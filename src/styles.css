@@ -72,8 +72,20 @@ body {
 }
 
 .hero-content {
-  max-width: 850px;
+  max-width: 1200px;
   margin-top: 3.5rem;
+}
+
+.hero-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.hero-copy {
+  display: flex;
+  flex-direction: column;
 }
 
 .overline {
@@ -153,6 +165,25 @@ body {
   background: linear-gradient(130deg, var(--rose-deep), var(--rose));
   font-weight: 700;
   box-shadow: 0 10px 20px rgba(166, 87, 116, 0.3);
+}
+
+.hero-map-preview {
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.hero-map-title {
+  margin: 0;
+  color: var(--rose-deep);
+  font-weight: 700;
+  font-size: 0.86rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .content-wrap {
@@ -458,6 +489,10 @@ body {
 }
 
 @media (max-width: 900px) {
+  .hero-layout {
+    grid-template-columns: 1fr;
+  }
+
   .map-layout {
     grid-template-columns: 1fr;
   }
