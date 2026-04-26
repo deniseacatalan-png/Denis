@@ -332,47 +332,61 @@ function App() {
 
             <div className="hero-map-preview" id="mapa" ref={mapSectionRef}>
               <p className="hero-map-title">Mapa destacado</p>
-              <div className="map-frame">
-                {selectedProperty ? (
-                  <MapContainer
-                    center={selectedProperty.coords}
-                    zoom={12}
-                    scrollWheelZoom={true}
-                    className="map-view"
-                  >
-                    <MapFocus coords={selectedProperty.coords} />
-                    <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    {visibleProperties.map((property) => (
-                      <CircleMarker
-                        key={property.id}
-                        center={property.coords}
-                        radius={property.id === selectedProperty.id ? 11 : 8}
-                        pathOptions={{
-                          color: CATEGORY_META[property.category]?.mapColor || "#a65774",
-                          fillColor: CATEGORY_META[property.category]?.mapColor || "#a65774",
-                          fillOpacity: 0.9,
-                          weight: property.id === selectedProperty.id ? 4 : 2
-                        }}
-                        eventHandlers={{
-                          click: () => setSelectedId(property.id)
-                        }}
-                      >
-                        <Popup>
-                          <strong>{property.title}</strong>
-                          <br />
-                          {property.price}
-                        </Popup>
-                      </CircleMarker>
-                    ))}
-                  </MapContainer>
-                ) : (
-                  <div className="map-empty">
-                    <p>No hay propiedades cargadas todavia.</p>
-                  </div>
-                )}
+              <div className="hero-map-content">
+                <div className="map-frame">
+                  {selectedProperty ? (
+                    <MapContainer
+                      center={selectedProperty.coords}
+                      zoom={12}
+                      scrollWheelZoom={true}
+                      className="map-view"
+                    >
+                      <MapFocus coords={selectedProperty.coords} />
+                      <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      />
+                      {visibleProperties.map((property) => (
+                        <CircleMarker
+                          key={property.id}
+                          center={property.coords}
+                          radius={property.id === selectedProperty.id ? 11 : 8}
+                          pathOptions={{
+                            color: CATEGORY_META[property.category]?.mapColor || "#a65774",
+                            fillColor: CATEGORY_META[property.category]?.mapColor || "#a65774",
+                            fillOpacity: 0.9,
+                            weight: property.id === selectedProperty.id ? 4 : 2
+                          }}
+                          eventHandlers={{
+                            click: () => setSelectedId(property.id)
+                          }}
+                        >
+                          <Popup>
+                            <strong>{property.title}</strong>
+                            <br />
+                            {property.price}
+                          </Popup>
+                        </CircleMarker>
+                      ))}
+                    </MapContainer>
+                  ) : (
+                    <div className="map-empty">
+                      <p>No hay propiedades cargadas todavia.</p>
+                    </div>
+                  )}
+                </div>
+
+                <aside className="hero-property-summary">
+                  <p className="chip">Propiedad seleccionada</p>
+                  <h3>{selectedProperty?.title || "Selecciona una propiedad"}</h3>
+                  <p>{selectedProperty?.location}</p>
+                  <p className={`status-pill status-pill--${selectedProperty?.category || "venta"}`}>
+                    {selectedProperty ? CATEGORY_META[selectedProperty.category]?.label : "En venta"}
+                  </p>
+                  <p className="hero-summary-text">
+                    {selectedProperty?.summary || "Haz clic en un punto del mapa para ver su descripcion."}
+                  </p>
+                </aside>
               </div>
             </div>
           </div>
