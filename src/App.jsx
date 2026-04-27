@@ -330,158 +330,155 @@ function App() {
       </header>
 
       <main className="content-wrap">
-        <section className="properties" id="propiedades">
+        <section className="properties properties-integrated" id="propiedades">
           <div className="section-title">
             <p>Coleccion real</p>
-            <h2>Propiedades desde el KML</h2>
+            <h2>Propiedades desde el KML + mapa a la derecha</h2>
           </div>
 
-          {loading ? (
-            <p className="loading-state">Leyendo las propiedades reales...</p>
-          ) : (
-            <div className="property-grid">
-              {visibleProperties.map((property) => (
-                <article
-                  className={`property-card ${property.id === selectedProperty?.id ? "active" : ""}`}
-                  key={property.id}
-                >
-                  <div className="property-cover">
-                    <p className={`status-pill status-pill--${property.category}`}>
-                      {CATEGORY_META[property.category]?.label || "En venta"}
-                    </p>
-                    <h3>{property.title}</h3>
-                    <p className="cover-location">{property.location}</p>
-                    <div className="cover-metrics">
-                      <div>
-                        <span>Precio</span>
-                        <strong>{formatDisplayedPrice(property)}</strong>
-                      </div>
-                      <div>
-                        <span>Superficie</span>
-                        <strong>{property.area}</strong>
-                      </div>
-                      <div>
-                        <span>Geo</span>
-                        <strong>{formatCoords(property.coords)}</strong>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="property-body">
-                    <p className="meta">Cargado desde el KML</p>
-                    <p className="summary">{property.summary}</p>
-                    <div className="card-actions">
-                      <button
-                        type="button"
-                        onClick={() => focusPropertyOnMap(property)}
-                        className="map-btn"
-                      >
-                        Ver en mapa
-                      </button>
-                      <a
-                        href={createWhatsAppLink(property)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="wa-btn"
-                      >
-                        Contactar por WhatsApp
-                      </a>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className="map-section" id="mapa" ref={mapSectionRef}>
-          <div className="section-title">
-            <p>Geolocalizacion</p>
-            <h2>Mapa de ubicaciones</h2>
-          </div>
-
-          <div className="map-layout">
-            <div className="map-frame">
-              {selectedProperty ? (
-                <MapContainer
-                  center={selectedProperty.coords}
-                  zoom={12}
-                  scrollWheelZoom={true}
-                  className="map-view"
-                >
-                  <MapFocus coords={selectedProperty.coords} />
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  {visibleProperties.map((property) => (
-                    <CircleMarker
-                      key={property.id}
-                      center={property.coords}
-                      radius={property.id === selectedProperty.id ? 11 : 8}
-                      pathOptions={{
-                        color: CATEGORY_META[property.category]?.mapColor || "#a65774",
-                        fillColor: CATEGORY_META[property.category]?.mapColor || "#a65774",
-                        fillOpacity: 0.9,
-                        weight: property.id === selectedProperty.id ? 4 : 2
-                      }}
-                      eventHandlers={{
-                        click: () => setSelectedId(property.id)
-                      }}
-                    >
-                      <Popup>
-                        <strong>{property.title}</strong>
-                        <br />
-                        {property.price}
-                      </Popup>
-                    </CircleMarker>
-                  ))}
-                </MapContainer>
+          <div className="properties-layout">
+            <div className="properties-list">
+              {loading ? (
+                <p className="loading-state">Leyendo las propiedades reales...</p>
               ) : (
-                <div className="map-empty">
-                  <p>No hay propiedades cargadas todavia.</p>
+                <div className="property-grid">
+                  {visibleProperties.map((property) => (
+                    <article
+                      className={`property-card ${property.id === selectedProperty?.id ? "active" : ""}`}
+                      key={property.id}
+                    >
+                      <div className="property-cover">
+                        <p className={`status-pill status-pill--${property.category}`}>
+                          {CATEGORY_META[property.category]?.label || "En venta"}
+                        </p>
+                        <h3>{property.title}</h3>
+                        <p className="cover-location">{property.location}</p>
+                        <div className="cover-metrics">
+                          <div>
+                            <span>Precio</span>
+                            <strong>{formatDisplayedPrice(property)}</strong>
+                          </div>
+                          <div>
+                            <span>Superficie</span>
+                            <strong>{property.area}</strong>
+                          </div>
+                          <div>
+                            <span>Geo</span>
+                            <strong>{formatCoords(property.coords)}</strong>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="property-body">
+                        <p className="meta">Cargado desde el KML</p>
+                        <p className="summary">{property.summary}</p>
+                        <div className="card-actions">
+                          <button
+                            type="button"
+                            onClick={() => focusPropertyOnMap(property)}
+                            className="map-btn"
+                          >
+                            Ver en mapa
+                          </button>
+                          <a
+                            href={createWhatsAppLink(property)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="wa-btn"
+                          >
+                            Contactar por WhatsApp
+                          </a>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
                 </div>
               )}
             </div>
 
-            <aside className="map-highlight details-panel" id="contacto">
-              <p className="chip">Ficha completa</p>
-              <h3>{selectedProperty?.title || "Selecciona una propiedad"}</h3>
-              <p>{selectedProperty?.location}</p>
-              <p className={`status-pill status-pill--${selectedProperty?.category || "venta"}`}>
-                {selectedProperty ? CATEGORY_META[selectedProperty.category]?.label : "En venta"}
-              </p>
-              <div className="detail-stats">
-                <div>
-                  <span>Precio</span>
-                  <strong>{formatDisplayedPrice(selectedProperty)}</strong>
-                </div>
-                <div>
-                  <span>Superficie</span>
-                  <strong>{selectedProperty?.area}</strong>
-                </div>
-                <div>
-                  <span>Geo</span>
-                  <strong>{selectedProperty ? formatCoords(selectedProperty.coords) : "-"}</strong>
-                </div>
+            <div className="properties-map-column" id="mapa" ref={mapSectionRef}>
+              <div className="map-frame">
+                {selectedProperty ? (
+                  <MapContainer
+                    center={selectedProperty.coords}
+                    zoom={12}
+                    scrollWheelZoom={true}
+                    className="map-view"
+                  >
+                    <MapFocus coords={selectedProperty.coords} />
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    {visibleProperties.map((property) => (
+                      <CircleMarker
+                        key={property.id}
+                        center={property.coords}
+                        radius={property.id === selectedProperty.id ? 11 : 8}
+                        pathOptions={{
+                          color: CATEGORY_META[property.category]?.mapColor || "#a65774",
+                          fillColor: CATEGORY_META[property.category]?.mapColor || "#a65774",
+                          fillOpacity: 0.9,
+                          weight: property.id === selectedProperty.id ? 4 : 2
+                        }}
+                        eventHandlers={{
+                          click: () => setSelectedId(property.id)
+                        }}
+                      >
+                        <Popup>
+                          <strong>{property.title}</strong>
+                          <br />
+                          {property.price}
+                        </Popup>
+                      </CircleMarker>
+                    ))}
+                  </MapContainer>
+                ) : (
+                  <div className="map-empty">
+                    <p>No hay propiedades cargadas todavia.</p>
+                  </div>
+                )}
               </div>
-              <div
-                className="rich-text"
-                dangerouslySetInnerHTML={{
-                  __html: selectedProperty?.descriptionHtml || "<p>Sin descripcion disponible.</p>"
-                }}
-              />
-              {selectedProperty ? (
-                <a
-                  href={createWhatsAppLink(selectedProperty)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="wa-btn"
-                >
-                  Hablar por WhatsApp
-                </a>
-              ) : null}
-            </aside>
+
+              <aside className="map-highlight details-panel" id="contacto">
+                <p className="chip">Ficha completa</p>
+                <h3>{selectedProperty?.title || "Selecciona una propiedad"}</h3>
+                <p>{selectedProperty?.location}</p>
+                <p className={`status-pill status-pill--${selectedProperty?.category || "venta"}`}>
+                  {selectedProperty ? CATEGORY_META[selectedProperty.category]?.label : "En venta"}
+                </p>
+                <div className="detail-stats">
+                  <div>
+                    <span>Precio</span>
+                    <strong>{formatDisplayedPrice(selectedProperty)}</strong>
+                  </div>
+                  <div>
+                    <span>Superficie</span>
+                    <strong>{selectedProperty?.area}</strong>
+                  </div>
+                  <div>
+                    <span>Geo</span>
+                    <strong>{selectedProperty ? formatCoords(selectedProperty.coords) : "-"}</strong>
+                  </div>
+                </div>
+                <div
+                  className="rich-text"
+                  dangerouslySetInnerHTML={{
+                    __html: selectedProperty?.descriptionHtml || "<p>Sin descripcion disponible.</p>"
+                  }}
+                />
+                {selectedProperty ? (
+                  <a
+                    href={createWhatsAppLink(selectedProperty)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="wa-btn"
+                  >
+                    Hablar por WhatsApp
+                  </a>
+                ) : null}
+              </aside>
+            </div>
           </div>
         </section>
       </main>
