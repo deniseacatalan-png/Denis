@@ -339,70 +339,6 @@ function App() {
       </header>
 
       <main className="content-wrap">
-        <section className="properties" id="propiedades">
-          <div className="section-title">
-            <p>Coleccion real</p>
-            <h2>Propiedades desde el KML</h2>
-          </div>
-
-          {loading ? (
-            <p className="loading-state">Leyendo las propiedades reales...</p>
-          ) : (
-            <div className="property-grid">
-              {visibleProperties.map((property) => (
-                <article
-                  className={`property-card ${property.id === selectedProperty?.id ? "active" : ""}`}
-                  key={property.id}
-                >
-                  <div className="property-cover">
-                    <p className={`status-pill status-pill--${property.category}`}>
-                      {CATEGORY_META[property.category]?.label || "En venta"}
-                    </p>
-                    <h3>{property.title}</h3>
-                    <p className="cover-location">{property.location}</p>
-                    <div className="cover-metrics">
-                      <div>
-                        <span>Precio</span>
-                        <strong>{formatDisplayedPrice(property)}</strong>
-                      </div>
-                      <div>
-                        <span>Superficie</span>
-                        <strong>{property.area}</strong>
-                      </div>
-                      <div>
-                        <span>Geo</span>
-                        <strong>{formatCoords(property.coords)}</strong>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="property-body">
-                    <p className="meta">Cargado desde el KML</p>
-                    <p className="summary">{property.summary}</p>
-                    <div className="card-actions">
-                      <button
-                        type="button"
-                        onClick={() => focusPropertyOnMap(property)}
-                        className="map-btn"
-                      >
-                        Ver en mapa
-                      </button>
-                      <a
-                        href={createWhatsAppLink(property)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="wa-btn"
-                      >
-                        Contactar por WhatsApp
-                      </a>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-
         <section className="map-section" id="mapa" ref={mapSectionRef}>
           <div className="section-title">
             <p>Geolocalizacion</p>
@@ -493,6 +429,71 @@ function App() {
             </aside>
           </div>
         </section>
+
+        <section className="properties" id="propiedades">
+          <div className="section-title">
+            <p>Coleccion real</p>
+            <h2>Propiedades desde el KML</h2>
+          </div>
+
+          {loading ? (
+            <p className="loading-state">Leyendo las propiedades reales...</p>
+          ) : (
+            <div className="property-grid">
+              {visibleProperties.map((property) => (
+                <article
+                  className={`property-card ${property.id === selectedProperty?.id ? "active" : ""}`}
+                  key={property.id}
+                >
+                  <div className="property-cover">
+                    <p className={`status-pill status-pill--${property.category}`}>
+                      {CATEGORY_META[property.category]?.label || "En venta"}
+                    </p>
+                    <h3>{property.title}</h3>
+                    <p className="cover-location">{property.location}</p>
+                    <div className="cover-metrics">
+                      <div>
+                        <span>Precio</span>
+                        <strong>{formatDisplayedPrice(property)}</strong>
+                      </div>
+                      <div>
+                        <span>Superficie</span>
+                        <strong>{property.area}</strong>
+                      </div>
+                      <div>
+                        <span>Geo</span>
+                        <strong>{formatCoords(property.coords)}</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="property-body">
+                    <p className="meta">Cargado desde el KML</p>
+                    <p className="summary">{property.summary}</p>
+                    <div className="card-actions">
+                      <button
+                        type="button"
+                        onClick={() => focusPropertyOnMap(property)}
+                        className="map-btn"
+                      >
+                        Ver en mapa
+                      </button>
+                      <a
+                        href={createWhatsAppLink(property)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="wa-btn"
+                      >
+                        Contactar por WhatsApp
+                      </a>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
       </main>
     </div>
   );
