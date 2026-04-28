@@ -99,6 +99,20 @@ body {
   font-size: 1.1rem;
 }
 
+.hero-headline-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.legend-inline {
+  margin-top: 1rem;
+  flex-direction: row;
+  justify-content: flex-end;
+  max-width: 280px;
+}
+
 .contact-line {
   margin-top: 0.65rem !important;
   font-size: 0.98rem !important;
@@ -484,5 +498,17 @@ body {
   .links {
     font-size: 0.92rem;
     gap: 0.65rem;
+  }
+}
+
+
+@media (max-width: 860px) {
+  .hero-headline-row {
+    flex-direction: column;
+  }
+
+  .legend-inline {
+    justify-content: flex-start;
+    max-width: none;
   }
 }
