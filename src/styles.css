@@ -105,6 +105,34 @@ body {
   color: #50353d;
 }
 
+.hero-shortcuts {
+  margin-top: 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.hero-shortcuts > a {
+  text-decoration: none;
+  color: var(--graphite);
+  font-weight: 600;
+  font-size: 0.93rem;
+}
+
+.chip-shortcut {
+  border-radius: 999px;
+  padding: 0.38rem 0.78rem;
+  border: 1px solid rgba(22, 22, 22, 0.13);
+  background: rgba(255, 255, 255, 0.64);
+}
+
+.chip-shortcut--primary {
+  color: #fff !important;
+  background: linear-gradient(130deg, var(--rose-deep), var(--rose));
+  border-color: rgba(166, 87, 116, 0.35);
+}
+
 .legend {
   display: flex;
   gap: 0.6rem;

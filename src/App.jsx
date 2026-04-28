@@ -313,6 +313,15 @@ function App() {
           <p className="contact-line">
             WhatsApp: <strong>+54 9 2944 68-8613</strong>
           </p>
+          <div className="hero-shortcuts">
+            <a href="#mapa">Geolocalizacion</a>
+            <a href="#mapa">Mapa de ubicaciones</a>
+            <a href="#propiedades" className="chip-shortcut">En venta</a>
+            <a href="#propiedades" className="chip-shortcut">Alquiler turistico</a>
+            <a href="#propiedades" className="chip-shortcut chip-shortcut--primary">
+              Explorar propiedades
+            </a>
+          </div>
           <div className="legend">
             {["venta", "alquiler_turistico"].map((key) => {
               const meta = CATEGORY_META[key];
