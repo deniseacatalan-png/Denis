@@ -290,12 +290,12 @@ function App() {
 
   return (
     <div className="page-shell">
-      <header className="hero" id="inicio" ref={mapSectionRef}>
+      <header className="hero" id="inicio">
         <nav className="top-nav">
           <p className="brand">Denise Catalan Bienes Raices</p>
           <div className="links">
             <a href="#propiedades">Propiedades</a>
-            <a href="#inicio">Mapa</a>
+            <a href="#mapa">Mapa</a>
             <a href="#contacto">WhatsApp</a>
           </div>
         </nav>
@@ -329,7 +329,7 @@ function App() {
             </a>
           </div>
 
-          <section className="hero-map-panel" id="mapa">
+          <section className="hero-map-panel" id="mapa" ref={mapSectionRef}>
             <div className="section-title">
               <p>Geolocalizacion</p>
               <h2>Mapa de ubicaciones</h2>
