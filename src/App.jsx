@@ -20,6 +20,13 @@ L.Icon.Default.mergeOptions({
 
 const KML_URL = "/PROPIEDADESVENTA.kml";
 const officeWhatsApp = "5492944688613";
+const PROPERTY_IMAGE_LIBRARY = {
+  "terreno-alihuen-alto": [
+    "/images/TERRENO ALIHUEN ALTO/alihuen.JPG",
+    "/images/TERRENO ALIHUEN ALTO/aa2.jpg",
+    "/images/TERRENO ALIHUEN ALTO/aa3.jpg"
+  ]
+};
 
 const CATEGORY_META = {
   venta: {
@@ -207,6 +214,18 @@ function parseKml(kmlText) {
     .filter(Boolean);
 }
 
+function resolvePropertyImages(property) {
+  const searchableText = `${property.title} ${property.location}`;
+  const normalized = slugify(searchableText);
+
+  const bestMatch = Object.entries(PROPERTY_IMAGE_LIBRARY).find(([folderSlug]) => {
+    const tokens = folderSlug.split("-").filter((token) => token.length > 2);
+    return tokens.every((token) => normalized.includes(token));
+  });
+
+  return bestMatch ? bestMatch[1] : [];
+}
+
 function MapFocus({ coords }) {
   const map = useMap();
 
@@ -230,7 +249,10 @@ function App() {
       try {
         const response = await fetch(KML_URL);
         const text = await response.text();
-        const parsed = parseKml(text);
+      const parsed = parseKml(text).map((property) => ({
+        ...property,
+        images: resolvePropertyImages(property)
+      }));
 
         if (!active) return;
 
@@ -370,6 +392,13 @@ function App() {
                   <div className="property-body">
                     <p className="meta">Cargado desde el KML</p>
                     <p className="summary">{property.summary}</p>
+                    {property.images.length ? (
+                      <img
+                        src={property.images[0]}
+                        alt={`Foto de ${property.title}`}
+                        className="card-preview-image"
+                      />
+                    ) : null}
                     <div className="card-actions">
                       <button
                         type="button"
@@ -377,6 +406,13 @@ function App() {
                         className="map-btn"
                       >
                         Ver en mapa
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedId(property.id)}
+                        className="map-btn"
+                      >
+                        Ver ficha completa
                       </button>
                       <a
                         href={createWhatsAppLink(property)}
@@ -471,6 +507,17 @@ function App() {
                   __html: selectedProperty?.descriptionHtml || "<p>Sin descripcion disponible.</p>"
                 }}
               />
+              {selectedProperty?.images?.length ? (
+                <div className="property-gallery">
+                  {selectedProperty.images.map((imageUrl) => (
+                    <a href={imageUrl} target="_blank" rel="noreferrer" key={imageUrl}>
+                      <img src={imageUrl} alt={`Foto de ${selectedProperty.title}`} loading="lazy" />
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <p className="gallery-empty">Esta propiedad todavia no tiene fotos cargadas.</p>
+              )}
               {selectedProperty ? (
                 <a
                   href={createWhatsAppLink(selectedProperty)}
