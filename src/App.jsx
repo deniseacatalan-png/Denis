@@ -322,32 +322,136 @@ function App() {
           </div>
         </nav>
 
-        <div className="hero-content">
-          <p className="overline">
-            {loading
-              ? "Cargando archivo KML..."
-              : `${visibleProperties.length} propiedades visibles`}
-          </p>
-          <h1>Propiedades reales en San Martin de los Andes, Patagonia.</h1>
-          <p>
-            Datos leidos desde <strong>PROPIEDADESVENTA.kml</strong> para mostrar ubicacion, precio y descripcion completa.
-          </p>
-          <p className="contact-line">
-            WhatsApp: <strong>+54 9 2944 68-8613</strong>
-          </p>
-          <div className="legend">
-            {["venta", "alquiler_turistico"].map((key) => {
-              const meta = CATEGORY_META[key];
-              return (
-                <span key={key} className={`legend-pill legend-pill--${key}`}>
-                  {meta.label}
-                </span>
-              );
-            })}
+        <div className="hero-layout">
+          <div className="hero-content">
+            <p className="overline">
+              {loading
+                ? "Cargando archivo KML..."
+                : `${visibleProperties.length} propiedades visibles`}
+            </p>
+            <h1>Propiedades reales en San Martin de los Andes, Patagonia.</h1>
+            <p>
+              Datos leidos desde <strong>PROPIEDADESVENTA.kml</strong> para mostrar ubicacion, precio y descripcion completa.
+            </p>
+            <p className="contact-line">
+              WhatsApp: <strong>+54 9 2944 68-8613</strong>
+            </p>
+            <div className="legend">
+              {["venta", "alquiler_turistico"].map((key) => {
+                const meta = CATEGORY_META[key];
+                return (
+                  <span key={key} className={`legend-pill legend-pill--${key}`}>
+                    {meta.label}
+                  </span>
+                );
+              })}
+            </div>
+            <a className="cta" href="#propiedades">
+              Explorar propiedades
+            </a>
           </div>
-          <a className="cta" href="#propiedades">
-            Explorar propiedades
-          </a>
+
+          <section className="map-section hero-map-section" id="mapa" ref={mapSectionRef}>
+            <div className="section-title">
+              <p>Geolocalizacion</p>
+              <h2>Mapa de ubicaciones</h2>
+            </div>
+
+            <div className="map-layout">
+              <div className="map-frame">
+                {selectedProperty ? (
+                  <MapContainer
+                    center={selectedProperty.coords}
+                    zoom={12}
+                    scrollWheelZoom={true}
+                    className="map-view"
+                  >
+                    <MapFocus coords={selectedProperty.coords} />
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    {visibleProperties.map((property) => (
+                      <CircleMarker
+                        key={property.id}
+                        center={property.coords}
+                        radius={property.id === selectedProperty.id ? 11 : 8}
+                        pathOptions={{
+                          color: CATEGORY_META[property.category]?.mapColor || "#a65774",
+                          fillColor: CATEGORY_META[property.category]?.mapColor || "#a65774",
+                          fillOpacity: 0.9,
+                          weight: property.id === selectedProperty.id ? 4 : 2
+                        }}
+                        eventHandlers={{
+                          click: () => setSelectedId(property.id)
+                        }}
+                      >
+                        <Popup>
+                          <strong>{property.title}</strong>
+                          <br />
+                          {property.price}
+                        </Popup>
+                      </CircleMarker>
+                    ))}
+                  </MapContainer>
+                ) : (
+                  <div className="map-empty">
+                    <p>No hay propiedades cargadas todavia.</p>
+                  </div>
+                )}
+              </div>
+
+              <aside className="map-highlight details-panel" id="contacto">
+                <p className="chip">Ficha completa</p>
+                <h3>{selectedProperty?.title || "Selecciona una propiedad"}</h3>
+                <p>{selectedProperty?.location}</p>
+                <p className={`status-pill status-pill--${selectedProperty?.category || "venta"}`}>
+                  {selectedProperty ? CATEGORY_META[selectedProperty.category]?.label : "En venta"}
+                </p>
+                <div className="detail-stats">
+                  <div>
+                    <span>Precio</span>
+                    <strong>{formatDisplayedPrice(selectedProperty)}</strong>
+                  </div>
+                  <div>
+                    <span>Superficie</span>
+                    <strong>{selectedProperty?.area}</strong>
+                  </div>
+                  <div>
+                    <span>Geo</span>
+                    <strong>{selectedProperty ? formatCoords(selectedProperty.coords) : "-"}</strong>
+                  </div>
+                </div>
+                <div
+                  className="rich-text"
+                  dangerouslySetInnerHTML={{
+                    __html: selectedProperty?.descriptionHtml || "<p>Sin descripcion disponible.</p>"
+                  }}
+                />
+                {selectedProperty?.images?.length ? (
+                  <div className="property-gallery">
+                    {selectedProperty.images.map((imageUrl) => (
+                      <a href={imageUrl} target="_blank" rel="noreferrer" key={imageUrl}>
+                        <img src={imageUrl} alt={`Foto de ${selectedProperty.title}`} loading="lazy" />
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="gallery-empty">Esta propiedad todavia no tiene fotos cargadas.</p>
+                )}
+                {selectedProperty ? (
+                  <a
+                    href={createWhatsAppLink(selectedProperty)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="wa-btn"
+                  >
+                    Hablar por WhatsApp
+                  </a>
+                ) : null}
+              </aside>
+            </div>
+          </section>
         </div>
       </header>
 
@@ -430,107 +534,6 @@ function App() {
           )}
         </section>
 
-        <section className="map-section" id="mapa" ref={mapSectionRef}>
-          <div className="section-title">
-            <p>Geolocalizacion</p>
-            <h2>Mapa de ubicaciones</h2>
-          </div>
-
-          <div className="map-layout">
-            <div className="map-frame">
-              {selectedProperty ? (
-                <MapContainer
-                  center={selectedProperty.coords}
-                  zoom={12}
-                  scrollWheelZoom={true}
-                  className="map-view"
-                >
-                  <MapFocus coords={selectedProperty.coords} />
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  {visibleProperties.map((property) => (
-                    <CircleMarker
-                      key={property.id}
-                      center={property.coords}
-                      radius={property.id === selectedProperty.id ? 11 : 8}
-                      pathOptions={{
-                        color: CATEGORY_META[property.category]?.mapColor || "#a65774",
-                        fillColor: CATEGORY_META[property.category]?.mapColor || "#a65774",
-                        fillOpacity: 0.9,
-                        weight: property.id === selectedProperty.id ? 4 : 2
-                      }}
-                      eventHandlers={{
-                        click: () => setSelectedId(property.id)
-                      }}
-                    >
-                      <Popup>
-                        <strong>{property.title}</strong>
-                        <br />
-                        {property.price}
-                      </Popup>
-                    </CircleMarker>
-                  ))}
-                </MapContainer>
-              ) : (
-                <div className="map-empty">
-                  <p>No hay propiedades cargadas todavia.</p>
-                </div>
-              )}
-            </div>
-
-            <aside className="map-highlight details-panel" id="contacto">
-              <p className="chip">Ficha completa</p>
-              <h3>{selectedProperty?.title || "Selecciona una propiedad"}</h3>
-              <p>{selectedProperty?.location}</p>
-              <p className={`status-pill status-pill--${selectedProperty?.category || "venta"}`}>
-                {selectedProperty ? CATEGORY_META[selectedProperty.category]?.label : "En venta"}
-              </p>
-              <div className="detail-stats">
-                <div>
-                  <span>Precio</span>
-                  <strong>{formatDisplayedPrice(selectedProperty)}</strong>
-                </div>
-                <div>
-                  <span>Superficie</span>
-                  <strong>{selectedProperty?.area}</strong>
-                </div>
-                <div>
-                  <span>Geo</span>
-                  <strong>{selectedProperty ? formatCoords(selectedProperty.coords) : "-"}</strong>
-                </div>
-              </div>
-              <div
-                className="rich-text"
-                dangerouslySetInnerHTML={{
-                  __html: selectedProperty?.descriptionHtml || "<p>Sin descripcion disponible.</p>"
-                }}
-              />
-              {selectedProperty?.images?.length ? (
-                <div className="property-gallery">
-                  {selectedProperty.images.map((imageUrl) => (
-                    <a href={imageUrl} target="_blank" rel="noreferrer" key={imageUrl}>
-                      <img src={imageUrl} alt={`Foto de ${selectedProperty.title}`} loading="lazy" />
-                    </a>
-                  ))}
-                </div>
-              ) : (
-                <p className="gallery-empty">Esta propiedad todavia no tiene fotos cargadas.</p>
-              )}
-              {selectedProperty ? (
-                <a
-                  href={createWhatsAppLink(selectedProperty)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="wa-btn"
-                >
-                  Hablar por WhatsApp
-                </a>
-              ) : null}
-            </aside>
-          </div>
-        </section>
       </main>
     </div>
   );

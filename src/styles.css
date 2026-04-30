@@ -71,9 +71,16 @@ body {
   color: var(--rose-deep);
 }
 
+.hero-layout {
+  margin-top: 3.2rem;
+  display: grid;
+  grid-template-columns: 30% 70%;
+  gap: 1rem;
+  align-items: start;
+}
+
 .hero-content {
-  max-width: 850px;
-  margin-top: 3.5rem;
+  margin-top: 0;
 }
 
 .overline {
@@ -172,6 +179,11 @@ body {
 
 .map-section {
   margin-top: 1.8rem;
+}
+
+.hero-map-section {
+  margin-top: 0;
+  min-height: 100%;
 }
 
 .section-title p {
@@ -495,6 +507,11 @@ body {
 @media (max-width: 900px) {
   .map-layout {
     grid-template-columns: 1fr;
+  }
+
+  .hero-layout {
+    grid-template-columns: 1fr;
+    margin-top: 2rem;
   }
 
   .hero {
