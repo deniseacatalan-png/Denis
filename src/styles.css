@@ -71,9 +71,16 @@ body {
   color: var(--rose-deep);
 }
 
+.hero-layout {
+  margin-top: 2.4rem;
+  display: grid;
+  grid-template-columns: 30% 70%;
+  gap: 1.2rem;
+  align-items: stretch;
+}
+
 .hero-content {
-  max-width: 850px;
-  margin-top: 3.5rem;
+  margin-top: 0.7rem;
 }
 
 .overline {
@@ -95,7 +102,6 @@ body {
 
 .hero p {
   margin: 0;
-  max-width: 620px;
   font-size: 1.1rem;
 }
 
@@ -157,21 +163,17 @@ body {
 
 .content-wrap {
   width: min(1200px, 92vw);
-  margin: -2rem auto 3rem;
+  margin: 1.2rem auto 3rem;
 }
 
 .properties,
-.map-section {
+.hero-map-panel {
   border: 1px solid var(--border);
   border-radius: 24px;
   padding: clamp(1rem, 2.4vw, 2rem);
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(4px);
   box-shadow: var(--shadow);
-}
-
-.map-section {
-  margin-top: 1.8rem;
 }
 
 .section-title p {
@@ -323,6 +325,16 @@ body {
   background: linear-gradient(140deg, #1f1f1f, #000);
 }
 
+
+.hero-map-panel {
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: clamp(0.9rem, 1.8vw, 1.2rem);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(4px);
+  box-shadow: var(--shadow);
+}
+
 .map-layout {
   display: grid;
   grid-template-columns: 1.6fr 1fr;
@@ -455,6 +467,16 @@ body {
   border: 1px dashed rgba(166, 87, 116, 0.24);
   background: rgba(255, 255, 255, 0.48);
   color: #6a5a5e;
+}
+
+@media (max-width: 1100px) {
+  .hero-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-content {
+    margin-top: 0;
+  }
 }
 
 @media (max-width: 900px) {
