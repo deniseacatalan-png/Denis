@@ -1,0 +1,18 @@
+# Carpetas de imágenes por propiedad
+
+Estas son las 14 carpetas creadas para subir imágenes de cada propiedad:
+
+1. `CASA LAS MARIAS DEL VALLE`
+2. `CASA MIRALEJOS`
+3. `HAS ORILLAS DE CALEUFU`
+4. `HUILQUIL CASONA DE MONTAÑA`
+5. `LOTE CJN BELLO`
+6. `LOTE G. MASANA`
+7. `LOTE OASIS`
+8. `LOTE VEGA MAIPU`
+9. `LOTE j. CALDERON`
+10. `LOTES KALEUCHE ALTO`
+11. `TERRENO ALIHUEN ALTO`
+12. `TERRENO CIPRESES`
+13. `TERRENO MIRALEJOS`
+14. `uf 42 E. MIRALEJOS`
