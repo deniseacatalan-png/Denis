@@ -248,6 +248,7 @@ function MapFocus({ coords }) {
 function App() {
   const [properties, setProperties] = useState([]);
   const [selectedId, setSelectedId] = useState("");
+  const [expandedGalleryId, setExpandedGalleryId] = useState("");
   const [loading, setLoading] = useState(true);
   const mapSectionRef = useRef(null);
 
@@ -486,13 +487,31 @@ function App() {
                   className={`property-card ${property.id === selectedProperty?.id ? "active" : ""}`}
                   key={property.id}
                 >
-                  <div className="property-cover">
+                  <button
+                    type="button"
+                    className="property-cover"
+                    style={
+                      property.images.length
+                        ? {
+                            backgroundImage: `linear-gradient(180deg, rgba(22,22,22,0.15), rgba(22,22,22,0.75)), url(${property.images[0]})`
+                          }
+                        : undefined
+                    }
+                    onClick={() =>
+                      setExpandedGalleryId((currentId) =>
+                        currentId === property.id ? "" : property.id
+                      )
+                    }
+                  >
                     <p className={`status-pill status-pill--${property.category}`}>
                       {CATEGORY_META[property.category]?.label || "En venta"}
                     </p>
                     <h3>{property.title}</h3>
                     <p className="cover-location">{property.location}</p>
-                    <div className="cover-metrics">
+                  </button>
+
+                  <div className="property-body">
+                    <div className="cover-metrics cover-metrics--card">
                       <div>
                         <span>Precio</span>
                         <strong>{formatDisplayedPrice(property)}</strong>
@@ -506,17 +525,14 @@ function App() {
                         <strong>{formatCoords(property.coords)}</strong>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="property-body">
-                    <p className="meta">Cargado desde el KML</p>
-                    <p className="summary">{property.summary}</p>
-                    {property.images.length ? (
-                      <img
-                        src={property.images[0]}
-                        alt={`Foto de ${property.title}`}
-                        className="card-preview-image"
-                      />
+                    {property.images.length > 1 && expandedGalleryId === property.id ? (
+                      <div className="property-gallery property-gallery--card">
+                        {property.images.slice(1).map((imageUrl) => (
+                          <a href={imageUrl} target="_blank" rel="noreferrer" key={imageUrl}>
+                            <img src={imageUrl} alt={`Foto de ${property.title}`} loading="lazy" />
+                          </a>
+                        ))}
+                      </div>
                     ) : null}
                     <div className="card-actions">
                       <button
