@@ -416,7 +416,18 @@ function App() {
 
               <aside className="map-highlight details-panel" id="contacto">
                 <p className="chip">Ficha completa</p>
-                <h3>{selectedProperty?.title || "Selecciona una propiedad"}</h3>
+                {selectedProperty?.images?.length ? (
+                  <div className="details-cover">
+                    <img
+                      src={selectedProperty.images[0]}
+                      alt={`Portada de ${selectedProperty.title}`}
+                      loading="lazy"
+                    />
+                    <h3>{selectedProperty.title}</h3>
+                  </div>
+                ) : (
+                  <h3>{selectedProperty?.title || "Selecciona una propiedad"}</h3>
+                )}
                 <p>{selectedProperty?.location}</p>
                 <p className={`status-pill status-pill--${selectedProperty?.category || "venta"}`}>
                   {selectedProperty ? CATEGORY_META[selectedProperty.category]?.label : "En venta"}
