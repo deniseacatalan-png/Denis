@@ -25,6 +25,15 @@ const PROPERTY_IMAGE_LIBRARY = {
     "/images/TERRENO ALIHUEN ALTO/alihuen.JPG",
     "/images/TERRENO ALIHUEN ALTO/aa2.jpg",
     "/images/TERRENO ALIHUEN ALTO/aa3.jpg"
+  ],
+  "has-orillas-de-caleufu": [
+    "/images/HAS ORILLAS DE CALEUFU/DJI_0051.JPG",
+    "/images/HAS ORILLAS DE CALEUFU/DJI_0054.JPG",
+    "/images/HAS ORILLAS DE CALEUFU/DJI_0055.JPG",
+    "/images/HAS ORILLAS DE CALEUFU/DJI_0056.JPG",
+    "/images/HAS ORILLAS DE CALEUFU/DJI_0059.JPG",
+    "/images/HAS ORILLAS DE CALEUFU/DJI_0061.JPG",
+    "/images/HAS ORILLAS DE CALEUFU/DJI_0062.JPG"
   ]
 };
 
