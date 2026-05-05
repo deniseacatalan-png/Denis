@@ -254,6 +254,19 @@ body {
   font-size: 0.92rem;
 }
 
+
+.map-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.header-map-btn {
+  align-self: center;
+  white-space: nowrap;
+}
+
 .section-title h2 {
   margin: 0.35rem 0 1.2rem;
   font-size: clamp(1.75rem, 3vw, 2.55rem);
@@ -503,6 +516,23 @@ body {
   color: var(--verde-bosque);
 }
 
+.tech-sheet {
+  border-top: 1px solid rgba(216, 191, 143, 0.5);
+  padding-top: 0.75rem;
+}
+
+.tech-sheet summary {
+  list-style: none;
+}
+
+.tech-sheet summary::-webkit-details-marker {
+  display: none;
+}
+
+.tech-sheet[open] .map-btn {
+  margin-bottom: 0.6rem;
+}
+
 .rich-text {
   max-height: 520px;
   overflow: auto;
@@ -598,5 +628,10 @@ body {
   .links {
     font-size: 0.92rem;
     gap: 0.65rem;
+  }
+
+  .map-section-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
