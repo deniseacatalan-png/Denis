@@ -352,9 +352,12 @@ function App() {
           </div>
 
           <section className="map-section hero-map-section" id="mapa" ref={mapSectionRef}>
-            <div className="section-title">
-              <p>Geolocalizacion</p>
-              <h2>Mapa de ubicaciones</h2>
+            <div className="section-title map-section-header">
+              <div>
+                <p>Geolocalizacion</p>
+                <h2>Plano de ubicaciones</h2>
+              </div>
+              <a className="map-btn header-map-btn" href="#propiedades">Ver propiedades</a>
             </div>
 
             <div className="map-layout">
@@ -422,12 +425,15 @@ function App() {
                     <strong>{selectedProperty ? formatCoords(selectedProperty.coords) : "-"}</strong>
                   </div>
                 </div>
-                <div
-                  className="rich-text"
-                  dangerouslySetInnerHTML={{
-                    __html: selectedProperty?.descriptionHtml || "<p>Sin descripcion disponible.</p>"
-                  }}
-                />
+                <details className="tech-sheet">
+                  <summary className="map-btn">Ver ficha tecnica</summary>
+                  <div
+                    className="rich-text"
+                    dangerouslySetInnerHTML={{
+                      __html: selectedProperty?.descriptionHtml || "<p>Sin descripcion disponible.</p>"
+                    }}
+                  />
+                </details>
                 {selectedProperty?.images?.length ? (
                   <div className="property-gallery">
                     {selectedProperty.images.map((imageUrl) => (
