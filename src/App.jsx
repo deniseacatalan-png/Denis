@@ -36,6 +36,9 @@ const PROPERTY_IMAGE_LIBRARY = {
     "/images/HAS ORILLAS DE CALEUFU/DJI_0062.JPG"
   ]
 };
+const PROPERTY_COVER_IMAGE_LIBRARY = {
+  "has-orillas-de-caleufu": "/images/HAS ORILLAS DE CALEUFU/DJI_0055.JPG"
+};
 
 const CATEGORY_META = {
   venta: {
@@ -235,6 +238,19 @@ function resolvePropertyImages(property) {
   return bestMatch ? bestMatch[1] : [];
 }
 
+function resolvePropertyCoverImage(property) {
+  const searchableText = `${property.title} ${property.location}`;
+  const normalized = slugify(searchableText);
+
+  const bestMatch = Object.entries(PROPERTY_COVER_IMAGE_LIBRARY).find(([folderSlug]) => {
+    const tokens = folderSlug.split("-").filter((token) => token.length > 2);
+    return tokens.every((token) => normalized.includes(token));
+  });
+
+  if (bestMatch) return bestMatch[1];
+  return property.images?.[0] || "";
+}
+
 function MapFocus({ coords }) {
   const map = useMap();
 
@@ -419,7 +435,7 @@ function App() {
                 {selectedProperty?.images?.length ? (
                   <div className="details-cover">
                     <img
-                      src={selectedProperty.images[0]}
+                      src={resolvePropertyCoverImage(selectedProperty)}
                       alt={`Portada de ${selectedProperty.title}`}
                       loading="lazy"
                     />
@@ -504,7 +520,7 @@ function App() {
                     style={
                       property.images.length
                         ? {
-                            backgroundImage: `linear-gradient(180deg, rgba(22,22,22,0.15), rgba(22,22,22,0.75)), url(${property.images[0]})`
+                            backgroundImage: `linear-gradient(180deg, rgba(22,22,22,0.15), rgba(22,22,22,0.75)), url(${resolvePropertyCoverImage(property)})`
                           }
                         : undefined
                     }
