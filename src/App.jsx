@@ -340,7 +340,7 @@ function App() {
     <div className="page-shell">
       <header className="hero" id="inicio">
         <nav className="top-nav">
-          <img className="brand-logo" src="/logo-dc.svg" alt="Logo Denise Catalán" />
+          <img className="brand-logo" src="/isodc.svg" alt="Logo Denise Catalán" />
           <div className="links">
             <a href="#propiedades">Propiedades</a>
             <a href="#mapa">Mapa</a>
