@@ -1,5 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Denise Catalan Bienes Raices">
-  <rect width="64" height="64" rx="16" fill="#161616" />
-  <path d="M14 40L32 14l18 26H14Z" fill="#ce7e96" />
-  <path d="M22 40h20v10H22z" fill="#f6ede1" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-label="Logo DC con llave">
+  <g fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M80 220 L80 980" stroke-width="60"/>
+    <path d="M80 220 H260 C470 220 640 390 640 600 C640 810 470 980 260 980 H80" stroke-width="60"/>
+    <path d="M1120 400 C1040 300 930 250 810 250 C590 250 420 420 420 640 C420 860 590 1030 810 1030 C930 1030 1040 980 1120 880" stroke-width="40"/>
+    <path d="M600 120 L600 1120" stroke-width="40"/>
+    <circle cx="600" cy="110" r="70" stroke-width="20"/>
+    <path d="M560 1040 h80 v90 h-80 z M640 1070 h35 v30 h-35 z" stroke-width="18"/>
+  </g>
 </svg>
