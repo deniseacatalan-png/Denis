@@ -60,7 +60,7 @@ body {
 }
 
 .brand-logo {
-  height: clamp(42px, 6vw, 68px);
+  height: calc(clamp(42px, 6vw, 68px) + 3mm);
   width: auto;
   display: block;
 }
