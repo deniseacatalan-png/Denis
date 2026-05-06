@@ -59,17 +59,10 @@ body {
   flex-wrap: wrap;
 }
 
-.brand {
-  margin: 0;
-  font-size: 0;
-  letter-spacing: 0.02em;
-}
-
-.brand::before {
-  content: "Denise Catalán Bienes Raíces";
-  font-size: clamp(1.45rem, 2.9vw, 2.15rem);
-  font-weight: 600;
-  color: var(--verde-bosque);
+.brand-logo {
+  height: clamp(42px, 6vw, 68px);
+  width: auto;
+  display: block;
 }
 
 .links {
