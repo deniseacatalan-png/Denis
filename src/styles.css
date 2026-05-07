@@ -85,6 +85,11 @@ body {
   font-size: 0.94rem;
 }
 
+.nav-service-button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
 .links a:hover {
   color: var(--rosa-profundo);
 }
@@ -708,4 +713,63 @@ body {
     flex-direction: column;
     align-items: flex-start;
   }
+}
+
+.services-label {
+  margin: 0;
+  font-weight: 600;
+  color: var(--verde-bosque);
+}
+
+.services-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.service-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(35, 35, 31, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.service-modal {
+  width: min(460px, 100%);
+  border-radius: 20px;
+  padding: 1.2rem;
+  border: 1px solid var(--border);
+  background: var(--blanco-calido);
+  box-shadow: var(--shadow);
+}
+
+.service-modal h3 {
+  margin: 0 0 0.6rem;
+  color: var(--verde-bosque);
+}
+
+.service-modal p {
+  margin: 0;
+  color: var(--gris-texto);
+}
+
+.service-modal-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.65rem;
+  justify-content: flex-end;
+}
+
+.service-modal select {
+  width: 100%;
+  margin-top: 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  padding: 0.62rem 0.95rem;
+  background: var(--blanco-calido);
+  font-family: inherit;
+  font-size: 1rem;
 }
