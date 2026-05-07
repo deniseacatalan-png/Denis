@@ -78,6 +78,15 @@ body {
   font-weight: 600;
 }
 
+.links .nav-service-link {
+  text-transform: none;
+  letter-spacing: 0.02em;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.94rem;
+  border: none;
+  cursor: pointer;
+}
+
 .links a:hover {
   color: var(--rosa-profundo);
 }
@@ -226,6 +235,70 @@ body {
   background: rgba(255, 250, 244, 0.78);
   backdrop-filter: blur(4px);
   box-shadow: var(--shadow);
+}
+
+.services-intro {
+  margin: 0.2rem 0 1rem;
+  max-width: 760px;
+  color: var(--gris-texto);
+  line-height: 1.45;
+}
+
+.services-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  align-items: center;
+}
+
+.services-actions label {
+  font-weight: 600;
+  color: var(--verde-bosque);
+}
+
+.services-actions select {
+  min-width: 180px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  padding: 0.62rem 0.95rem;
+  background: var(--blanco-calido);
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.services-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(35, 35, 31, 0.52);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  z-index: 1200;
+}
+
+.services-modal {
+  position: relative;
+  width: min(740px, 95vw);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: clamp(1rem, 2.2vw, 2rem);
+  background: var(--blanco-calido);
+  box-shadow: var(--shadow);
+}
+
+.services-modal-close {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(47, 79, 62, 0.1);
+  color: var(--verde-bosque);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
 }
 
 .map-section {

@@ -266,6 +266,8 @@ function App() {
   const [selectedId, setSelectedId] = useState("");
   const [expandedGalleryId, setExpandedGalleryId] = useState("");
   const [loading, setLoading] = useState(true);
+  const [serviceNeed, setServiceNeed] = useState("vender");
+  const [isServicesModalOpen, setIsServicesModalOpen] = useState(false);
   const mapSectionRef = useRef(null);
 
   useEffect(() => {
@@ -336,15 +338,24 @@ function App() {
     return `https://wa.me/${officeWhatsApp}?text=${encodeURIComponent(message)}`;
   };
 
+  const createServiceWhatsAppLink = () => {
+    const message = `Hola Denise, quiero solicitar tus servicios. Mi necesidad es: ${serviceNeed}.`;
+    return `https://wa.me/${officeWhatsApp}?text=${encodeURIComponent(message)}`;
+  };
+
   return (
     <div className="page-shell">
       <header className="hero" id="inicio">
         <nav className="top-nav">
           <img className="brand-logo" src="/isodc.svg" alt="Logo Denise Catalán" />
           <div className="links">
-            <a href="#propiedades">Propiedades</a>
-            <a href="#mapa">Mapa</a>
-            <a href="#contacto">WhatsApp</a>
+            <button
+              type="button"
+              className="status-pill status-pill--venta nav-service-link"
+              onClick={() => setIsServicesModalOpen(true)}
+            >
+              Solicitar servicios
+            </button>
           </div>
         </nav>
 
@@ -586,6 +597,50 @@ function App() {
         </section>
 
       </main>
+      {isServicesModalOpen ? (
+        <div className="services-modal-backdrop" onClick={() => setIsServicesModalOpen(false)}>
+          <section
+            className="services-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="services-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="services-modal-close"
+              onClick={() => setIsServicesModalOpen(false)}
+              aria-label="Cerrar modal de servicios"
+            >
+              ×
+            </button>
+            <div className="section-title">
+              <p>Carta de presentación</p>
+              <h2 id="services-modal-title">Servicios inmobiliarios para tu próximo paso</h2>
+            </div>
+            <p className="services-intro">
+              Te acompañamos con estrategia comercial, tasación y difusión para que puedas vender,
+              alquilar o invertir con respaldo profesional en San Martín de los Andes y Patagonia.
+            </p>
+            <div className="services-actions">
+              <label htmlFor="service-need">Quiero registrar mi necesidad:</label>
+              <select
+                id="service-need"
+                value={serviceNeed}
+                onChange={(event) => setServiceNeed(event.target.value)}
+              >
+                <option value="vender">Vender</option>
+                <option value="alquilar">Alquilar</option>
+                <option value="invertir">Invertir</option>
+                <option value="otros">Otros</option>
+              </select>
+              <a href={createServiceWhatsAppLink()} target="_blank" rel="noreferrer" className="wa-btn">
+                Registrar necesidad
+              </a>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }
