@@ -78,6 +78,13 @@ body {
   font-weight: 600;
 }
 
+.links .nav-service-link {
+  text-transform: none;
+  letter-spacing: 0.02em;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.94rem;
+}
+
 .links a:hover {
   color: var(--rosa-profundo);
 }
@@ -226,6 +233,39 @@ body {
   background: rgba(255, 250, 244, 0.78);
   backdrop-filter: blur(4px);
   box-shadow: var(--shadow);
+}
+
+.services-card {
+  margin-bottom: 1rem;
+}
+
+.services-intro {
+  margin: 0.2rem 0 1rem;
+  max-width: 760px;
+  color: var(--gris-texto);
+  line-height: 1.45;
+}
+
+.services-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  align-items: center;
+}
+
+.services-actions label {
+  font-weight: 600;
+  color: var(--verde-bosque);
+}
+
+.services-actions select {
+  min-width: 180px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  padding: 0.62rem 0.95rem;
+  background: var(--blanco-calido);
+  font-family: inherit;
+  font-size: 1rem;
 }
 
 .map-section {
