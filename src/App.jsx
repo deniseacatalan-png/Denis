@@ -362,11 +362,6 @@ function App() {
 
         <div className="hero-layout">
           <div className="hero-content">
-            <p className="overline">
-              {loading
-                ? "Cargando archivo KML..."
-                : `${visibleProperties.length} propiedades visibles`}
-            </p>
             <h1>Propiedades reales en San Martin de los Andes, Patagonia.</h1>
             <p>
               Datos leidos desde <strong>PROPIEDADESVENTA.kml</strong> para mostrar ubicacion, precio y descripcion completa.
@@ -374,19 +369,6 @@ function App() {
             <p className="contact-line">
               WhatsApp: <strong>+54 9 2944 68-8613</strong>
             </p>
-            <div className="legend">
-              {["venta", "alquiler_turistico"].map((key) => {
-                const meta = CATEGORY_META[key];
-                return (
-                  <span key={key} className={`legend-pill legend-pill--${key}`}>
-                    {meta.label}
-                  </span>
-                );
-              })}
-            </div>
-            <a className="cta" href="#propiedades">
-              Explorar propiedades
-            </a>
           </div>
 
           <section className="map-section hero-map-section" id="mapa" ref={mapSectionRef}>
@@ -511,31 +493,9 @@ function App() {
       </header>
 
       <main className="content-wrap">
-        <section className="properties services-card" id="servicios">
-          <div className="section-title">
-            <p>Carta de presentación</p>
-            <h2>Servicios inmobiliarios para tu próximo paso</h2>
-          </div>
-          <p className="services-intro">
-            Te acompañamos con estrategia comercial, tasación y difusión para que puedas vender,
-            alquilar o invertir con respaldo profesional en San Martín de los Andes y Patagonia.
-          </p>
-          <div className="services-actions">
-            <p className="services-label">Quiero solicitar el servicio de:</p>
-            <button
-              type="button"
-              className="wa-btn"
-              onClick={() => setIsServiceModalOpen(true)}
-            >
-              Solicitar servicio
-            </button>
-          </div>
-        </section>
-
         <section className="properties" id="propiedades">
           <div className="section-title">
-            <p>Coleccion real</p>
-            <h2>Propiedades desde el KML</h2>
+            <h2>PROPIEDADES</h2>
           </div>
 
           {loading ? (
