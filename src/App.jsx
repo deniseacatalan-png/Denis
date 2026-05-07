@@ -338,7 +338,7 @@ function App() {
   };
 
   const createServiceWhatsAppLink = () => {
-    const message = `Hola Denise, quiero utilizar tus servicios. Mi necesidad es: ${serviceNeed}.`;
+    const message = `Hola Denise, quiero solicitar tus servicios. Mi necesidad es: ${serviceNeed}.`;
     return `https://wa.me/${officeWhatsApp}?text=${encodeURIComponent(message)}`;
   };
 
@@ -349,7 +349,7 @@ function App() {
           <img className="brand-logo" src="/isodc.svg" alt="Logo Denise Catalán" />
           <div className="links">
             <a href="#servicios" className="status-pill status-pill--venta nav-service-link">
-              Utilizar servicios
+              Solicitar servicios
             </a>
           </div>
         </nav>
