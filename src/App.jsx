@@ -622,9 +622,7 @@ function App() {
       {isServiceModalOpen ? (
         <div className="service-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="service-modal-title">
           <div className="service-modal">
-            <h3 id="service-modal-title">Solicitar servicio</h3>
-            <p>Elegí la necesidad y te enviamos directo a WhatsApp.</p>
-            <label htmlFor="service-need" className="services-label">Quiero solicitar el servicio de:</label>
+            <label id="service-modal-title" htmlFor="service-need" className="services-label">Quiero solicitar el servicio de:</label>
             <select
               id="service-need"
               value={serviceNeed}
