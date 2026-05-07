@@ -71,14 +71,15 @@ const CATEGORY_META = {
   }
 };
 
-function slugify(value) {
-  return value
+function slugify(value, maxLength = Number.POSITIVE_INFINITY) {
+  const normalized = value
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 48);
+    .replace(/^-+|-+$/g, "");
+
+  return Number.isFinite(maxLength) ? normalized.slice(0, maxLength) : normalized;
 }
 
 function htmlToText(html) {
@@ -222,7 +223,7 @@ function parseKml(kmlText) {
       }
 
       return {
-        id: `${slugify(name)}-${index + 1}`,
+        id: `${slugify(name, 48)}-${index + 1}`,
         title: name,
         location: extractLocation(plainText, name),
         price: extractPrice(plainText),
@@ -246,6 +247,10 @@ function resolvePropertyImages(property) {
 
   let bestScore = 0;
   let bestImages = [];
+
+  if (PROPERTY_IMAGE_LIBRARY[normalizedTitle]) {
+    return PROPERTY_IMAGE_LIBRARY[normalizedTitle];
+  }
 
   for (const [folderSlug, images] of Object.entries(PROPERTY_IMAGE_LIBRARY)) {
     const folderTokens = folderSlug.split("-").filter((token) => token.length > 1);
