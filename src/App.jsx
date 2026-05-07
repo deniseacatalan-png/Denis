@@ -267,6 +267,7 @@ function App() {
   const [expandedGalleryId, setExpandedGalleryId] = useState("");
   const [loading, setLoading] = useState(true);
   const [serviceNeed, setServiceNeed] = useState("vender");
+  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const mapSectionRef = useRef(null);
 
   useEffect(() => {
@@ -337,9 +338,14 @@ function App() {
     return `https://wa.me/${officeWhatsApp}?text=${encodeURIComponent(message)}`;
   };
 
-  const createServiceWhatsAppLink = () => {
-    const message = `Hola Denise, quiero solicitar tus servicios. Mi necesidad es: ${serviceNeed}.`;
+  const createServiceWhatsAppLink = (need = serviceNeed) => {
+    const message = `Hola Denise, quiero solicitar el servicio de ${need}.`;
     return `https://wa.me/${officeWhatsApp}?text=${encodeURIComponent(message)}`;
+  };
+
+  const handleSelectServiceNeed = (need) => {
+    setServiceNeed(need);
+    setIsServiceModalOpen(true);
   };
 
   return (
@@ -515,20 +521,19 @@ function App() {
             alquilar o invertir con respaldo profesional en San Martín de los Andes y Patagonia.
           </p>
           <div className="services-actions">
-            <label htmlFor="service-need">Quiero registrar mi necesidad:</label>
-            <select
-              id="service-need"
-              value={serviceNeed}
-              onChange={(event) => setServiceNeed(event.target.value)}
-            >
-              <option value="vender">Vender</option>
-              <option value="alquilar">Alquilar</option>
-              <option value="invertir">Invertir</option>
-              <option value="otros">Otros</option>
-            </select>
-            <a href={createServiceWhatsAppLink()} target="_blank" rel="noreferrer" className="wa-btn">
-              Registrar necesidad
-            </a>
+            <p className="services-label">Quiero solicitar el servicio de:</p>
+            <div className="services-quick-actions">
+              {["vender", "alquilar", "invertir", "otros"].map((need) => (
+                <button
+                  key={need}
+                  type="button"
+                  className="map-btn"
+                  onClick={() => handleSelectServiceNeed(need)}
+                >
+                  {need.charAt(0).toUpperCase() + need.slice(1)}
+                </button>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -619,6 +624,30 @@ function App() {
         </section>
 
       </main>
+      {isServiceModalOpen ? (
+        <div className="service-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="service-modal-title">
+          <div className="service-modal">
+            <h3 id="service-modal-title">Confirmar contacto</h3>
+            <p>
+              Te vamos a redirigir a WhatsApp para solicitar el servicio de <strong>{serviceNeed}</strong>.
+            </p>
+            <div className="service-modal-actions">
+              <button type="button" className="map-btn" onClick={() => setIsServiceModalOpen(false)}>
+                Cancelar
+              </button>
+              <a
+                href={createServiceWhatsAppLink(serviceNeed)}
+                target="_blank"
+                rel="noreferrer"
+                className="wa-btn"
+                onClick={() => setIsServiceModalOpen(false)}
+              >
+                Ir a WhatsApp
+              </a>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
