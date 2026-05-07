@@ -495,8 +495,7 @@ function App() {
       <main className="content-wrap">
         <section className="properties" id="propiedades">
           <div className="section-title">
-            <p>Coleccion real</p>
-            <h2>Propiedades desde el KML</h2>
+            <h2>PROPIEDADES</h2>
           </div>
 
           {loading ? (
