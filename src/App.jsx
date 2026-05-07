@@ -493,27 +493,6 @@ function App() {
       </header>
 
       <main className="content-wrap">
-        <section className="properties services-card" id="servicios">
-          <div className="section-title">
-            <p>Carta de presentación</p>
-            <h2>Servicios inmobiliarios para tu próximo paso</h2>
-          </div>
-          <p className="services-intro">
-            Te acompañamos con estrategia comercial, tasación y difusión para que puedas vender,
-            alquilar o invertir con respaldo profesional en San Martín de los Andes y Patagonia.
-          </p>
-          <div className="services-actions">
-            <p className="services-label">Quiero solicitar el servicio de:</p>
-            <button
-              type="button"
-              className="wa-btn"
-              onClick={() => setIsServiceModalOpen(true)}
-            >
-              Solicitar servicio
-            </button>
-          </div>
-        </section>
-
         <section className="properties" id="propiedades">
           <div className="section-title">
             <p>Coleccion real</p>
