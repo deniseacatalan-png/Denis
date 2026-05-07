@@ -362,11 +362,6 @@ function App() {
 
         <div className="hero-layout">
           <div className="hero-content">
-            <p className="overline">
-              {loading
-                ? "Cargando archivo KML..."
-                : `${visibleProperties.length} propiedades visibles`}
-            </p>
             <h1>Propiedades reales en San Martin de los Andes, Patagonia.</h1>
             <p>
               Datos leidos desde <strong>PROPIEDADESVENTA.kml</strong> para mostrar ubicacion, precio y descripcion completa.
@@ -374,19 +369,6 @@ function App() {
             <p className="contact-line">
               WhatsApp: <strong>+54 9 2944 68-8613</strong>
             </p>
-            <div className="legend">
-              {["venta", "alquiler_turistico"].map((key) => {
-                const meta = CATEGORY_META[key];
-                return (
-                  <span key={key} className={`legend-pill legend-pill--${key}`}>
-                    {meta.label}
-                  </span>
-                );
-              })}
-            </div>
-            <a className="cta" href="#propiedades">
-              Explorar propiedades
-            </a>
           </div>
 
           <section className="map-section hero-map-section" id="mapa" ref={mapSectionRef}>
