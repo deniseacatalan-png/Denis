@@ -251,19 +251,16 @@ body {
   align-items: center;
 }
 
-.services-actions label {
+.services-label {
+  margin: 0;
   font-weight: 600;
   color: var(--verde-bosque);
 }
 
-.services-actions select {
-  min-width: 180px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  padding: 0.62rem 0.95rem;
-  background: var(--blanco-calido);
-  font-family: inherit;
-  font-size: 1rem;
+.services-quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
 }
 
 .services-modal-backdrop {

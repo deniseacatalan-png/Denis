@@ -266,7 +266,6 @@ function App() {
   const [selectedId, setSelectedId] = useState("");
   const [expandedGalleryId, setExpandedGalleryId] = useState("");
   const [loading, setLoading] = useState(true);
-  const [serviceNeed, setServiceNeed] = useState("vender");
   const [isServicesModalOpen, setIsServicesModalOpen] = useState(false);
   const mapSectionRef = useRef(null);
 
@@ -335,11 +334,6 @@ function App() {
 
   const createWhatsAppLink = (property) => {
     const message = `Hola Denise, quiero informacion sobre: ${property.title} (${property.price}) en ${property.location}.`;
-    return `https://wa.me/${officeWhatsApp}?text=${encodeURIComponent(message)}`;
-  };
-
-  const createServiceWhatsAppLink = () => {
-    const message = `Hola Denise, quiero solicitar tus servicios. Mi necesidad es: ${serviceNeed}.`;
     return `https://wa.me/${officeWhatsApp}?text=${encodeURIComponent(message)}`;
   };
 
@@ -623,20 +617,22 @@ function App() {
               alquilar o invertir con respaldo profesional en San Martín de los Andes y Patagonia.
             </p>
             <div className="services-actions">
-              <label htmlFor="service-need">Quiero registrar mi necesidad:</label>
-              <select
-                id="service-need"
-                value={serviceNeed}
-                onChange={(event) => setServiceNeed(event.target.value)}
-              >
-                <option value="vender">Vender</option>
-                <option value="alquilar">Alquilar</option>
-                <option value="invertir">Invertir</option>
-                <option value="otros">Otros</option>
-              </select>
-              <a href={createServiceWhatsAppLink()} target="_blank" rel="noreferrer" className="wa-btn">
-                Registrar necesidad
-              </a>
+              <p className="services-label">Quiero solicitar el servicio de:</p>
+              <div className="services-quick-links">
+                {["vender", "alquilar", "invertir", "otros"].map((need) => (
+                  <a
+                    key={need}
+                    href={`https://wa.me/${officeWhatsApp}?text=${encodeURIComponent(
+                      `Hola Denise, quiero solicitar tus servicios. Mi necesidad es: ${need}.`
+                    )}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="wa-btn"
+                  >
+                    {need.charAt(0).toUpperCase() + need.slice(1)}
+                  </a>
+                ))}
+              </div>
             </div>
           </section>
         </div>
