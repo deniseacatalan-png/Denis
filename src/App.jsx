@@ -20,25 +20,21 @@ L.Icon.Default.mergeOptions({
 
 const KML_URL = "/PROPIEDADESVENTA.kml";
 const officeWhatsApp = "5492944688613";
-const PROPERTY_IMAGE_LIBRARY = {
-  "terreno-alihuen-alto": [
-    "/images/TERRENO ALIHUEN ALTO/alihuen.JPG",
-    "/images/TERRENO ALIHUEN ALTO/aa2.jpg",
-    "/images/TERRENO ALIHUEN ALTO/aa3.jpg"
-  ],
-  "has-orillas-de-caleufu": [
-    "/images/HAS ORILLAS DE CALEUFU/DJI_0055.JPG",
-    "/images/HAS ORILLAS DE CALEUFU/DJI_0051.JPG",
-    "/images/HAS ORILLAS DE CALEUFU/DJI_0054.JPG",
-    "/images/HAS ORILLAS DE CALEUFU/DJI_0056.JPG",
-    "/images/HAS ORILLAS DE CALEUFU/DJI_0059.JPG",
-    "/images/HAS ORILLAS DE CALEUFU/DJI_0061.JPG",
-    "/images/HAS ORILLAS DE CALEUFU/DJI_0062.JPG"
-  ]
-};
-const PROPERTY_COVER_IMAGE_LIBRARY = {
-  "has-orillas-de-caleufu": "/images/HAS ORILLAS DE CALEUFU/DJI_0055.JPG"
-};
+const PUBLIC_IMAGE_FILES = import.meta.glob(
+  "../public/images/**/*.{jpg,JPG,jpeg,JPEG,png,PNG,webp,WEBP,avif,AVIF}",
+  { eager: true, import: "default", query: "?url" }
+);
+
+const PROPERTY_IMAGE_LIBRARY = Object.entries(PUBLIC_IMAGE_FILES).reduce((acc, [filePath, fileUrl]) => {
+  const normalizedPath = filePath.replace(/\\/g, "/");
+  const folderName = normalizedPath.split("/").at(-2) || "";
+  const folderSlug = slugify(folderName);
+
+  if (!folderSlug) return acc;
+  if (!acc[folderSlug]) acc[folderSlug] = [];
+  acc[folderSlug].push(fileUrl);
+  return acc;
+}, {});
 
 const EXCLUDED_PROPERTY_PATTERNS = [
   /lote\s+oasis/i,
@@ -243,27 +239,32 @@ function parseKml(kmlText) {
 }
 
 function resolvePropertyImages(property) {
-  const searchableText = `${property.title} ${property.location}`;
-  const normalized = slugify(searchableText);
+  const normalizedTitle = slugify(property.title || "");
+  const normalizedLocation = slugify(property.location || "");
+  const titleTokens = normalizedTitle.split("-").filter((token) => token.length > 1);
+  const locationTokens = normalizedLocation.split("-").filter((token) => token.length > 2);
 
-  const bestMatch = Object.entries(PROPERTY_IMAGE_LIBRARY).find(([folderSlug]) => {
-    const tokens = folderSlug.split("-").filter((token) => token.length > 2);
-    return tokens.every((token) => normalized.includes(token));
-  });
+  let bestScore = 0;
+  let bestImages = [];
 
-  return bestMatch ? bestMatch[1] : [];
+  for (const [folderSlug, images] of Object.entries(PROPERTY_IMAGE_LIBRARY)) {
+    const folderTokens = folderSlug.split("-").filter((token) => token.length > 1);
+    const titleHits = folderTokens.filter((token) => titleTokens.includes(token)).length;
+    const locationHits = folderTokens.filter((token) => locationTokens.includes(token)).length;
+    const score = titleHits * 3 + locationHits;
+
+    const hasStrongTitleMatch = titleHits >= 2 || normalizedTitle.includes(folderSlug);
+
+    if (hasStrongTitleMatch && score > bestScore) {
+      bestScore = score;
+      bestImages = images;
+    }
+  }
+
+  return bestImages;
 }
 
 function resolvePropertyCoverImage(property) {
-  const searchableText = `${property.title} ${property.location}`;
-  const normalized = slugify(searchableText);
-
-  const bestMatch = Object.entries(PROPERTY_COVER_IMAGE_LIBRARY).find(([folderSlug]) => {
-    const tokens = folderSlug.split("-").filter((token) => token.length > 2);
-    return tokens.every((token) => normalized.includes(token));
-  });
-
-  if (bestMatch) return bestMatch[1];
   return property.images?.[0] || "";
 }
 
