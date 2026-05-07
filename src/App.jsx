@@ -40,6 +40,18 @@ const PROPERTY_COVER_IMAGE_LIBRARY = {
   "has-orillas-de-caleufu": "/images/HAS ORILLAS DE CALEUFU/DJI_0055.JPG"
 };
 
+const EXCLUDED_PROPERTY_PATTERNS = [
+  /lote\s+oasis/i,
+  /casa\s+las\s+marias\s+del\s+valle/i,
+  /terreno\s+cipreses/i,
+  /casa\s+miralejos/i
+];
+
+function isExcludedProperty(name, styleColor) {
+  if ((styleColor || "").toLowerCase() === "000000") return true;
+  return EXCLUDED_PROPERTY_PATTERNS.some((pattern) => pattern.test(name || ""));
+}
+
 const CATEGORY_META = {
   venta: {
     label: "En venta",
@@ -206,6 +218,10 @@ function parseKml(kmlText) {
       const plainText = htmlToText(descriptionHtml);
 
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        return null;
+      }
+
+      if (isExcludedProperty(name, styleColor)) {
         return null;
       }
 
