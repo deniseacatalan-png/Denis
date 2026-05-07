@@ -83,8 +83,11 @@ body {
   letter-spacing: 0.02em;
   padding: 0.5rem 0.9rem;
   font-size: 0.94rem;
+ codex/replace-whatsapp-map-properties-with-services-yuhlhx
   border: none;
   cursor: pointer;
+=======
+ main
 }
 
 .links a:hover {
@@ -237,6 +240,13 @@ body {
   box-shadow: var(--shadow);
 }
 
+codex/replace-whatsapp-map-properties-with-services-yuhlhx
+=======
+.services-card {
+  margin-bottom: 1rem;
+}
+
+main
 .services-intro {
   margin: 0.2rem 0 1rem;
   max-width: 760px;
@@ -251,12 +261,17 @@ body {
   align-items: center;
 }
 
+codex/replace-whatsapp-map-properties-with-services-yuhlhx
 .services-label {
   margin: 0;
+
+.services-actions label {
+ main
   font-weight: 600;
   color: var(--verde-bosque);
 }
 
+ codex/replace-whatsapp-map-properties-with-services-yuhlhx
 .services-quick-links {
   display: flex;
   flex-wrap: wrap;
@@ -296,6 +311,15 @@ body {
   font-size: 1.35rem;
   line-height: 1;
   cursor: pointer;
+
+.services-actions select {
+  min-width: 180px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  padding: 0.62rem 0.95rem;
+  background: var(--blanco-calido);
+  font-family: inherit;
+ main
 }
 
 .map-section {

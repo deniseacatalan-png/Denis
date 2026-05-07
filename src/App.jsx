@@ -266,7 +266,10 @@ function App() {
   const [selectedId, setSelectedId] = useState("");
   const [expandedGalleryId, setExpandedGalleryId] = useState("");
   const [loading, setLoading] = useState(true);
+ codex/replace-whatsapp-map-properties-with-services-yuhlhx
   const [isServicesModalOpen, setIsServicesModalOpen] = useState(false);
+  const [serviceNeed, setServiceNeed] = useState("vender");
+main
   const mapSectionRef = useRef(null);
 
   useEffect(() => {
@@ -337,12 +340,18 @@ function App() {
     return `https://wa.me/${officeWhatsApp}?text=${encodeURIComponent(message)}`;
   };
 
+  const createServiceWhatsAppLink = () => {
+    const message = `Hola Denise, quiero solicitar tus servicios. Mi necesidad es: ${serviceNeed}.`;
+    return `https://wa.me/${officeWhatsApp}?text=${encodeURIComponent(message)}`;
+  };
+
   return (
     <div className="page-shell">
       <header className="hero" id="inicio">
         <nav className="top-nav">
           <img className="brand-logo" src="/isodc.svg" alt="Logo Denise Catalán" />
           <div className="links">
+ codex/replace-whatsapp-map-properties-with-services-yuhlhx
             <button
               type="button"
               className="status-pill status-pill--venta nav-service-link"
@@ -350,6 +359,11 @@ function App() {
             >
               Solicitar servicios
             </button>
+
+            <a href="#servicios" className="status-pill status-pill--venta nav-service-link">
+              Solicitar servicios
+            </a>
+main
           </div>
         </nav>
 
@@ -504,6 +518,33 @@ function App() {
       </header>
 
       <main className="content-wrap">
+        <section className="properties services-card" id="servicios">
+          <div className="section-title">
+            <p>Carta de presentación</p>
+            <h2>Servicios inmobiliarios para tu próximo paso</h2>
+          </div>
+          <p className="services-intro">
+            Te acompañamos con estrategia comercial, tasación y difusión para que puedas vender,
+            alquilar o invertir con respaldo profesional en San Martín de los Andes y Patagonia.
+          </p>
+          <div className="services-actions">
+            <label htmlFor="service-need">Quiero registrar mi necesidad:</label>
+            <select
+              id="service-need"
+              value={serviceNeed}
+              onChange={(event) => setServiceNeed(event.target.value)}
+            >
+              <option value="vender">Vender</option>
+              <option value="alquilar">Alquilar</option>
+              <option value="invertir">Invertir</option>
+              <option value="otros">Otros</option>
+            </select>
+            <a href={createServiceWhatsAppLink()} target="_blank" rel="noreferrer" className="wa-btn">
+              Registrar necesidad
+            </a>
+          </div>
+        </section>
+
         <section className="properties" id="propiedades">
           <div className="section-title">
             <p>Coleccion real</p>
