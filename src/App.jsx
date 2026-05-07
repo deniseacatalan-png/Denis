@@ -343,10 +343,6 @@ function App() {
     return `https://wa.me/${officeWhatsApp}?text=${encodeURIComponent(message)}`;
   };
 
-  const handleSelectServiceNeed = (need) => {
-    setServiceNeed(need);
-    setIsServiceModalOpen(true);
-  };
 
   return (
     <div className="page-shell">
@@ -354,9 +350,13 @@ function App() {
         <nav className="top-nav">
           <img className="brand-logo" src="/isodc.svg" alt="Logo Denise Catalán" />
           <div className="links">
-            <a href="#servicios" className="status-pill status-pill--venta nav-service-link">
+            <button
+              type="button"
+              className="status-pill status-pill--venta nav-service-link nav-service-button"
+              onClick={() => setIsServiceModalOpen(true)}
+            >
               Solicitar servicios
-            </a>
+            </button>
           </div>
         </nav>
 
@@ -522,18 +522,13 @@ function App() {
           </p>
           <div className="services-actions">
             <p className="services-label">Quiero solicitar el servicio de:</p>
-            <div className="services-quick-actions">
-              {["vender", "alquilar", "invertir", "otros"].map((need) => (
-                <button
-                  key={need}
-                  type="button"
-                  className="map-btn"
-                  onClick={() => handleSelectServiceNeed(need)}
-                >
-                  {need.charAt(0).toUpperCase() + need.slice(1)}
-                </button>
-              ))}
-            </div>
+            <button
+              type="button"
+              className="wa-btn"
+              onClick={() => setIsServiceModalOpen(true)}
+            >
+              Solicitar servicio
+            </button>
           </div>
         </section>
 
@@ -627,13 +622,22 @@ function App() {
       {isServiceModalOpen ? (
         <div className="service-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="service-modal-title">
           <div className="service-modal">
-            <h3 id="service-modal-title">Confirmar contacto</h3>
-            <p>
-              Te vamos a redirigir a WhatsApp para solicitar el servicio de <strong>{serviceNeed}</strong>.
-            </p>
+            <h3 id="service-modal-title">Solicitar servicio</h3>
+            <p>Elegí la necesidad y te enviamos directo a WhatsApp.</p>
+            <label htmlFor="service-need" className="services-label">Quiero solicitar el servicio de:</label>
+            <select
+              id="service-need"
+              value={serviceNeed}
+              onChange={(event) => setServiceNeed(event.target.value)}
+            >
+              <option value="vender">Vender</option>
+              <option value="alquilar">Alquilar</option>
+              <option value="invertir">Invertir</option>
+              <option value="otros">Otros</option>
+            </select>
             <div className="service-modal-actions">
               <button type="button" className="map-btn" onClick={() => setIsServiceModalOpen(false)}>
-                Cancelar
+                Cerrar
               </button>
               <a
                 href={createServiceWhatsAppLink(serviceNeed)}

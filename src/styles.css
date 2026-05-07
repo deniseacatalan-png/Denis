@@ -85,6 +85,11 @@ body {
   font-size: 0.94rem;
 }
 
+.nav-service-button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
 .links a:hover {
   color: var(--rosa-profundo);
 }
@@ -756,4 +761,15 @@ body {
   display: flex;
   gap: 0.65rem;
   justify-content: flex-end;
+}
+
+.service-modal select {
+  width: 100%;
+  margin-top: 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  padding: 0.62rem 0.95rem;
+  background: var(--blanco-calido);
+  font-family: inherit;
+  font-size: 1rem;
 }
