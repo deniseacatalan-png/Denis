@@ -187,6 +187,12 @@ function formatCoords(coords) {
   return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 }
 
+function createGoogleEarthLink(property) {
+  if (!property?.coords) return "#";
+  const [lat, lng] = property.coords;
+  return `https://earth.google.com/web/search/${lat},${lng}`;
+}
+
 function parseKml(kmlText) {
   const styleColorMap = {};
   for (const match of kmlText.matchAll(
@@ -499,14 +505,26 @@ function App() {
                   <p className="gallery-empty">Esta propiedad todavia no tiene fotos cargadas.</p>
                 )}
                 {selectedProperty ? (
-                  <a
-                    href={createWhatsAppLink(selectedProperty)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="wa-btn"
-                  >
-                    Hablar por WhatsApp
-                  </a>
+                  <>
+                    {selectedProperty.category === "venta" ? (
+                      <a
+                        href={createGoogleEarthLink(selectedProperty)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="map-btn"
+                      >
+                        Ver en Google Earth
+                      </a>
+                    ) : null}
+                    <a
+                      href={createWhatsAppLink(selectedProperty)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="wa-btn"
+                    >
+                      Hablar por WhatsApp
+                    </a>
+                  </>
                 ) : null}
               </aside>
             </div>
@@ -584,6 +602,16 @@ function App() {
                       >
                         Ver en mapa
                       </button>
+                      {property.category === "venta" ? (
+                        <a
+                          href={createGoogleEarthLink(property)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="map-btn"
+                        >
+                          Google Earth
+                        </a>
+                      ) : null}
                       <a
                         href={createWhatsAppLink(property)}
                         target="_blank"
