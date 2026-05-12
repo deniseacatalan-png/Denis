@@ -205,7 +205,8 @@ function parseKml(kmlText) {
   return placemarks
     .map((placemark, index) => {
       const name = placemark.querySelector("name")?.textContent?.trim() || `Propiedad ${index + 1}`;
-      const descriptionHtml = placemark.querySelector("description")?.textContent?.trim() || "";
+      const descriptionOriginal = placemark.querySelector("description")?.textContent || "";
+      const descriptionHtml = descriptionOriginal.trim();
       const coordinatesText = placemark.querySelector("coordinates")?.textContent?.trim() || "";
       const styleUrl = placemark.querySelector("styleUrl")?.textContent?.trim() || "";
       const styleColor = styleColorMap[styleUrl.replace(/^#/, "")] || "";
@@ -232,6 +233,7 @@ function parseKml(kmlText) {
         styleColor,
         coords: [lat, lng],
         descriptionHtml,
+        descriptionOriginal,
         summary: truncateText(plainText, 210),
         rawDescription: plainText
       };
@@ -483,7 +485,7 @@ function App() {
                   <div
                     className="rich-text"
                     dangerouslySetInnerHTML={{
-                      __html: selectedProperty?.descriptionHtml || "<p>Sin descripcion disponible.</p>"
+                      __html: selectedProperty?.descriptionOriginal?.trim() || "<p>Sin descripcion disponible.</p>"
                     }}
                   />
                 </details>
