@@ -196,12 +196,6 @@ function formatCoords(coords) {
   return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 }
 
-function createGoogleEarthLink(property) {
-  if (!property?.coords) return "#";
-  const [lat, lng] = property.coords;
-  return `https://earth.google.com/web/search/${lat},${lng}`;
-}
-
 function parseKml(kmlText) {
   const styleColorMap = {};
   for (const match of kmlText.matchAll(
@@ -303,6 +297,7 @@ function App() {
   const [properties, setProperties] = useState([]);
   const [selectedId, setSelectedId] = useState("");
   const [expandedGalleryId, setExpandedGalleryId] = useState("");
+  const [isPropertyModalOpen, setIsPropertyModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [serviceNeed, setServiceNeed] = useState("vender");
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
@@ -494,15 +489,9 @@ function App() {
                     <strong>{selectedProperty ? formatCoords(selectedProperty.coords) : "-"}</strong>
                   </div>
                 </div>
-                <details className="tech-sheet">
-                  <summary className="map-btn">Ver ficha tecnica</summary>
-                  <div
-                    className="rich-text"
-                    dangerouslySetInnerHTML={{
-                      __html: selectedProperty?.descriptionHtml || "<p>Sin descripcion disponible.</p>"
-                    }}
-                  />
-                </details>
+                <button type="button" className="map-btn" onClick={() => setIsPropertyModalOpen(true)}>
+                  Ver ficha tecnica
+                </button>
                 {selectedProperty?.images?.length ? (
                   <div className="property-gallery">
                     {selectedProperty.images.map((imageUrl) => (
@@ -516,16 +505,6 @@ function App() {
                 )}
                 {selectedProperty ? (
                   <>
-                    {selectedProperty.category === "venta" ? (
-                      <a
-                        href={createGoogleEarthLink(selectedProperty)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="map-btn"
-                      >
-                        Ver en Google Earth
-                      </a>
-                    ) : null}
                     <a
                       href={createWhatsAppLink(selectedProperty)}
                       target="_blank"
@@ -612,16 +591,12 @@ function App() {
                       >
                         Ver en mapa
                       </button>
-                      {property.category === "venta" ? (
-                        <a
-                          href={createGoogleEarthLink(property)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="map-btn"
-                        >
-                          Google Earth
-                        </a>
-                      ) : null}
+                      <button type="button" className="map-btn" onClick={() => {
+                        setSelectedId(property.id);
+                        setIsPropertyModalOpen(true);
+                      }}>
+                        Ver ficha tecnica
+                      </button>
                       <a
                         href={createWhatsAppLink(property)}
                         target="_blank"
@@ -666,6 +641,40 @@ function App() {
               >
                 Ir a WhatsApp
               </a>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {isPropertyModalOpen ? (
+        <div
+          className="service-modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="property-modal-title"
+        >
+          <div className="service-modal">
+            <h3 id="property-modal-title">{selectedProperty?.coverTitle || "Ficha de propiedad"}</h3>
+            <div
+              className="rich-text"
+              dangerouslySetInnerHTML={{
+                __html: selectedProperty?.descriptionHtml || "<p>Sin descripcion disponible.</p>"
+              }}
+            />
+            <div className="service-modal-actions">
+              <button type="button" className="map-btn" onClick={() => setIsPropertyModalOpen(false)}>
+                Cerrar
+              </button>
+              {selectedProperty ? (
+                <a
+                  href={createWhatsAppLink(selectedProperty)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="wa-btn"
+                  onClick={() => setIsPropertyModalOpen(false)}
+                >
+                  Consultar por WhatsApp
+                </a>
+              ) : null}
             </div>
           </div>
         </div>
