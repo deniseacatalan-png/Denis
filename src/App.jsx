@@ -105,6 +105,8 @@ function extractPrice(text) {
       .trim();
 
   const pricePatterns = [
+    /(?:valor|precio)\s*(?:de\s+venta)?\s*[:\-]\s*((?:U\$D|USD|U\$S)\s*[0-9][0-9.,]*(?:\s*(?:mil|millones?))?)/i,
+    /(?:valor|precio)\s*(?:de\s+venta)?\s+((?:U\$D|USD|U\$S)\s*[0-9][0-9.,]*(?:\s*(?:mil|millones?))?)/i,
     /(?:U\$D|USD|U\$S)\s*[0-9][0-9.,]*(?:\s*(?:mil|millones?))?/i,
     /valor[:\s]*((?:U\$D|USD|U\$S)\s*[0-9][0-9.,]*(?:\s*(?:mil|millones?))?)/i
   ];
@@ -121,8 +123,15 @@ function extractPrice(text) {
 }
 
 function extractArea(text) {
+  const sectionMatch = text.match(
+    /(?:superficie|sup\.?|terreno|lote|frente)\s*[:\-]\s*([0-9][0-9.,]*\s?(?:m²|m2|ha|hect[aá]reas?))/i
+  );
+  if (sectionMatch?.[1]) {
+    return sectionMatch[1].replace(/\s+/g, " ").trim();
+  }
+
   const patterns = [
-    /\b[0-9][0-9.,]*\s?(?:m²|m2)\b(?:\s*cubiertos?)?/i,
+    /\b[0-9][0-9.,]*\s?(?:m²|m2)\b(?:\s*(?:cubiertos?|totales?|de\s+terreno))?/i,
     /\b[0-9][0-9.,]*\s?ha\b/i,
     /\b[0-9][0-9.,]*\s?hect[aá]reas?\b/i
   ];
@@ -231,6 +240,7 @@ function parseKml(kmlText) {
       return {
         id: `${slugify(name, 48)}-${index + 1}`,
         title: name,
+        coverTitle: name,
         location: extractLocation(plainText, name),
         price: extractPrice(plainText),
         area: extractArea(plainText),
@@ -464,7 +474,7 @@ function App() {
                     <h3>{selectedProperty.title}</h3>
                   </div>
                 ) : (
-                  <h3>{selectedProperty?.title || "Selecciona una propiedad"}</h3>
+                    <h3>{selectedProperty?.coverTitle || "Selecciona una propiedad"}</h3>
                 )}
                 <p>{selectedProperty?.location}</p>
                 <p className={`status-pill status-pill--${selectedProperty?.category || "venta"}`}>
@@ -566,7 +576,7 @@ function App() {
                     <p className={`status-pill status-pill--${property.category}`}>
                       {CATEGORY_META[property.category]?.label || "En venta"}
                     </p>
-                    <h3>{property.title}</h3>
+                    <h3>{property.coverTitle}</h3>
                     <p className="cover-location">{property.location}</p>
                   </button>
 
