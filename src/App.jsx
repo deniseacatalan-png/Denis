@@ -89,12 +89,28 @@ function htmlToText(html) {
   return text.replace(/\s+/g, " ").trim();
 }
 
+function extractLabeledField(text, labels = []) {
+  if (!labels.length) return "";
+  const escapedLabels = labels.map((label) => label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const pattern = new RegExp(
+    `(?:${escapedLabels.join("|")})\\s*:\\s*(.*?)(?=\\s*(?:[A-ZÁÉÍÓÚÑ][\\wÁÉÍÓÚÑáéíóúñ ]{2,20}\\s*:|$))`,
+    "i"
+  );
+  const match = text.match(pattern);
+  return match?.[1]?.replace(/\s+/g, " ").trim() || "";
+}
+
 function truncateText(text, maxLength = 180) {
   if (text.length <= maxLength) return text;
   return `${text.slice(0, maxLength - 1).trim()}...`;
 }
 
 function extractPrice(text) {
+  const labeledPrice = extractLabeledField(text, ["Valor", "Precio"]);
+  if (labeledPrice) {
+    return labeledPrice.replace(/\s+/g, " ").trim();
+  }
+
   const normalizeCurrency = (value) =>
     value
       .replace(/U\$S/gi, "USD")
@@ -121,6 +137,11 @@ function extractPrice(text) {
 }
 
 function extractArea(text) {
+  const labeledArea = extractLabeledField(text, ["Superficie", "Sup", "Terreno", "Lote"]);
+  if (labeledArea) {
+    return labeledArea.replace(/\s+/g, " ").trim();
+  }
+
   const patterns = [
     /\b[0-9][0-9.,]*\s?(?:m²|m2)\b(?:\s*cubiertos?)?/i,
     /\b[0-9][0-9.,]*\s?ha\b/i,
@@ -136,12 +157,8 @@ function extractArea(text) {
 }
 
 function extractLocation(text, title) {
-  const locationMatch = text.match(
-    /Ubicaci[oó]n:\s*(.*?)(?=\s*(?:Superficie|Servicios|Caracter[ií]sticas|Valor|Frente|Distribuci[oó]n|Acceso|Amenities|Usos|FOS|FOT|Opcion|Opción|Capacidad|Terreno|Lote|Casa|Departamento|$))/i
-  );
-  if (locationMatch) {
-    return locationMatch[1].replace(/\s+/g, " ").trim();
-  }
+  const labeledLocation = extractLabeledField(text, ["Ubicación", "Ubicacion", "Localización", "Localizacion"]);
+  if (labeledLocation) return labeledLocation;
 
   if (/miralejos/i.test(title)) return "Estancia Miralejos, San Martin de los Andes";
   if (/kaleuche/i.test(title)) return "Kaleuche, San Martin de los Andes";
@@ -273,6 +290,7 @@ function parseKml(kmlText) {
         descriptionHtml,
         summary: truncateText(plainText, 210),
         rawDescription: plainText,
+        technicalSheetDescription: plainText,
         ...contextFields
       };
     })
@@ -630,6 +648,7 @@ function App() {
                     <p className="cover-location">
                       {property.naturalContextLabel}: {property.naturalContext}
                     </p>
+                    <p className="cover-location">{property.summary}</p>
                     {property.images.length > 1 && expandedGalleryId === property.id ? (
                       <div className="property-gallery property-gallery--card">
                         {property.images.slice(1).map((imageUrl) => (
