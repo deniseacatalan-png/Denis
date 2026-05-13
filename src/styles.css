@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap");
 
 :root {
   --rosa-nude: #d9a8ad;
@@ -772,4 +773,177 @@ body {
   background: var(--blanco-calido);
   font-family: inherit;
   font-size: 1rem;
+}
+
+/* --- Premium boutique theme override --- */
+:root {
+  --bg-rose: #F05DCE;
+  --bg-rose-mid: #E548B8;
+  --bg-rose-deep: #C93B8F;
+  --bg-black: #111111;
+  --gold: #C6A769;
+  --chrome: #ddd9e8;
+  --text-main: #f6f3fa;
+  --text-soft: #e5ddea;
+  --glass: rgba(255, 255, 255, 0.16);
+  --glass-strong: rgba(255, 255, 255, 0.2);
+  --glass-border: rgba(255, 255, 255, 0.34);
+  --rose-border: rgba(240, 93, 206, 0.38);
+}
+
+body {
+  font-family: "Manrope", "Cormorant Garamond", serif;
+  color: var(--text-main);
+  background:
+    radial-gradient(circle at 8% 2%, rgba(240, 93, 206, 0.32), transparent 36%),
+    radial-gradient(circle at 92% 10%, rgba(198, 167, 105, 0.2), transparent 34%),
+    linear-gradient(154deg, #f7d3ec 0%, #e2aed4 20%, #c96eb0 42%, #3a2334 70%, #111111 100%);
+}
+
+.hero {
+  background:
+    linear-gradient(132deg, rgba(240, 93, 206, 0.24) 0%, rgba(20, 20, 24, 0.48) 62%, rgba(17, 17, 17, 0.7) 100%),
+    url('/images/HUILQUIL CASONA DE MONTAÑA/DJI_0408.JPG') center/cover no-repeat;
+  border-bottom: 1px solid rgba(198, 167, 105, 0.44);
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(17, 17, 17, 0.34), rgba(17, 17, 17, 0.52));
+  pointer-events: none;
+}
+
+.hero, .page-shell { position: relative; }
+.hero > * { position: relative; z-index: 1; }
+
+.links a, .services-label, .section-title p { color: var(--chrome); }
+.links a:hover { color: var(--gold); }
+
+.overline, .legend-pill, .chip {
+  background: linear-gradient(135deg, rgba(240, 93, 206, 0.16), rgba(198, 167, 105, 0.16));
+  color: #ffeec9;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.hero h1::before {
+  color: #fff;
+  letter-spacing: 0.015em;
+  text-shadow: 0 10px 28px rgba(0, 0, 0, 0.34);
+}
+
+.hero-content > p:not(.overline):not(.contact-line)::before {
+  content: "Invertí en naturaleza.";
+  color: #ffe8f8;
+}
+
+.contact-line::before,
+.contact-line::after { color: #eee4f0; }
+
+.properties,
+.map-section,
+.service-modal,
+.property-card,
+.map-highlight {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.08));
+  border: 1px solid transparent;
+  border-image: linear-gradient(130deg, rgba(240, 93, 206, 0.42), rgba(198, 167, 105, 0.38), rgba(255, 255, 255, 0.42)) 1;
+  backdrop-filter: blur(16px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 14px 34px rgba(19, 12, 18, 0.24);
+}
+
+.property-card:hover,
+.property-card.active {
+  transform: translateY(-4px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 20px 42px rgba(21, 11, 20, 0.34);
+}
+
+.property-cover,
+.details-cover { background-blend-mode: soft-light; }
+
+.property-cover::after,
+.details-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.05), rgba(17,17,17,0.55));
+  pointer-events: none;
+}
+
+.property-cover > *,
+.details-cover > * { position: relative; z-index: 1; }
+
+.price,
+.section-title h2,
+.rich-text h3,
+.service-modal h3 { color: #fff; }
+
+.summary,
+.meta,
+.services-intro,
+.rich-text,
+.service-modal p,
+.gallery-empty { color: var(--text-soft); }
+
+.cover-metrics div,
+.detail-stats div {
+  background: linear-gradient(145deg, rgba(255,255,255,0.22), rgba(255,255,255,0.1));
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.34);
+}
+
+.map-btn,
+.wa-btn,
+.cta,
+.nav-service-button {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.48);
+  color: #fff;
+  background: linear-gradient(128deg, rgba(240, 93, 206, 0.55), rgba(201, 59, 143, 0.52), rgba(17, 17, 17, 0.55));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.34), 0 10px 24px rgba(26, 12, 24, 0.24);
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease, filter .25s ease;
+}
+
+.map-btn::before,
+.wa-btn::before,
+.cta::before,
+.nav-service-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -130%;
+  width: 62%;
+  height: 100%;
+  transform: skewX(-24deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.62), transparent);
+  transition: left .5s ease;
+}
+
+.map-btn:hover::before,
+.wa-btn:hover::before,
+.cta:hover::before,
+.nav-service-button:hover::before { left: 150%; }
+
+.map-btn:hover,
+.wa-btn:hover,
+.cta:hover,
+.nav-service-button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(198, 167, 105, 0.85);
+  filter: brightness(1.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.46),
+    0 14px 28px rgba(31, 13, 27, 0.34),
+    0 0 0 1px rgba(240, 93, 206, 0.28);
+}
+
+.service-modal-backdrop {
+  background: radial-gradient(circle, rgba(17,17,17,0.46), rgba(17,17,17,0.74));
 }
