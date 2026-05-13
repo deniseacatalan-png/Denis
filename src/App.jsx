@@ -222,13 +222,20 @@ function parseKml(kmlText) {
         return null;
       }
 
+      const inferredCategory = buildCategory(plainText, styleColor);
+      const isHuilquilTouristic = /huilquil\s+casona?\s+de\s+montaña/i.test(name);
+
       return {
         id: `${slugify(name, 48)}-${index + 1}`,
         title: name,
         location: extractLocation(plainText, name),
         price: extractPrice(plainText),
         area: extractArea(plainText),
-        category: buildCategory(plainText, styleColor),
+        category: isHuilquilTouristic
+          ? "alquiler_turistico"
+          : inferredCategory === "alquiler_turistico"
+            ? "venta"
+            : inferredCategory,
         styleColor,
         coords: [lat, lng],
         descriptionHtml,
