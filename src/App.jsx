@@ -150,6 +150,37 @@ function extractLocation(text, title) {
   return "San Martin de los Andes, Neuquen";
 }
 
+function extractContextFields(text) {
+  const fieldPatterns = [
+    {
+      key: "territorialReferences",
+      label: "Referencias territoriales",
+      pattern:
+        /(?:Referencias?\s+territoriales?|Entorno|Referencias?|Contexto)\s*:\s*(.*?)(?=\s*(?:Ubicaci[oó]n|Vistas?|Paisaje|Contexto natural|Servicios|Caracter[ií]sticas|Valor|Superficie|$))/i
+    },
+    {
+      key: "naturalViews",
+      label: "Vistas",
+      pattern:
+        /(?:Vistas?|Visuales)\s*:\s*(.*?)(?=\s*(?:Contexto natural|Referencias?|Ubicaci[oó]n|Servicios|Caracter[ií]sticas|Valor|Superficie|$))/i
+    },
+    {
+      key: "naturalContext",
+      label: "Contexto natural",
+      pattern:
+        /(?:Contexto natural|Paisaje|Entorno natural)\s*:\s*(.*?)(?=\s*(?:Referencias?|Vistas?|Ubicaci[oó]n|Servicios|Caracter[ií]sticas|Valor|Superficie|$))/i
+    }
+  ];
+
+  return fieldPatterns.reduce((acc, field) => {
+    const match = text.match(field.pattern);
+    const value = match?.[1]?.replace(/\s+/g, " ").trim();
+    acc[field.key] = value || "A confirmar en Google Earth";
+    acc[`${field.key}Label`] = field.label;
+    return acc;
+  }, {});
+}
+
 function buildCategory(text, styleColor) {
   if (styleColor === "ef5350") {
     return "alquiler_turistico";
@@ -213,6 +244,7 @@ function parseKml(kmlText) {
       const lat = Number.parseFloat(latText);
       const lng = Number.parseFloat(lngText);
       const plainText = htmlToText(descriptionHtml);
+      const contextFields = extractContextFields(plainText);
 
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
         return null;
@@ -240,7 +272,8 @@ function parseKml(kmlText) {
         coords: [lat, lng],
         descriptionHtml,
         summary: truncateText(plainText, 210),
-        rawDescription: plainText
+        rawDescription: plainText,
+        ...contextFields
       };
     })
     .filter(Boolean);
@@ -485,6 +518,20 @@ function App() {
                     <strong>{selectedProperty ? formatCoords(selectedProperty.coords) : "-"}</strong>
                   </div>
                 </div>
+                <div className="detail-stats">
+                  <div>
+                    <span>{selectedProperty?.territorialReferencesLabel || "Referencias territoriales"}</span>
+                    <strong>{selectedProperty?.territorialReferences}</strong>
+                  </div>
+                  <div>
+                    <span>{selectedProperty?.naturalViewsLabel || "Vistas"}</span>
+                    <strong>{selectedProperty?.naturalViews}</strong>
+                  </div>
+                  <div>
+                    <span>{selectedProperty?.naturalContextLabel || "Contexto natural"}</span>
+                    <strong>{selectedProperty?.naturalContext}</strong>
+                  </div>
+                </div>
                 <details className="tech-sheet">
                   <summary className="map-btn">Ver ficha tecnica</summary>
                   <div
@@ -574,6 +621,15 @@ function App() {
                         <strong>{formatCoords(property.coords)}</strong>
                       </div>
                     </div>
+                    <p className="cover-location">
+                      {property.territorialReferencesLabel}: {property.territorialReferences}
+                    </p>
+                    <p className="cover-location">
+                      {property.naturalViewsLabel}: {property.naturalViews}
+                    </p>
+                    <p className="cover-location">
+                      {property.naturalContextLabel}: {property.naturalContext}
+                    </p>
                     {property.images.length > 1 && expandedGalleryId === property.id ? (
                       <div className="property-gallery property-gallery--card">
                         {property.images.slice(1).map((imageUrl) => (
