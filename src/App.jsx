@@ -376,9 +376,23 @@ function App() {
   return (
     <div className="page-shell">
       <header className="hero" id="inicio">
-        <nav className="top-nav">
-          <img className="brand-logo" src="/isodc.svg" alt="Logo Denise Catalán" />
-          <div className="links">
+        <nav className="top-nav" aria-label="Cabecera principal">
+          <div className="brand-block">
+            <div className="brand-identity">
+              <img className="brand-logo" src="/isodc.svg" alt="Logo Denise Catalán" />
+              <h1>Denise Catalán Bienes Raíces</h1>
+            </div>
+            <p className="brand-slogan">Invertí en naturaleza.</p>
+          </div>
+
+          <div className="header-utility">
+            <a className="geo-reference" href="#mapa" aria-label="Ir al mapa de ubicaciones">
+              <span className="geo-reference-icon" aria-hidden="true">⌖</span>
+              <span>
+                <strong>Geolocalización</strong>
+                <small>San Martín de los Andes · Patagonia</small>
+              </span>
+            </a>
             <button
               type="button"
               className="status-pill status-pill--venta nav-service-link nav-service-button"
@@ -390,15 +404,7 @@ function App() {
         </nav>
 
         <div className="hero-layout">
-          <div className="hero-content">
-            <h1>Propiedades reales en San Martin de los Andes, Patagonia.</h1>
-            <p>
-              Datos leidos desde <strong>PROPIEDADESVENTA.kml</strong> para mostrar ubicacion, precio y descripcion completa.
-            </p>
-            <p className="contact-line">
-              WhatsApp: <strong>+54 9 2944 68-8613</strong>
-            </p>
-          </div>
+          <div className="hero-content" aria-hidden="true" />
 
           <section className="map-section hero-map-section" id="mapa" ref={mapSectionRef}>
             <div className="section-title map-section-header">
