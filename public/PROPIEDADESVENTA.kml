@@ -366,8 +366,8 @@ zona residencial de alta demanda, con entorno natural y &lt;span&gt;&amp;nbsp;&a
 		</Point>
 	</Placemark>
 <Placemark id="099130585137BE3FB633">
-		<name>TERRENO ALIHUEN ALTO</name>
-		<description>&lt;h3&gt;&lt;b&gt;TERRENO ALIHUEN ALTO&lt;/b&gt;&lt;/h3&gt;&lt;p&gt;&lt;b&gt;Ubicación:&lt;/b&gt; Alihuén Alto, San Martín de los Andes.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Superficie:&lt;/b&gt; 1.700 m².&lt;/p&gt;&lt;p&gt;&lt;b&gt;Servicios:&lt;/b&gt; Todos los servicios disponibles en la zona.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Características:&lt;/b&gt; Muy buenas vistas, ideal para proyecto de montaña (pendiente pronunciada).&lt;/p&gt;&lt;p&gt;&lt;b&gt;Valor:&lt;/b&gt; U$D 45.000&lt;/p&gt;</description>
+		<name>LOTE ALIHUEN ALTO</name>
+		<description>&lt;h3&gt;&lt;b&gt;LOTE ALIHUEN ALTO&lt;/b&gt;&lt;/h3&gt;&lt;p&gt;&lt;b&gt;Ubicación:&lt;/b&gt; Alihuén Alto, San Martín de los Andes.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Superficie:&lt;/b&gt; 1.700 m².&lt;/p&gt;&lt;p&gt;&lt;b&gt;Servicios:&lt;/b&gt; Todos los servicios disponibles en la zona.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Características:&lt;/b&gt; Muy buenas vistas, ideal para proyecto de montaña (pendiente pronunciada).&lt;/p&gt;&lt;p&gt;&lt;b&gt;Valor:&lt;/b&gt; U$D 45.000&lt;/p&gt;</description>
 		<styleUrl>#__managed_style_093D50190F3EF20E6B84</styleUrl>
 		<Point>
 			<extrude>1</extrude>
@@ -375,8 +375,8 @@ zona residencial de alta demanda, con entorno natural y &lt;span&gt;&amp;nbsp;&a
 		</Point>
 	</Placemark>
 <Placemark id="0BE59C84B238918C2DA6">
-		<name>LOTE G. MASANA</name>
-		<description>&lt;h3&gt;&lt;b&gt;LOTE G. MASANA&lt;/b&gt;&lt;/h3&gt;&lt;p&gt;&lt;b&gt;Ubicación:&lt;/b&gt; Sector Kaleuche, San Martín de los Andes.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Superficie:&lt;/b&gt; 1.135,69 m².&lt;/p&gt;&lt;p&gt;&lt;b&gt;Servicios:&lt;/b&gt; Luz y gas de red.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Características:&lt;/b&gt; Excelente orientación y visuales a Chapelco y cordillera.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Valor:&lt;/b&gt; U$D 45.000&lt;/p&gt;</description>
+		<name>LOTE KALEUCHE MEDIO</name>
+		<description>&lt;h3&gt;&lt;b&gt;LOTE KALEUCHE MEDIO&lt;/b&gt;&lt;/h3&gt;&lt;p&gt;&lt;b&gt;Ubicación:&lt;/b&gt; Sector Kaleuche, San Martín de los Andes.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Superficie:&lt;/b&gt; 1.135,69 m².&lt;/p&gt;&lt;p&gt;&lt;b&gt;Servicios:&lt;/b&gt; Luz y gas de red.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Características:&lt;/b&gt; Excelente orientación y visuales a Chapelco y cordillera.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Valor:&lt;/b&gt; U$D 45.000&lt;/p&gt;</description>
 		<LookAt>
 			<longitude>-71.31561222293286</longitude>
 			<latitude>-40.10824026727941</latitude>
@@ -411,8 +411,8 @@ zona residencial de alta demanda, con entorno natural y &lt;span&gt;&amp;nbsp;&a
 		</Point>
 	</Placemark>
 <Placemark id="08EC67BAD7396ED8582C">
-		<name>LOTE j. CALDERON</name>
-		<description>&lt;h3&gt;&lt;b&gt;LOTE j. CALDERON&lt;/b&gt;&lt;/h3&gt;&lt;p&gt;&lt;b&gt;Ubicación:&lt;/b&gt; José Calderón esquina, frente al Arroyo Pocahullo.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Superficie:&lt;/b&gt; 371,80 m².&lt;/p&gt;&lt;p&gt;&lt;b&gt;Servicios:&lt;/b&gt; Servicios urbanos completos.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Características:&lt;/b&gt; Lote estratégico por ubicación y potencial comercial/residencial.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Valor:&lt;/b&gt; U$D 150.000&lt;/p&gt;</description>
+		<name>LOTE ZONA CENTRO</name>
+		<description>&lt;h3&gt;&lt;b&gt;LOTE ZONA CENTRO&lt;/b&gt;&lt;/h3&gt;&lt;p&gt;&lt;b&gt;Ubicación:&lt;/b&gt; José Calderón esquina, frente al Arroyo Pocahullo.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Superficie:&lt;/b&gt; 371,80 m².&lt;/p&gt;&lt;p&gt;&lt;b&gt;Servicios:&lt;/b&gt; Servicios urbanos completos.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Características:&lt;/b&gt; Lote estratégico por ubicación y potencial comercial/residencial.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Valor:&lt;/b&gt; U$D 150.000&lt;/p&gt;</description>
 		<LookAt>
 			<longitude>-71.34908096965835</longitude>
 			<latitude>-40.15188819337922</latitude>
@@ -429,8 +429,8 @@ zona residencial de alta demanda, con entorno natural y &lt;span&gt;&amp;nbsp;&a
 		</Point>
 	</Placemark>
 <Placemark id="080F9D724439870E2EBB">
-		<name>TERRENO MIRALEJOS</name>
-		<description>&lt;h3&gt;&lt;b&gt;TERRENO MIRALEJOS&lt;/b&gt;&lt;/h3&gt;&lt;p&gt;&lt;b&gt;Ubicación:&lt;/b&gt; Estancia Miralejos, San Martín de los Andes.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Superficie:&lt;/b&gt; 2.520 m².&lt;/p&gt;&lt;p&gt;&lt;b&gt;Servicios:&lt;/b&gt; Electricidad, agua y acceso interno consolidado.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Características:&lt;/b&gt; Lote amplio con privacidad, entorno natural y gran potencial de construcción.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Valor:&lt;/b&gt; U$D 130.000&lt;/p&gt;</description>
+		<name>LOTE 102, ESTANCIA MIRALEJOS CLUB DE CAMPO</name>
+		<description>&lt;h3&gt;&lt;b&gt;LOTE 102, ESTANCIA MIRALEJOS CLUB DE CAMPO&lt;/b&gt;&lt;/h3&gt;&lt;p&gt;&lt;b&gt;Ubicación:&lt;/b&gt; Estancia Miralejos, San Martín de los Andes.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Superficie:&lt;/b&gt; 2.520 m².&lt;/p&gt;&lt;p&gt;&lt;b&gt;Servicios:&lt;/b&gt; Electricidad, agua y acceso interno consolidado.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Características:&lt;/b&gt; Lote amplio con privacidad, entorno natural y gran potencial de construcción.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Valor:&lt;/b&gt; U$D 130.000&lt;/p&gt;</description>
 		<LookAt>
 			<longitude>-71.27766425426158</longitude>
 			<latitude>-40.17011320889445</latitude>
@@ -447,8 +447,8 @@ zona residencial de alta demanda, con entorno natural y &lt;span&gt;&amp;nbsp;&a
 		</Point>
 	</Placemark>
 <Placemark id="039AC08FFF3B2D9D17D7">
-		<name>uf 42 E. MIRALEJOS</name>
-		<description>&lt;h3&gt;&lt;b&gt;uf 42 E. MIRALEJOS&lt;/b&gt;&lt;/h3&gt;&lt;p&gt;&lt;b&gt;Ubicación:&lt;/b&gt; Estancia Miralejos, San Martín de los Andes.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Superficie:&lt;/b&gt; 2.520 m².&lt;/p&gt;&lt;p&gt;&lt;b&gt;Servicios:&lt;/b&gt; Red de servicios internos y acceso vehicular.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Características:&lt;/b&gt; Entorno de barrio de campo, vistas abiertas y excelente exposición solar.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Valor:&lt;/b&gt; U$D 135.000&lt;/p&gt;</description>
+		<name>LOTE 42, ESTANCIA MIRALEJOS CLUB DE CAMPO</name>
+		<description>&lt;h3&gt;&lt;b&gt;LOTE 42, ESTANCIA MIRALEJOS CLUB DE CAMPO&lt;/b&gt;&lt;/h3&gt;&lt;p&gt;&lt;b&gt;Ubicación:&lt;/b&gt; Estancia Miralejos, San Martín de los Andes.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Superficie:&lt;/b&gt; 2.520 m².&lt;/p&gt;&lt;p&gt;&lt;b&gt;Servicios:&lt;/b&gt; Red de servicios internos y acceso vehicular.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Características:&lt;/b&gt; Entorno de barrio de campo, vistas abiertas y excelente exposición solar.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Valor:&lt;/b&gt; U$D 135.000&lt;/p&gt;</description>
 		<LookAt>
 			<longitude>-71.28413379151372</longitude>
 			<latitude>-40.15823284662673</latitude>
