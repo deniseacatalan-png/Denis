@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap");
 
 :root {
   --rosa-nude: #d9a8ad;
@@ -773,3 +774,157 @@ body {
   font-family: inherit;
   font-size: 1rem;
 }
+
+/* --- Premium boutique theme override --- */
+:root {
+  --bg-rose: #f40f87;
+  --bg-rose-deep: #9b0056;
+  --bg-black: #070707;
+  --gold: #d8b46a;
+  --chrome: #c7ccd8;
+  --text-soft: #e8e8ea;
+  --glass: rgba(17, 17, 20, 0.58);
+  --glass-strong: rgba(8, 8, 10, 0.74);
+  --glass-border: rgba(216, 180, 106, 0.26);
+}
+
+body {
+  font-family: "Manrope", "Cormorant Garamond", serif;
+  color: var(--text-soft);
+  background: radial-gradient(circle at 12% 8%, rgba(244, 15, 135, 0.25), transparent 35%),
+    linear-gradient(145deg, #f40f87 0%, #68003c 34%, #171016 62%, #050506 100%);
+}
+
+.hero {
+  background: linear-gradient(145deg, rgba(244, 15, 135, 0.22) 0%, rgba(10, 10, 12, 0.9) 70%),
+    url('/images/HUILQUIL CASONA DE MONTAÑA/DJI_0408.JPG') center/cover no-repeat;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.44), rgba(0, 0, 0, 0.72));
+  pointer-events: none;
+}
+
+.hero, .page-shell { position: relative; }
+.hero > * { position: relative; z-index: 1; }
+
+.links a, .services-label, .section-title p { color: var(--chrome); }
+.links a:hover { color: var(--gold); }
+
+.overline, .legend-pill, .chip {
+  background: rgba(216, 180, 106, 0.12);
+  color: var(--gold);
+  border: 1px solid var(--glass-border);
+}
+
+.hero h1::before {
+  color: #fff;
+  letter-spacing: 0.01em;
+  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.hero-content > p:not(.overline):not(.contact-line)::before {
+  content: "Invertí en naturaleza.";
+  color: #f9d3e9;
+}
+
+.contact-line::before,
+.contact-line::after { color: #cbc8d3; }
+
+.properties,
+.map-section,
+.service-modal,
+.property-card,
+.map-highlight {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(13px);
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.4);
+}
+
+.property-card:hover,
+.property-card.active {
+  box-shadow: 0 26px 50px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(216, 180, 106, 0.35);
+}
+
+.property-cover,
+.details-cover {
+  background-blend-mode: multiply;
+}
+
+.property-cover::after,
+.details-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.2), rgba(0,0,0,0.72));
+  pointer-events: none;
+}
+
+.property-cover > *,
+.details-cover > * { position: relative; z-index: 1; }
+
+.price,
+.section-title h2,
+.rich-text h3,
+.service-modal h3 { color: #fff; }
+
+.summary,
+.meta,
+.services-intro,
+.rich-text,
+.service-modal p,
+.gallery-empty { color: #c8c7d0; }
+
+.cover-metrics div,
+.detail-stats div {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(216, 180, 106, 0.2);
+}
+
+.map-btn,
+.wa-btn,
+.cta,
+.nav-service-button {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(216, 180, 106, 0.44);
+  color: #fff;
+  background: linear-gradient(130deg, rgba(244, 15, 135, 0.35), rgba(8, 8, 10, 0.95));
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.map-btn::before,
+.wa-btn::before,
+.cta::before,
+.nav-service-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 70%;
+  height: 100%;
+  transform: skewX(-25deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+  transition: left .45s ease;
+}
+
+.map-btn:hover::before,
+.wa-btn:hover::before,
+.cta:hover::before,
+.nav-service-button:hover::before { left: 140%; }
+
+.map-btn:hover,
+.wa-btn:hover,
+.cta:hover,
+.nav-service-button:hover {
+  transform: translateY(-2px);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px rgba(216, 180, 106, 0.35), 0 10px 24px rgba(0,0,0,.42);
+}
+
+.service-modal-backdrop { background: rgba(0, 0, 0, 0.75); }
