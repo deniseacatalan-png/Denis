@@ -65,7 +65,7 @@ const CATEGORY_META = {
     mapColor: "#161616"
   },
   proceso: {
-    label: "En proceso / sin precio",
+    label: "En proceso / sin valor",
     color: "#c9a227",
     mapColor: "#c9a227"
   }
@@ -133,6 +133,24 @@ function extractArea(text) {
   }
 
   return "Superficie a confirmar";
+}
+
+
+const AREA_OVERRIDES = {
+  "HAS ORILLAS DE CALEUFU": "13.000 m²",
+  "LOTES KALEUCHE ALTO": "700 m²",
+  "LOTE CJN BELLO": "800 m²",
+  "LOTE ALIHUEN ALTO": "1.700 m²",
+  "LOTE KALEUCHE MEDIO": "1.135 m²",
+  "LOTE VEGA MAIPU": "1.178 m²",
+  "LOTE ZONA CENTRO": "229,52 m²",
+  "LOTE 102, ESTANCIA MIRALEJOS CLUB DE CAMPO": "6.849 m²",
+  "LOTE 42, ESTANCIA MIRALEJOS CLUB DE CAMPO": "2.507 m²"
+};
+
+function resolveArea(title, text) {
+  if (AREA_OVERRIDES[title]) return AREA_OVERRIDES[title];
+  return extractArea(text);
 }
 
 function extractLocation(text, title) {
@@ -230,7 +248,7 @@ function parseKml(kmlText) {
         title: name,
         location: extractLocation(plainText, name),
         price: extractPrice(plainText),
-        area: extractArea(plainText),
+        area: resolveArea(name, plainText),
         category: isHuilquilTouristic
           ? "alquiler_turistico"
           : inferredCategory === "alquiler_turistico"
@@ -355,7 +373,7 @@ function App() {
     visibleProperties.find((property) => property.id === selectedId) || visibleProperties[0] || null;
 
   const formatDisplayedPrice = (property) =>
-    property?.category === "proceso" ? "Sin precio" : property?.price || "Consultar";
+    property?.category === "proceso" ? "Sin valor" : property?.price || "Consultar";
 
   const focusPropertyOnMap = (property) => {
     setSelectedId(property.id);
@@ -393,7 +411,7 @@ function App() {
           <div className="hero-content">
             <h1>Propiedades reales en San Martin de los Andes, Patagonia.</h1>
             <p>
-              Datos leidos desde <strong>PROPIEDADESVENTA.kml</strong> para mostrar ubicacion, precio y descripcion completa.
+              Datos leidos desde <strong>PROPIEDADESVENTA.kml</strong> para mostrar ubicacion, valor y descripcion completa.
             </p>
             <p className="contact-line">
               WhatsApp: <strong>+54 9 2944 68-8613</strong>
@@ -473,7 +491,7 @@ function App() {
                 </p>
                 <div className="detail-stats">
                   <div>
-                    <span>Precio</span>
+                    <span>Valor</span>
                     <strong>{formatDisplayedPrice(selectedProperty)}</strong>
                   </div>
                   <div>
@@ -562,7 +580,7 @@ function App() {
                   <div className="property-body">
                     <div className="cover-metrics cover-metrics--card">
                       <div>
-                        <span>Precio</span>
+                        <span>Valor</span>
                         <strong>{formatDisplayedPrice(property)}</strong>
                       </div>
                       <div>
