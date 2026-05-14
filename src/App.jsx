@@ -135,6 +135,24 @@ function extractArea(text) {
   return "Superficie a confirmar";
 }
 
+
+const AREA_OVERRIDES = {
+  "HAS ORILLAS DE CALEUFU": "13.000 m²",
+  "LOTES KALEUCHE ALTO": "700 m²",
+  "LOTE CJN BELLO": "800 m²",
+  "LOTE ALIHUEN ALTO": "1.700 m²",
+  "LOTE KALEUCHE MEDIO": "1.135 m²",
+  "LOTE VEGA MAIPU": "1.178 m²",
+  "LOTE ZONA CENTRO": "229,52 m²",
+  "LOTE 102, ESTANCIA MIRALEJOS CLUB DE CAMPO": "6.849 m²",
+  "LOTE 42, ESTANCIA MIRALEJOS CLUB DE CAMPO": "2.507 m²"
+};
+
+function resolveArea(title, text) {
+  if (AREA_OVERRIDES[title]) return AREA_OVERRIDES[title];
+  return extractArea(text);
+}
+
 function extractLocation(text, title) {
   const locationMatch = text.match(
     /Ubicaci[oó]n:\s*(.*?)(?=\s*(?:Superficie|Servicios|Caracter[ií]sticas|Valor|Frente|Distribuci[oó]n|Acceso|Amenities|Usos|FOS|FOT|Opcion|Opción|Capacidad|Terreno|Lote|Casa|Departamento|$))/i
@@ -230,7 +248,7 @@ function parseKml(kmlText) {
         title: name,
         location: extractLocation(plainText, name),
         price: extractPrice(plainText),
-        area: extractArea(plainText),
+        area: resolveArea(name, plainText),
         category: isHuilquilTouristic
           ? "alquiler_turistico"
           : inferredCategory === "alquiler_turistico"
