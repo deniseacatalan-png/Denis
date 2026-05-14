@@ -391,10 +391,12 @@ function App() {
         }
         if (text === kmlVersionRef.current) return;
         kmlVersionRef.current = text;
-        const parsed = parseKml(text).map((property) => ({
-          ...property,
-          images: [...property.imagesFromDescription, ...resolvePropertyImages(property)]
-        }));
+        const parsed = parseKml(text)
+          .filter((property) => property.category === "venta" || property.category === "alquiler_turistico")
+          .map((property) => ({
+            ...property,
+            images: [...property.imagesFromDescription, ...resolvePropertyImages(property)]
+          }));
 
         if (!active) return;
 
