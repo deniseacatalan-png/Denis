@@ -36,16 +36,8 @@ const PROPERTY_IMAGE_LIBRARY = Object.entries(PUBLIC_IMAGE_FILES).reduce((acc, [
   return acc;
 }, {});
 
-const EXCLUDED_PROPERTY_PATTERNS = [
-  /lote\s+oasis/i,
-  /casa\s+las\s+marias\s+del\s+valle/i,
-  /terreno\s+cipreses/i,
-  /casa\s+miralejos/i
-];
-
 function isExcludedProperty(name, styleColor) {
-  if ((styleColor || "").toLowerCase() === "000000") return true;
-  return EXCLUDED_PROPERTY_PATTERNS.some((pattern) => pattern.test(name || ""));
+  return (styleColor || "").toLowerCase() === "000000";
 }
 
 const CATEGORY_META = {
@@ -70,13 +62,6 @@ const CATEGORY_META = {
     mapColor: "#c9a227"
   }
 };
-
-const INACTIVE_PROPERTY_PATTERNS = [
-  /\bvendid[oa]s?\b/i,
-  /\binhabilitad[oa]s?\b/i,
-  /\bno disponible\b/i,
-  /\breservad[oa]s?\b/i
-];
 
 function slugify(value, maxLength = Number.POSITIVE_INFINITY) {
   const normalized = value
@@ -207,12 +192,6 @@ function buildCategory(text, styleColor) {
   return "venta";
 }
 
-function isInactiveProperty(name, text, styleColor) {
-  if (styleColor === "000000") return true;
-  const searchable = `${name || ""} ${text || ""}`;
-  return INACTIVE_PROPERTY_PATTERNS.some((pattern) => pattern.test(searchable));
-}
-
 function normalizeKmlColor(styleColor, fallback = "#a65774") {
   const color = (styleColor || "").replace(/[^a-f0-9]/gi, "").toLowerCase();
   if (!color) return fallback;
@@ -269,9 +248,6 @@ function parseKml(kmlText) {
       }
 
       const inferredCategory = buildCategory(plainText, styleColor);
-      if (isInactiveProperty(name, plainText, styleColor)) {
-        return null;
-      }
       const isHuilquilTouristic = /huilquil\s+casona?\s+de\s+montaña/i.test(name);
 
       return {
