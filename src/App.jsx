@@ -19,7 +19,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow
 });
 
-const KML_URL = "/webpropiedades.kml";
+const KML_URL_CANDIDATES = ["/webpropiedades.kml", "/WEBPROPIEDADES.kml"];
 const KML_REFRESH_MS = 15000;
 const officeWhatsApp = "5492944688613";
 const PUBLIC_IMAGE_FILES = import.meta.glob(
@@ -369,8 +369,20 @@ function App() {
 
     async function loadKml() {
       try {
-        const response = await fetch(`${KML_URL}?t=${Date.now()}`, { cache: "no-store" });
-        const text = await response.text();
+        const timestamp = Date.now();
+        let text = "";
+
+        for (const candidate of KML_URL_CANDIDATES) {
+          const response = await fetch(`${candidate}?t=${timestamp}`, { cache: "no-store" });
+          if (response.ok) {
+            text = await response.text();
+            break;
+          }
+        }
+
+        if (!text) {
+          throw new Error("No se pudo leer webpropiedades.kml");
+        }
         if (text === kmlVersionRef.current) return;
         kmlVersionRef.current = text;
         const parsed = parseKml(text).map((property) => ({
@@ -469,7 +481,7 @@ function App() {
           <div className="hero-content">
             <h1>Propiedades reales en San Martin de los Andes, Patagonia.</h1>
             <p>
-              Datos leidos desde <strong>webpropiedades.kml</strong> para mostrar ubicacion, valor y descripcion completa.
+              Datos leidos desde <strong>webpropiedades.kml</strong> para mostrar ubicacion, valor y descripcion completa (con compatibilidad de nombre en mayusculas/minusculas).
             </p>
             <p className="contact-line">
               WhatsApp: <strong>+54 9 2944 68-8613</strong>
