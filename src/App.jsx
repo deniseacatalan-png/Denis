@@ -18,7 +18,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow
 });
 
-const KML_URL = "/PROPIEDADESVENTA.kml";
+const KML_URL = "/webpropiedades.kml";
 const officeWhatsApp = "5492944688613";
 const PUBLIC_IMAGE_FILES = import.meta.glob(
   "../public/images/**/*.{jpg,JPG,jpeg,JPEG,png,PNG,webp,WEBP,avif,AVIF}",
@@ -36,16 +36,10 @@ const PROPERTY_IMAGE_LIBRARY = Object.entries(PUBLIC_IMAGE_FILES).reduce((acc, [
   return acc;
 }, {});
 
-const EXCLUDED_PROPERTY_PATTERNS = [
-  /lote\s+oasis/i,
-  /casa\s+las\s+marias\s+del\s+valle/i,
-  /terreno\s+cipreses/i,
-  /casa\s+miralejos/i
-];
-
 function isExcludedProperty(name, styleColor) {
+  const normalizedName = (name || "").toLowerCase();
   if ((styleColor || "").toLowerCase() === "000000") return true;
-  return EXCLUDED_PROPERTY_PATTERNS.some((pattern) => pattern.test(name || ""));
+  return /\b(vendid[oa]|inhabilitad[oa])\b/.test(normalizedName);
 }
 
 const CATEGORY_META = {
@@ -169,20 +163,20 @@ function extractLocation(text, title) {
 }
 
 function buildCategory(text, styleColor) {
-  if (styleColor === "ef5350") {
-    return "alquiler_turistico";
+  if (styleColor === "ab47bc" || styleColor === "ff78c4") {
+    return "venta";
+  }
+
+  if (styleColor === "ffee58") {
+    return "proceso";
   }
 
   if (styleColor === "000000") {
     return "vendido";
   }
 
-  if (styleColor === "ab47bc") {
-    return "venta";
-  }
-
-  if (styleColor === "ffee58") {
-    return "proceso";
+  if (styleColor === "ef5350") {
+    return "alquiler_turistico";
   }
 
   if (/tur[ií]stic|temporada|pax/i.test(text)) {
@@ -200,23 +194,57 @@ function buildCategory(text, styleColor) {
   return "venta";
 }
 
+function normalizeKmlColor(styleColor, fallback = "#a65774") {
+  const color = (styleColor || "").replace(/[^a-f0-9]/gi, "").toLowerCase();
+  if (!color) return fallback;
+
+  if (color.length === 6) return `#${color}`;
+  if (color.length === 8) {
+    const rr = color.slice(6, 8);
+    const gg = color.slice(4, 6);
+    const bb = color.slice(2, 4);
+    return `#${rr}${gg}${bb}`;
+  }
+
+  return fallback;
+}
+
 function formatCoords(coords) {
   const [lat, lng] = coords;
   return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 }
 
 function parseKml(kmlText) {
-  const styleColorMap = {};
-  for (const match of kmlText.matchAll(
-    /<gx:CascadingStyle kml:id="(__managed_style_[^"]+)_normal">[\s\S]*?<href>https:\/\/earth\.google\.com\/earth\/document\/icon\?color=([a-z0-9]+)/gi
-  )) {
-    const styleId = match[1];
-    const color = match[2].toLowerCase();
-    styleColorMap[styleId] = color;
-  }
-
   const parser = new DOMParser();
   const xml = parser.parseFromString(kmlText, "application/xml");
+  const styleColorMap = {};
+
+  xml.querySelectorAll("gx\\:CascadingStyle, CascadingStyle").forEach((node) => {
+    const styleId = node.getAttribute("kml:id") || node.getAttribute("id") || "";
+    if (!styleId) return;
+
+    const href = node.querySelector("IconStyle Icon href, IconStyle href")?.textContent || "";
+    const hrefColor = href.match(/color=([a-z0-9]+)/i)?.[1]?.toLowerCase() || "";
+    const iconColor = node.querySelector("IconStyle color")?.textContent?.trim()?.toLowerCase() || "";
+    const color = hrefColor || iconColor;
+    if (!color) return;
+
+    styleColorMap[styleId.replace(/_normal$/i, "")] = color;
+    styleColorMap[styleId] = color;
+  });
+
+  xml.querySelectorAll("StyleMap").forEach((styleMap) => {
+    const styleMapId = styleMap.getAttribute("id") || styleMap.getAttribute("kml:id") || "";
+    if (!styleMapId) return;
+
+    const normalPair = [...styleMap.querySelectorAll("Pair")].find(
+      (pair) => pair.querySelector("key")?.textContent?.trim() === "normal"
+    );
+    const normalStyleUrl = normalPair?.querySelector("styleUrl")?.textContent?.trim().replace(/^#/, "") || "";
+    if (normalStyleUrl && styleColorMap[normalStyleUrl]) {
+      styleColorMap[styleMapId] = styleColorMap[normalStyleUrl];
+    }
+  });
 
   const placemarks = [...xml.querySelectorAll("Placemark")];
 
@@ -255,6 +283,7 @@ function parseKml(kmlText) {
             ? "venta"
             : inferredCategory,
         styleColor,
+        markerColor: normalizeKmlColor(styleColor),
         coords: [lat, lng],
         descriptionHtml,
         summary: truncateText(plainText, 210),
@@ -322,7 +351,10 @@ function App() {
 
     async function loadKml() {
       try {
-        const response = await fetch(KML_URL);
+        const response = await fetch(`${KML_URL}?v=${Date.now()}`, { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error(`No se pudo cargar ${KML_URL}`);
+        }
         const text = await response.text();
       const parsed = parseKml(text).map((property) => ({
         ...property,
@@ -343,9 +375,11 @@ function App() {
     }
 
     loadKml();
+    const refreshIntervalId = window.setInterval(loadKml, 60000);
 
     return () => {
       active = false;
+      window.clearInterval(refreshIntervalId);
     };
   }, []);
 
@@ -357,8 +391,10 @@ function App() {
     }
   }, [properties, selectedId]);
 
-  const visibleProperties = properties.filter((property) =>
-    property.category === "venta" || property.category === "alquiler_turistico"
+  const visibleProperties = properties.filter(
+    (property) =>
+      property.category === "venta" ||
+      property.category === "alquiler_turistico"
   );
 
   useEffect(() => {
@@ -411,7 +447,7 @@ function App() {
           <div className="hero-content">
             <h1>Propiedades reales en San Martin de los Andes, Patagonia.</h1>
             <p>
-              Datos leidos desde <strong>PROPIEDADESVENTA.kml</strong> para mostrar ubicacion, valor y descripcion completa.
+              Datos leidos desde <strong>webpropiedades.kml</strong> para mostrar ubicacion, valor y descripcion completa.
             </p>
             <p className="contact-line">
               WhatsApp: <strong>+54 9 2944 68-8613</strong>
@@ -447,8 +483,9 @@ function App() {
                         center={property.coords}
                         radius={property.id === selectedProperty.id ? 11 : 8}
                         pathOptions={{
-                          color: CATEGORY_META[property.category]?.mapColor || "#a65774",
-                          fillColor: CATEGORY_META[property.category]?.mapColor || "#a65774",
+                          color: property.markerColor || CATEGORY_META[property.category]?.mapColor || "#a65774",
+                          fillColor:
+                            property.markerColor || CATEGORY_META[property.category]?.mapColor || "#a65774",
                           fillOpacity: 0.9,
                           weight: property.id === selectedProperty.id ? 4 : 2
                         }}
