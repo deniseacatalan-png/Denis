@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   MapContainer,
   CircleMarker,
+  Polygon,
   Popup,
   TileLayer,
   useMap
@@ -18,7 +19,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow
 });
 
-const KML_URL = "/PROPIEDADESVENTA.kml";
+const KML_URL = "/webpropiedades.kml";
+const KML_REFRESH_MS = 15000;
 const officeWhatsApp = "5492944688613";
 const PUBLIC_IMAGE_FILES = import.meta.glob(
   "../public/images/**/*.{jpg,JPG,jpeg,JPEG,png,PNG,webp,WEBP,avif,AVIF}",
@@ -87,6 +89,17 @@ function htmlToText(html) {
   const doc = parser.parseFromString(html || "", "text/html");
   const text = doc.body.innerText || doc.body.textContent || "";
   return text.replace(/\s+/g, " ").trim();
+}
+
+function extractImagesFromDescription(descriptionHtml) {
+  if (!descriptionHtml) return [];
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(descriptionHtml, "text/html");
+  const sources = [...doc.querySelectorAll("img[src]"), ...doc.querySelectorAll("a[href]")].map((node) =>
+    node.getAttribute("src") || node.getAttribute("href") || ""
+  );
+
+  return [...new Set(sources.filter((url) => /\.(png|jpe?g|webp|avif)$/i.test(url)))];
 }
 
 function truncateText(text, maxLength = 180) {
@@ -218,21 +231,45 @@ function parseKml(kmlText) {
   const parser = new DOMParser();
   const xml = parser.parseFromString(kmlText, "application/xml");
 
+  const folderCategoryMap = new Map();
+  [...xml.querySelectorAll("Folder")].forEach((folder) => {
+    const folderName = folder.querySelector(":scope > name")?.textContent?.trim() || "";
+    folder.querySelectorAll(":scope > Placemark").forEach((placemark) => {
+      const folderHints = `${folderName} ${placemark.querySelector("name")?.textContent || ""}`;
+      folderCategoryMap.set(placemark, folderHints);
+    });
+  });
+
   const placemarks = [...xml.querySelectorAll("Placemark")];
 
   return placemarks
     .map((placemark, index) => {
       const name = placemark.querySelector("name")?.textContent?.trim() || `Propiedad ${index + 1}`;
       const descriptionHtml = placemark.querySelector("description")?.textContent?.trim() || "";
-      const coordinatesText = placemark.querySelector("coordinates")?.textContent?.trim() || "";
+      const pointCoordinatesText = placemark.querySelector("Point coordinates")?.textContent?.trim() || "";
       const styleUrl = placemark.querySelector("styleUrl")?.textContent?.trim() || "";
       const styleColor = styleColorMap[styleUrl.replace(/^#/, "")] || "";
-      const [lngText, latText] = coordinatesText.split(",");
+      const polygonCoordinatesText =
+        placemark.querySelector("Polygon outerBoundaryIs LinearRing coordinates")?.textContent?.trim() || "";
+      const polygonCoords = polygonCoordinatesText
+        .split(/\s+/)
+        .map((coord) => coord.trim())
+        .filter(Boolean)
+        .map((coord) => {
+          const [polygonLngText, polygonLatText] = coord.split(",");
+          return [Number.parseFloat(polygonLatText), Number.parseFloat(polygonLngText)];
+        })
+        .filter(([polyLat, polyLng]) => Number.isFinite(polyLat) && Number.isFinite(polyLng));
+      const [lngText, latText] = pointCoordinatesText.split(",");
       const lat = Number.parseFloat(latText);
       const lng = Number.parseFloat(lngText);
       const plainText = htmlToText(descriptionHtml);
+      const folderHints = folderCategoryMap.get(placemark) || "";
 
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      const isPoint = Number.isFinite(lat) && Number.isFinite(lng);
+      const isPolygon = polygonCoords.length >= 3;
+
+      if (!isPoint && !isPolygon) {
         return null;
       }
 
@@ -240,8 +277,10 @@ function parseKml(kmlText) {
         return null;
       }
 
-      const inferredCategory = buildCategory(plainText, styleColor);
+      const inferredCategory = buildCategory(`${plainText} ${folderHints}`, styleColor);
       const isHuilquilTouristic = /huilquil\s+casona?\s+de\s+montaña/i.test(name);
+
+      const imagesFromDescription = extractImagesFromDescription(descriptionHtml);
 
       return {
         id: `${slugify(name, 48)}-${index + 1}`,
@@ -255,10 +294,13 @@ function parseKml(kmlText) {
             ? "venta"
             : inferredCategory,
         styleColor,
-        coords: [lat, lng],
+        coords: isPoint ? [lat, lng] : polygonCoords[0],
+        polygonCoords: isPolygon ? polygonCoords : null,
+        geometryType: isPolygon ? "polygon" : "point",
         descriptionHtml,
         summary: truncateText(plainText, 210),
-        rawDescription: plainText
+        rawDescription: plainText,
+        imagesFromDescription
       };
     })
     .filter(Boolean);
@@ -298,12 +340,16 @@ function resolvePropertyCoverImage(property) {
   return property.images?.[0] || "";
 }
 
-function MapFocus({ coords }) {
+function MapFocus({ coords, bounds }) {
   const map = useMap();
 
   useEffect(() => {
+    if (bounds) {
+      map.flyToBounds(bounds, { padding: [24, 24], duration: 1.1, maxZoom: 14 });
+      return;
+    }
     map.flyTo(coords, 13, { duration: 1.1 });
-  }, [coords, map]);
+  }, [bounds, coords, map]);
 
   return null;
 }
@@ -316,18 +362,21 @@ function App() {
   const [serviceNeed, setServiceNeed] = useState("vender");
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const mapSectionRef = useRef(null);
+  const kmlVersionRef = useRef("");
 
   useEffect(() => {
     let active = true;
 
     async function loadKml() {
       try {
-        const response = await fetch(KML_URL);
+        const response = await fetch(`${KML_URL}?t=${Date.now()}`, { cache: "no-store" });
         const text = await response.text();
-      const parsed = parseKml(text).map((property) => ({
-        ...property,
-        images: resolvePropertyImages(property)
-      }));
+        if (text === kmlVersionRef.current) return;
+        kmlVersionRef.current = text;
+        const parsed = parseKml(text).map((property) => ({
+          ...property,
+          images: [...property.imagesFromDescription, ...resolvePropertyImages(property)]
+        }));
 
         if (!active) return;
 
@@ -343,9 +392,11 @@ function App() {
     }
 
     loadKml();
+    const intervalId = window.setInterval(loadKml, KML_REFRESH_MS);
 
     return () => {
       active = false;
+      window.clearInterval(intervalId);
     };
   }, []);
 
@@ -371,6 +422,13 @@ function App() {
 
   const selectedProperty =
     visibleProperties.find((property) => property.id === selectedId) || visibleProperties[0] || null;
+
+  const mapBounds = useMemo(() => {
+    const coords = visibleProperties.flatMap((property) =>
+      property.polygonCoords?.length ? property.polygonCoords : [property.coords]
+    );
+    return coords.length ? L.latLngBounds(coords) : null;
+  }, [visibleProperties]);
 
   const formatDisplayedPrice = (property) =>
     property?.category === "proceso" ? "Sin valor" : property?.price || "Consultar";
@@ -411,7 +469,7 @@ function App() {
           <div className="hero-content">
             <h1>Propiedades reales en San Martin de los Andes, Patagonia.</h1>
             <p>
-              Datos leidos desde <strong>PROPIEDADESVENTA.kml</strong> para mostrar ubicacion, valor y descripcion completa.
+              Datos leidos desde <strong>webpropiedades.kml</strong> para mostrar ubicacion, valor y descripcion completa.
             </p>
             <p className="contact-line">
               WhatsApp: <strong>+54 9 2944 68-8613</strong>
@@ -436,32 +494,50 @@ function App() {
                     scrollWheelZoom={true}
                     className="map-view"
                   >
-                    <MapFocus coords={selectedProperty.coords} />
+                    <MapFocus coords={selectedProperty.coords} bounds={mapBounds} />
                     <TileLayer
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
                     {visibleProperties.map((property) => (
-                      <CircleMarker
-                        key={property.id}
-                        center={property.coords}
-                        radius={property.id === selectedProperty.id ? 11 : 8}
-                        pathOptions={{
-                          color: CATEGORY_META[property.category]?.mapColor || "#a65774",
-                          fillColor: CATEGORY_META[property.category]?.mapColor || "#a65774",
-                          fillOpacity: 0.9,
-                          weight: property.id === selectedProperty.id ? 4 : 2
-                        }}
-                        eventHandlers={{
-                          click: () => setSelectedId(property.id)
-                        }}
-                      >
-                        <Popup>
-                          <strong>{property.title}</strong>
-                          <br />
-                          {property.price}
-                        </Popup>
-                      </CircleMarker>
+                      property.geometryType === "polygon" && property.polygonCoords ? (
+                        <Polygon
+                          key={property.id}
+                          positions={property.polygonCoords}
+                          pathOptions={{
+                            color: CATEGORY_META[property.category]?.mapColor || "#a65774",
+                            fillColor: CATEGORY_META[property.category]?.mapColor || "#a65774",
+                            fillOpacity: property.id === selectedProperty.id ? 0.35 : 0.18,
+                            weight: property.id === selectedProperty.id ? 3 : 2
+                          }}
+                          eventHandlers={{ click: () => setSelectedId(property.id) }}
+                        >
+                          <Popup>
+                            <strong>{property.title}</strong>
+                            <br />
+                            {property.price}
+                          </Popup>
+                        </Polygon>
+                      ) : (
+                        <CircleMarker
+                          key={property.id}
+                          center={property.coords}
+                          radius={property.id === selectedProperty.id ? 11 : 8}
+                          pathOptions={{
+                            color: CATEGORY_META[property.category]?.mapColor || "#a65774",
+                            fillColor: CATEGORY_META[property.category]?.mapColor || "#a65774",
+                            fillOpacity: 0.9,
+                            weight: property.id === selectedProperty.id ? 4 : 2
+                          }}
+                          eventHandlers={{ click: () => setSelectedId(property.id) }}
+                        >
+                          <Popup>
+                            <strong>{property.title}</strong>
+                            <br />
+                            {property.price}
+                          </Popup>
+                        </CircleMarker>
+                      )
                     ))}
                   </MapContainer>
                 ) : (
