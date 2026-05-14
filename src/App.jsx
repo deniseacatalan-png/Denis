@@ -38,6 +38,8 @@ const PROPERTY_IMAGE_LIBRARY = Object.entries(PUBLIC_IMAGE_FILES).reduce((acc, [
   return acc;
 }, {});
 
+const ALLOWED_STYLE_COLORS = new Set(["ab47bc", "ef5350"]);
+
 const EXCLUDED_PROPERTY_PATTERNS = [
   /lote\s+oasis/i,
   /casa\s+las\s+marias\s+del\s+valle/i,
@@ -274,6 +276,10 @@ function parseKml(kmlText) {
       }
 
       if (isExcludedProperty(name, styleColor)) {
+        return null;
+      }
+
+      if (!ALLOWED_STYLE_COLORS.has((styleColor || "").toLowerCase())) {
         return null;
       }
 
