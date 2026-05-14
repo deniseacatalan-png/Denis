@@ -215,17 +215,36 @@ function formatCoords(coords) {
 }
 
 function parseKml(kmlText) {
-  const styleColorMap = {};
-  for (const match of kmlText.matchAll(
-    /<gx:CascadingStyle kml:id="(__managed_style_[^"]+)_normal">[\s\S]*?<href>https:\/\/earth\.google\.com\/earth\/document\/icon\?color=([a-z0-9]+)/gi
-  )) {
-    const styleId = match[1];
-    const color = match[2].toLowerCase();
-    styleColorMap[styleId] = color;
-  }
-
   const parser = new DOMParser();
   const xml = parser.parseFromString(kmlText, "application/xml");
+  const styleColorMap = {};
+
+  xml.querySelectorAll("gx\\:CascadingStyle, CascadingStyle").forEach((node) => {
+    const styleId = node.getAttribute("kml:id") || node.getAttribute("id") || "";
+    if (!styleId) return;
+
+    const href = node.querySelector("IconStyle Icon href, IconStyle href")?.textContent || "";
+    const hrefColor = href.match(/color=([a-z0-9]+)/i)?.[1]?.toLowerCase() || "";
+    const iconColor = node.querySelector("IconStyle color")?.textContent?.trim()?.toLowerCase() || "";
+    const color = hrefColor || iconColor;
+    if (!color) return;
+
+    styleColorMap[styleId.replace(/_normal$/i, "")] = color;
+    styleColorMap[styleId] = color;
+  });
+
+  xml.querySelectorAll("StyleMap").forEach((styleMap) => {
+    const styleMapId = styleMap.getAttribute("id") || styleMap.getAttribute("kml:id") || "";
+    if (!styleMapId) return;
+
+    const normalPair = [...styleMap.querySelectorAll("Pair")].find(
+      (pair) => pair.querySelector("key")?.textContent?.trim() === "normal"
+    );
+    const normalStyleUrl = normalPair?.querySelector("styleUrl")?.textContent?.trim().replace(/^#/, "") || "";
+    if (normalStyleUrl && styleColorMap[normalStyleUrl]) {
+      styleColorMap[styleMapId] = styleColorMap[normalStyleUrl];
+    }
+  });
 
   const placemarks = [...xml.querySelectorAll("Placemark")];
 
@@ -356,9 +375,11 @@ function App() {
     }
 
     loadKml();
+    const refreshIntervalId = window.setInterval(loadKml, 60000);
 
     return () => {
       active = false;
+      window.clearInterval(refreshIntervalId);
     };
   }, []);
 
