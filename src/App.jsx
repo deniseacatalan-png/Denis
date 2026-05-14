@@ -18,7 +18,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow
 });
 
-const KML_URL = "/PROPIEDADESVENTA.kml";
+const KML_URL = "/webpropiedades.kml";
+const KML_REFRESH_INTERVAL_MS = 30000;
 const officeWhatsApp = "5492944688613";
 const PUBLIC_IMAGE_FILES = import.meta.glob(
   "../public/images/**/*.{jpg,JPG,jpeg,JPEG,png,PNG,webp,WEBP,avif,AVIF}",
@@ -43,8 +44,8 @@ const EXCLUDED_PROPERTY_PATTERNS = [
   /casa\s+miralejos/i
 ];
 
-function isExcludedProperty(name, styleColor) {
-  if ((styleColor || "").toLowerCase() === "000000") return true;
+function isExcludedProperty(name, styleColor, category) {
+  if ((styleColor || "").toLowerCase() === "000000" || category === "vendido") return true;
   return EXCLUDED_PROPERTY_PATTERNS.some((pattern) => pattern.test(name || ""));
 }
 
@@ -205,18 +206,57 @@ function formatCoords(coords) {
   return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 }
 
-function parseKml(kmlText) {
-  const styleColorMap = {};
-  for (const match of kmlText.matchAll(
-    /<gx:CascadingStyle kml:id="(__managed_style_[^"]+)_normal">[\s\S]*?<href>https:\/\/earth\.google\.com\/earth\/document\/icon\?color=([a-z0-9]+)/gi
-  )) {
-    const styleId = match[1];
-    const color = match[2].toLowerCase();
-    styleColorMap[styleId] = color;
+function normalizeStyleColor(rawColor = "") {
+  const cleaned = rawColor.toLowerCase().replace(/[^a-f0-9]/g, "");
+  if (!cleaned) return "";
+
+  if (cleaned.length === 8) {
+    const blue = cleaned.slice(2, 4);
+    const green = cleaned.slice(4, 6);
+    const red = cleaned.slice(6, 8);
+    return `${red}${green}${blue}`;
   }
 
+  if (cleaned.length >= 6) {
+    return cleaned.slice(-6);
+  }
+
+  return cleaned;
+}
+
+function parseKml(kmlText) {
   const parser = new DOMParser();
   const xml = parser.parseFromString(kmlText, "application/xml");
+  const styleColorMap = {};
+
+  const assignStyleColor = (styleId, rawColor) => {
+    if (!styleId) return;
+    const normalizedColor = normalizeStyleColor(rawColor);
+    if (normalizedColor) styleColorMap[styleId] = normalizedColor;
+  };
+
+  xml.querySelectorAll("Style, gx\:CascadingStyle").forEach((styleNode) => {
+    const styleId = styleNode.getAttribute("id") || styleNode.getAttribute("kml:id") || "";
+    const iconColor = styleNode.querySelector("IconStyle > color")?.textContent?.trim();
+    const hrefColorMatch = styleNode
+      .querySelector("IconStyle > Icon > href")
+      ?.textContent?.match(/color=([a-f0-9]{6,8})/i);
+
+    assignStyleColor(styleId, iconColor || hrefColorMatch?.[1] || "");
+  });
+
+  xml.querySelectorAll("StyleMap").forEach((styleMapNode) => {
+    const styleMapId = styleMapNode.getAttribute("id") || "";
+    const normalStyleUrl = [...styleMapNode.querySelectorAll("Pair")]
+      .find((pairNode) => pairNode.querySelector("key")?.textContent?.trim() === "normal")
+      ?.querySelector("styleUrl")
+      ?.textContent?.trim()
+      ?.replace(/^#/, "");
+
+    if (styleMapId && normalStyleUrl && styleColorMap[normalStyleUrl]) {
+      styleColorMap[styleMapId] = styleColorMap[normalStyleUrl];
+    }
+  });
 
   const placemarks = [...xml.querySelectorAll("Placemark")];
 
@@ -236,11 +276,11 @@ function parseKml(kmlText) {
         return null;
       }
 
-      if (isExcludedProperty(name, styleColor)) {
+      const inferredCategory = buildCategory(plainText, styleColor);
+
+      if (isExcludedProperty(name, styleColor, inferredCategory)) {
         return null;
       }
-
-      const inferredCategory = buildCategory(plainText, styleColor);
       const isHuilquilTouristic = /huilquil\s+casona?\s+de\s+montaña/i.test(name);
 
       return {
@@ -322,17 +362,19 @@ function App() {
 
     async function loadKml() {
       try {
-        const response = await fetch(KML_URL);
+        const response = await fetch(`${KML_URL}?v=${Date.now()}`, { cache: "no-store" });
         const text = await response.text();
-      const parsed = parseKml(text).map((property) => ({
-        ...property,
-        images: resolvePropertyImages(property)
-      }));
+        const parsed = parseKml(text).map((property) => ({
+          ...property,
+          images: resolvePropertyImages(property)
+        }));
 
         if (!active) return;
 
         setProperties(parsed);
-        setSelectedId(parsed[0]?.id || "");
+        setSelectedId((currentId) =>
+          parsed.some((property) => property.id === currentId) ? currentId : parsed[0]?.id || ""
+        );
       } catch (error) {
         if (!active) return;
         setProperties([]);
@@ -343,9 +385,11 @@ function App() {
     }
 
     loadKml();
+    const intervalId = window.setInterval(loadKml, KML_REFRESH_INTERVAL_MS);
 
     return () => {
       active = false;
+      window.clearInterval(intervalId);
     };
   }, []);
 
@@ -411,7 +455,7 @@ function App() {
           <div className="hero-content">
             <h1>Propiedades reales en San Martin de los Andes, Patagonia.</h1>
             <p>
-              Datos leidos desde <strong>PROPIEDADESVENTA.kml</strong> para mostrar ubicacion, valor y descripcion completa.
+              Datos sincronizados automaticamente desde <strong>webpropiedades.kml</strong> para mostrar ubicacion, valor y descripcion completa.
             </p>
             <p className="contact-line">
               WhatsApp: <strong>+54 9 2944 68-8613</strong>
