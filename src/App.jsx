@@ -37,7 +37,9 @@ const PROPERTY_IMAGE_LIBRARY = Object.entries(PUBLIC_IMAGE_FILES).reduce((acc, [
 }, {});
 
 function isExcludedProperty(name, styleColor) {
-  return (styleColor || "").toLowerCase() === "000000";
+  const normalizedName = (name || "").toLowerCase();
+  if ((styleColor || "").toLowerCase() === "000000") return true;
+  return /\b(vendid[oa]|inhabilitad[oa])\b/.test(normalizedName);
 }
 
 const CATEGORY_META = {
@@ -161,20 +163,20 @@ function extractLocation(text, title) {
 }
 
 function buildCategory(text, styleColor) {
-  if (styleColor === "ef5350") {
-    return "alquiler_turistico";
+  if (styleColor === "ab47bc" || styleColor === "ff78c4") {
+    return "venta";
+  }
+
+  if (styleColor === "ffee58") {
+    return "proceso";
   }
 
   if (styleColor === "000000") {
     return "vendido";
   }
 
-  if (styleColor === "ab47bc") {
-    return "venta";
-  }
-
-  if (styleColor === "ffee58") {
-    return "proceso";
+  if (styleColor === "ef5350") {
+    return "alquiler_turistico";
   }
 
   if (/tur[ií]stic|temporada|pax/i.test(text)) {
@@ -368,8 +370,11 @@ function App() {
     }
   }, [properties, selectedId]);
 
-  const visibleProperties = properties.filter((property) =>
-    property.category === "venta" || property.category === "alquiler_turistico"
+  const visibleProperties = properties.filter(
+    (property) =>
+      property.category === "venta" ||
+      property.category === "alquiler_turistico" ||
+      property.category === "proceso"
   );
 
   useEffect(() => {
