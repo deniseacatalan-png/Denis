@@ -18,7 +18,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow
 });
 
-const KML_URL = "/PROPIEDADESVENTA.kml";
+const KML_URL = "/webpropiedades.kml";
 const officeWhatsApp = "5492944688613";
 const PUBLIC_IMAGE_FILES = import.meta.glob(
   "../public/images/**/*.{jpg,JPG,jpeg,JPEG,png,PNG,webp,WEBP,avif,AVIF}",
@@ -70,6 +70,13 @@ const CATEGORY_META = {
     mapColor: "#c9a227"
   }
 };
+
+const INACTIVE_PROPERTY_PATTERNS = [
+  /\bvendid[oa]s?\b/i,
+  /\binhabilitad[oa]s?\b/i,
+  /\bno disponible\b/i,
+  /\breservad[oa]s?\b/i
+];
 
 function slugify(value, maxLength = Number.POSITIVE_INFINITY) {
   const normalized = value
@@ -200,6 +207,27 @@ function buildCategory(text, styleColor) {
   return "venta";
 }
 
+function isInactiveProperty(name, text, styleColor) {
+  if (styleColor === "000000") return true;
+  const searchable = `${name || ""} ${text || ""}`;
+  return INACTIVE_PROPERTY_PATTERNS.some((pattern) => pattern.test(searchable));
+}
+
+function normalizeKmlColor(styleColor, fallback = "#a65774") {
+  const color = (styleColor || "").replace(/[^a-f0-9]/gi, "").toLowerCase();
+  if (!color) return fallback;
+
+  if (color.length === 6) return `#${color}`;
+  if (color.length === 8) {
+    const rr = color.slice(6, 8);
+    const gg = color.slice(4, 6);
+    const bb = color.slice(2, 4);
+    return `#${rr}${gg}${bb}`;
+  }
+
+  return fallback;
+}
+
 function formatCoords(coords) {
   const [lat, lng] = coords;
   return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
@@ -241,6 +269,9 @@ function parseKml(kmlText) {
       }
 
       const inferredCategory = buildCategory(plainText, styleColor);
+      if (isInactiveProperty(name, plainText, styleColor)) {
+        return null;
+      }
       const isHuilquilTouristic = /huilquil\s+casona?\s+de\s+montaña/i.test(name);
 
       return {
@@ -255,6 +286,7 @@ function parseKml(kmlText) {
             ? "venta"
             : inferredCategory,
         styleColor,
+        markerColor: normalizeKmlColor(styleColor),
         coords: [lat, lng],
         descriptionHtml,
         summary: truncateText(plainText, 210),
@@ -322,7 +354,10 @@ function App() {
 
     async function loadKml() {
       try {
-        const response = await fetch(KML_URL);
+        const response = await fetch(`${KML_URL}?v=${Date.now()}`, { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error(`No se pudo cargar ${KML_URL}`);
+        }
         const text = await response.text();
       const parsed = parseKml(text).map((property) => ({
         ...property,
@@ -411,7 +446,7 @@ function App() {
           <div className="hero-content">
             <h1>Propiedades reales en San Martin de los Andes, Patagonia.</h1>
             <p>
-              Datos leidos desde <strong>PROPIEDADESVENTA.kml</strong> para mostrar ubicacion, valor y descripcion completa.
+              Datos leidos desde <strong>webpropiedades.kml</strong> para mostrar ubicacion, valor y descripcion completa.
             </p>
             <p className="contact-line">
               WhatsApp: <strong>+54 9 2944 68-8613</strong>
@@ -447,8 +482,9 @@ function App() {
                         center={property.coords}
                         radius={property.id === selectedProperty.id ? 11 : 8}
                         pathOptions={{
-                          color: CATEGORY_META[property.category]?.mapColor || "#a65774",
-                          fillColor: CATEGORY_META[property.category]?.mapColor || "#a65774",
+                          color: property.markerColor || CATEGORY_META[property.category]?.mapColor || "#a65774",
+                          fillColor:
+                            property.markerColor || CATEGORY_META[property.category]?.mapColor || "#a65774",
                           fillOpacity: 0.9,
                           weight: property.id === selectedProperty.id ? 4 : 2
                         }}
