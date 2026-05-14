@@ -394,8 +394,7 @@ function App() {
   const visibleProperties = properties.filter(
     (property) =>
       property.category === "venta" ||
-      property.category === "alquiler_turistico" ||
-      property.category === "proceso"
+      property.category === "alquiler_turistico"
   );
 
   useEffect(() => {
