@@ -1112,19 +1112,34 @@ body {
 
 .admin-property-row {
   width: 100%;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  column-gap: 0.55rem;
+  align-items: center;
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 12px;
   padding: 0.78rem;
   text-align: left;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.1);
-  cursor: pointer;
+  color: #1e1a1f;
+  background: rgba(255, 255, 255, 0.88);
+  cursor: grab;
+  transition: border-color 0.2s ease, background 0.2s ease, opacity 0.2s ease;
 }
 
 .admin-property-row.active,
 .admin-property-row:hover {
   border-color: rgba(198, 167, 105, 0.78);
-  background: rgba(240, 93, 206, 0.22);
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.admin-property-row.is-dragging {
+  opacity: 0.55;
+  cursor: grabbing;
+}
+
+.admin-property-row.is-drop-target {
+  border-color: rgba(255, 238, 201, 0.95);
+  background: rgba(255, 238, 201, 0.92);
 }
 
 .admin-property-row span,
@@ -1132,9 +1147,55 @@ body {
   display: block;
 }
 
+.admin-property-row > span:not(.admin-property-drag-handle),
 .admin-property-row small {
+  grid-column: 2;
+}
+
+.admin-property-drag-handle {
+  grid-row: 1 / span 2;
+  color: rgba(138, 106, 79, 0.78);
+  font-family: "Manrope", sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.08em;
+  line-height: 1;
+}
+
+.admin-property-row small {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
   margin-top: 0.25rem;
-  color: var(--text-soft);
+  color: #5b4c55;
+}
+
+.admin-publish-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  border-radius: 999px;
+  padding: 0.16rem 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.admin-publish-chip.is-published {
+  color: #23533c;
+  background: rgba(47, 128, 76, 0.16);
+}
+
+.admin-publish-chip.is-hidden {
+  color: #7c2936;
+  background: rgba(148, 36, 55, 0.14);
+}
+
+.admin-sidebar-note {
+  margin: -0.3rem 0 0.7rem;
+  color: #ffeec9;
+  font-size: 0.9rem;
+  font-weight: 800;
 }
 
 .admin-editor-title {
@@ -1165,6 +1226,161 @@ body {
   width: auto;
 }
 
+.admin-location-picker {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 14px;
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.admin-location-picker-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  align-items: stretch;
+}
+
+.admin-location-picker-header h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.12rem;
+}
+
+.admin-location-picker-header p,
+.admin-location-message {
+  margin: 0.22rem 0 0;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.admin-location-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.55rem;
+  align-items: center;
+  width: 100%;
+}
+
+.admin-location-search input {
+  min-width: 0;
+}
+
+.admin-location-search .map-btn {
+  flex: 0 0 auto;
+  min-height: 44px;
+}
+
+.admin-location-results {
+  display: grid;
+  gap: 0.45rem;
+  max-height: 180px;
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
+.admin-location-results button {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 10px;
+  padding: 0.62rem 0.72rem;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+.admin-location-results button:hover {
+  border-color: rgba(198, 167, 105, 0.78);
+  background: rgba(240, 93, 206, 0.2);
+}
+
+.admin-location-map-wrap {
+  min-height: 320px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 12px;
+}
+
+.admin-location-map {
+  width: 100%;
+  height: min(40vw, 380px);
+  min-height: 320px;
+  color: #1e1a1f;
+}
+
+.leaflet-marker-icon.admin-location-marker {
+  border: 0;
+  background: transparent;
+}
+
+.admin-location-marker-pin {
+  position: relative;
+  display: block;
+  width: 30px;
+  height: 30px;
+  transform: rotate(-45deg);
+  transform-origin: 50% 50%;
+  border: 3px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  background: var(--marker-color, #a65774);
+  box-shadow:
+    0 10px 18px rgba(17, 17, 17, 0.34),
+    0 0 0 2px rgba(30, 26, 31, 0.18);
+}
+
+.admin-location-marker-pin::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: inset 0 0 0 2px rgba(30, 26, 31, 0.12);
+}
+
+.admin-location-marker::after {
+  content: "";
+  position: absolute;
+  left: 7px;
+  bottom: 0;
+  width: 20px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(17, 17, 17, 0.24);
+  filter: blur(1px);
+}
+
+.admin-location-coordinates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-color-picker {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.admin-color-picker input[type="color"] {
+  width: 54px;
+  height: 44px;
+  padding: 0.24rem;
+  cursor: pointer;
+}
+
+.admin-color-picker input[type="text"],
+.admin-color-picker input:not([type]) {
+  min-width: 0;
+}
+
 .admin-description-widget {
   display: flex;
   flex-direction: column;
@@ -1187,7 +1403,7 @@ body {
 
 .admin-segmented-control {
   display: inline-grid;
-  grid-template-columns: repeat(3, minmax(68px, 1fr));
+  grid-template-columns: repeat(4, minmax(68px, 1fr));
   gap: 0.25rem;
   padding: 0.25rem;
   border: 1px solid rgba(255, 255, 255, 0.22);
@@ -1210,6 +1426,89 @@ body {
 .admin-segmented-control button.active {
   color: #1e1a1f;
   background: rgba(255, 255, 255, 0.88);
+}
+
+.admin-rich-editor {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.admin-rich-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  padding: 0.55rem;
+  border-bottom: 1px solid rgba(30, 26, 31, 0.12);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.admin-rich-toolbar select,
+.admin-rich-toolbar button {
+  width: auto;
+  min-height: 36px;
+  border: 1px solid rgba(30, 26, 31, 0.16);
+  border-radius: 9px;
+  background: #fff;
+  color: #1e1a1f;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.admin-rich-toolbar select {
+  min-width: 132px;
+  padding: 0.42rem 0.6rem;
+}
+
+.admin-rich-toolbar button {
+  cursor: pointer;
+  padding: 0.42rem 0.62rem;
+}
+
+.admin-rich-toolbar button:hover,
+.admin-rich-toolbar select:focus {
+  border-color: rgba(198, 167, 105, 0.78);
+  box-shadow: 0 0 0 3px rgba(198, 167, 105, 0.18);
+  outline: none;
+}
+
+.admin-toolbar-underline {
+  text-decoration: underline;
+}
+
+.admin-rich-editor-surface {
+  min-height: 280px;
+  max-height: 520px;
+  overflow: auto;
+  padding: 1rem;
+  color: #1e1a1f;
+  background: rgba(255, 255, 255, 0.94);
+  font-family: "Manrope", sans-serif;
+  font-size: 0.98rem;
+  outline: none;
+}
+
+.admin-rich-editor-surface:focus {
+  box-shadow: inset 0 0 0 2px rgba(198, 167, 105, 0.32);
+}
+
+.admin-rich-editor-surface:empty::before {
+  content: attr(data-placeholder);
+  color: rgba(30, 26, 31, 0.48);
+  pointer-events: none;
+}
+
+.admin-rich-editor-surface h1,
+.admin-rich-editor-surface h2,
+.admin-rich-editor-surface h3,
+.admin-rich-editor-surface h4,
+.admin-rich-editor-surface p,
+.admin-rich-editor-surface li,
+.admin-rich-editor-surface a {
+  color: #1e1a1f;
 }
 
 .admin-preview-pane {
@@ -1309,5 +1608,15 @@ body {
 @media (max-width: 640px) {
   .admin-grid {
     grid-template-columns: 1fr;
+  }
+
+  .admin-location-picker-header,
+  .admin-location-coordinates {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-location-search {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

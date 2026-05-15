@@ -31,7 +31,6 @@ function propertyValues(property) {
     sqlString(property.category),
     sqlNumber(property.latitude),
     sqlNumber(property.longitude),
-    sqlString(property.styleColor),
     sqlString(property.markerColor),
     sqlString(property.summary),
     sqlString(property.descriptionHtml),
@@ -58,7 +57,6 @@ function upsertStatement(property) {
     "category",
     "latitude",
     "longitude",
-    "style_color",
     "marker_color",
     "summary",
     "description_html",
@@ -105,7 +103,7 @@ cross join (
 
 const properties = parseKmlProperties({ kmlPath, publicDir });
 const seedSql = `-- Generated from public/webpropiedades.kml.
--- Run after supabase/migrations/202605150001_initial_schema.sql.
+-- Run after Supabase migrations.
 
 begin;
 

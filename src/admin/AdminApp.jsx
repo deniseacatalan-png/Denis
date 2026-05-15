@@ -1,5 +1,7 @@
 import { upload } from "@vercel/blob/client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import L from "leaflet";
+import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import { CATEGORY_META, slugify } from "../utils/properties";
 import {
   deleteAdminProperty,
@@ -8,7 +10,8 @@ import {
   onAuthStateChange,
   saveAdminProperty,
   signInAdmin,
-  signOutAdmin
+  signOutAdmin,
+  updateAdminPropertyOrder
 } from "../utils/supabase/properties";
 
 const emptyPropertyForm = {
@@ -21,7 +24,6 @@ const emptyPropertyForm = {
   category: "venta",
   latitude: "-40.1573",
   longitude: "-71.3524",
-  styleColor: "",
   markerColor: "#a65774",
   summary: "",
   descriptionHtml: "",
@@ -33,6 +35,7 @@ const emptyPropertyForm = {
 
 const imageContentTypes = ["image/avif", "image/jpeg", "image/png", "image/webp"];
 const imageAccept = imageContentTypes.join(",");
+const defaultPropertyCoords = [-40.1573, -71.3524];
 
 const mimeExtensions = {
   "image/avif": ".avif",
@@ -40,6 +43,417 @@ const mimeExtensions = {
   "image/png": ".png",
   "image/webp": ".webp"
 };
+
+function colorValue(value, fallback = "#a65774") {
+  return /^#[0-9a-f]{6}$/i.test(value || "") ? value : fallback;
+}
+
+function reorderProperties(properties, sourceId, targetId) {
+  const sourceIndex = properties.findIndex((property) => property.id === sourceId);
+  const targetIndex = properties.findIndex((property) => property.id === targetId);
+
+  if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) {
+    return properties;
+  }
+
+  const nextProperties = [...properties];
+  const [movedProperty] = nextProperties.splice(sourceIndex, 1);
+  nextProperties.splice(targetIndex, 0, movedProperty);
+
+  return nextProperties.map((property, index) => ({
+    ...property,
+    displayOrder: index
+  }));
+}
+
+function escapeHtml(text) {
+  return text.replace(/[&<>"']/g, (character) => {
+    const entities = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    };
+
+    return entities[character];
+  });
+}
+
+function textToParagraphHtml(text) {
+  return text
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, "<br>")}</p>`)
+    .join("");
+}
+
+function htmlToPlainText(html) {
+  if (!html) return "";
+
+  if (typeof window !== "undefined" && typeof window.DOMParser !== "undefined") {
+    const doc = new window.DOMParser().parseFromString(html, "text/html");
+    return (doc.body.innerText || doc.body.textContent || "")
+      .replace(/\n{3,}/g, "\n\n")
+      .replace(/[ \t]{2,}/g, " ")
+      .trim();
+  }
+
+  return html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function RichHtmlEditor({ html, onChange }) {
+  const editorRef = useRef(null);
+  const selectionRef = useRef(null);
+
+  useEffect(() => {
+    const editor = editorRef.current;
+    const nextHtml = html || "";
+
+    if (editor && editor.innerHTML !== nextHtml) {
+      editor.innerHTML = nextHtml;
+    }
+  }, [html]);
+
+  const saveSelection = () => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const selection = window.getSelection();
+
+    if (!selection || selection.rangeCount === 0) return;
+
+    const range = selection.getRangeAt(0);
+    if (editor.contains(range.commonAncestorContainer)) {
+      selectionRef.current = range.cloneRange();
+    }
+  };
+
+  const restoreSelection = () => {
+    const selection = window.getSelection();
+    if (!selectionRef.current || !selection) return;
+
+    try {
+      selection.removeAllRanges();
+      selection.addRange(selectionRef.current);
+    } catch {
+      selectionRef.current = null;
+    }
+  };
+
+  const emitChange = () => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    const nextHtml = editor.innerHTML === "<br>" ? "" : editor.innerHTML;
+    const nextPlainText = editor.innerText.replace(/\n{3,}/g, "\n\n").trim();
+    onChange(nextHtml, nextPlainText);
+  };
+
+  const applyCommand = (command, value = null) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    editor.focus();
+    restoreSelection();
+    document.execCommand(command, false, value);
+    saveSelection();
+    emitChange();
+  };
+
+  const keepFocus = (event) => {
+    saveSelection();
+    event.preventDefault();
+  };
+
+  const handlePaste = (event) => {
+    const htmlPayload = event.clipboardData.getData("text/html");
+    const textPayload = event.clipboardData.getData("text/plain");
+    const pastedContent = htmlPayload || textToParagraphHtml(textPayload);
+
+    if (!pastedContent) return;
+
+    event.preventDefault();
+    document.execCommand("insertHTML", false, pastedContent);
+    window.setTimeout(emitChange, 0);
+  };
+
+  const handleLink = () => {
+    const url = window.prompt("URL del enlace");
+    if (!url) return;
+    applyCommand("createLink", url);
+  };
+
+  return (
+    <div className="admin-rich-editor">
+      <div className="admin-rich-toolbar" aria-label="Herramientas de ficha tecnica" onMouseDown={saveSelection}>
+        <select
+          defaultValue="<p>"
+          onChange={(event) => applyCommand("formatBlock", event.target.value)}
+          aria-label="Formato"
+        >
+          <option value="<p>">Parrafo</option>
+          <option value="<h3>">Titulo</option>
+          <option value="<h4>">Subtitulo</option>
+        </select>
+        <button type="button" title="Negrita" onMouseDown={keepFocus} onClick={() => applyCommand("bold")}>
+          <strong>B</strong>
+        </button>
+        <button type="button" title="Italica" onMouseDown={keepFocus} onClick={() => applyCommand("italic")}>
+          <em>I</em>
+        </button>
+        <button type="button" title="Subrayado" onMouseDown={keepFocus} onClick={() => applyCommand("underline")}>
+          <span className="admin-toolbar-underline">U</span>
+        </button>
+        <button
+          type="button"
+          title="Lista"
+          onMouseDown={keepFocus}
+          onClick={() => applyCommand("insertUnorderedList")}
+        >
+          Lista
+        </button>
+        <button
+          type="button"
+          title="Lista numerada"
+          onMouseDown={keepFocus}
+          onClick={() => applyCommand("insertOrderedList")}
+        >
+          1. Lista
+        </button>
+        <button type="button" title="Enlace" onMouseDown={keepFocus} onClick={handleLink}>
+          Enlace
+        </button>
+        <button type="button" title="Limpiar formato" onMouseDown={keepFocus} onClick={() => applyCommand("removeFormat")}>
+          Limpiar
+        </button>
+      </div>
+      <div
+        ref={editorRef}
+        className="admin-rich-editor-surface rich-text"
+        contentEditable
+        suppressContentEditableWarning
+        data-placeholder="Escribi la ficha tecnica..."
+        onInput={() => {
+          saveSelection();
+          emitChange();
+        }}
+        onKeyUp={saveSelection}
+        onMouseUp={saveSelection}
+        onBlur={() => {
+          saveSelection();
+          emitChange();
+        }}
+        onPaste={handlePaste}
+      />
+    </div>
+  );
+}
+
+function parseCoordinate(value, fallback) {
+  const coordinate = Number(value);
+  return Number.isFinite(coordinate) ? coordinate : fallback;
+}
+
+function MapCenterSync({ center }) {
+  const map = useMap();
+
+  useEffect(() => {
+    map.setView(center, Math.max(map.getZoom(), 14));
+  }, [center, map]);
+
+  return null;
+}
+
+function MapClickSync({ onSelect }) {
+  useMapEvents({
+    click(event) {
+      onSelect(event.latlng.lat, event.latlng.lng);
+    }
+  });
+
+  return null;
+}
+
+function LocationPicker({ latitude, longitude, location, markerColor, onCoordinatesChange }) {
+  const previousLocationRef = useRef(location);
+  const [searchQuery, setSearchQuery] = useState(location || "");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchMessage, setSearchMessage] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const hasValidLatitude = Number.isFinite(Number(latitude));
+  const hasValidLongitude = Number.isFinite(Number(longitude));
+  const safeMarkerColor = colorValue(markerColor);
+  const position = useMemo(
+    () => [
+      parseCoordinate(latitude, defaultPropertyCoords[0]),
+      parseCoordinate(longitude, defaultPropertyCoords[1])
+    ],
+    [latitude, longitude]
+  );
+  const markerIcon = useMemo(
+    () =>
+      L.divIcon({
+        className: "admin-location-marker",
+        html: `<span class="admin-location-marker-pin" style="--marker-color: ${safeMarkerColor}"></span>`,
+        iconSize: [34, 44],
+        iconAnchor: [17, 40],
+        popupAnchor: [0, -34]
+      }),
+    [safeMarkerColor]
+  );
+
+  useEffect(() => {
+    if (location !== previousLocationRef.current) {
+      previousLocationRef.current = location;
+      setSearchQuery(location || "");
+    }
+  }, [location]);
+
+  const updateCoordinates = (nextLatitude, nextLongitude) => {
+    onCoordinatesChange(nextLatitude.toFixed(6), nextLongitude.toFixed(6));
+  };
+
+  const handleMarkerDrag = (event) => {
+    const nextPosition = event.target.getLatLng();
+    updateCoordinates(nextPosition.lat, nextPosition.lng);
+  };
+
+  const handleSearch = async (event) => {
+    event?.preventDefault();
+    const trimmedQuery = searchQuery.trim();
+
+    if (!trimmedQuery) return;
+
+    const coordinateMatch = trimmedQuery.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
+    if (coordinateMatch) {
+      updateCoordinates(Number(coordinateMatch[1]), Number(coordinateMatch[2]));
+      setSearchResults([]);
+      setSearchMessage("");
+      return;
+    }
+
+    setIsSearching(true);
+    setSearchMessage("");
+
+    try {
+      const params = new URLSearchParams({
+        format: "json",
+        limit: "5",
+        countrycodes: "ar",
+        addressdetails: "1",
+        "accept-language": "es",
+        q: trimmedQuery
+      });
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?${params.toString()}`);
+
+      if (!response.ok) {
+        throw new Error("No se pudo buscar esa ubicacion.");
+      }
+
+      const results = await response.json();
+      setSearchResults(results);
+      setSearchMessage(results.length ? "" : "No encontre resultados para esa busqueda.");
+    } catch (searchError) {
+      setSearchResults([]);
+      setSearchMessage(searchError.message);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const selectSearchResult = (result) => {
+    const nextLatitude = Number(result.lat);
+    const nextLongitude = Number(result.lon);
+
+    if (!Number.isFinite(nextLatitude) || !Number.isFinite(nextLongitude)) return;
+
+    updateCoordinates(nextLatitude, nextLongitude);
+    setSearchQuery(result.display_name || "");
+    setSearchResults([]);
+    setSearchMessage("");
+  };
+
+  return (
+    <section className="admin-location-picker">
+      <div className="admin-location-picker-header">
+        <div>
+          <h3>Ubicacion en mapa</h3>
+          <p>{hasValidLatitude && hasValidLongitude ? "Coordenadas seleccionadas" : "San Martin de los Andes"}</p>
+        </div>
+        <div className="admin-location-search">
+          <input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                handleSearch(event);
+              }
+            }}
+            placeholder="Buscar por nombre o direccion"
+          />
+          <button type="button" className="map-btn" onClick={handleSearch} disabled={isSearching}>
+            {isSearching ? "Buscando..." : "Buscar"}
+          </button>
+        </div>
+      </div>
+
+      {searchMessage ? <p className="admin-location-message">{searchMessage}</p> : null}
+
+      {searchResults.length ? (
+        <div className="admin-location-results">
+          {searchResults.map((result) => (
+            <button type="button" key={result.place_id} onClick={() => selectSearchResult(result)}>
+              {result.display_name}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="admin-location-map-wrap">
+        <MapContainer center={position} zoom={14} scrollWheelZoom={true} className="admin-location-map">
+          <MapCenterSync center={position} />
+          <MapClickSync onSelect={updateCoordinates} />
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <Marker position={position} draggable icon={markerIcon} eventHandlers={{ dragend: handleMarkerDrag }}>
+            <Popup>Ubicacion de la propiedad</Popup>
+          </Marker>
+        </MapContainer>
+      </div>
+
+      <div className="admin-location-coordinates">
+        <label>
+          Latitud
+          <input
+            type="number"
+            step="any"
+            value={latitude}
+            onChange={(event) => onCoordinatesChange(event.target.value, longitude)}
+            required
+          />
+        </label>
+        <label>
+          Longitud
+          <input
+            type="number"
+            step="any"
+            value={longitude}
+            onChange={(event) => onCoordinatesChange(latitude, event.target.value)}
+            required
+          />
+        </label>
+      </div>
+    </section>
+  );
+}
 
 function imagePathForFile(file, propertySlug, index) {
   const extension = file.name.match(/\.[a-z0-9]+$/i)?.[0]?.toLowerCase() || mimeExtensions[file.type] || "";
@@ -49,6 +463,8 @@ function imagePathForFile(file, propertySlug, index) {
 }
 
 function propertyToForm(property) {
+  const rawDescription = property.rawDescription || "";
+
   return {
     databaseId: property.databaseId || property.id || "",
     title: property.title || "",
@@ -59,11 +475,10 @@ function propertyToForm(property) {
     category: property.category || "venta",
     latitude: String(property.latitude ?? property.coords?.[0] ?? ""),
     longitude: String(property.longitude ?? property.coords?.[1] ?? ""),
-    styleColor: property.styleColor || "",
     markerColor: property.markerColor || CATEGORY_META[property.category]?.mapColor || "#a65774",
     summary: property.summary || "",
-    descriptionHtml: property.descriptionHtml || "",
-    rawDescription: property.rawDescription || "",
+    descriptionHtml: property.descriptionHtml || textToParagraphHtml(rawDescription),
+    rawDescription,
     isPublished: Boolean(property.isPublished),
     displayOrder: property.displayOrder || 0,
     images: property.images || []
@@ -137,7 +552,10 @@ function AdminApp() {
   const [form, setForm] = useState(emptyPropertyForm);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
-  const [descriptionView, setDescriptionView] = useState("preview");
+  const [isSavingOrder, setIsSavingOrder] = useState(false);
+  const [draggingPropertyId, setDraggingPropertyId] = useState("");
+  const [dropTargetPropertyId, setDropTargetPropertyId] = useState("");
+  const [descriptionView, setDescriptionView] = useState("editor");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -195,11 +613,84 @@ function AdminApp() {
     }));
   };
 
+  const updateTitle = (title) => {
+    setForm((current) => ({
+      ...current,
+      title,
+      slug: slugify(title)
+    }));
+  };
+
+  const updateDescription = (descriptionHtml, rawDescription = htmlToPlainText(descriptionHtml)) => {
+    setForm((current) => ({
+      ...current,
+      descriptionHtml,
+      rawDescription
+    }));
+  };
+
   const startNewProperty = () => {
     setSelectedId("");
-    setForm(emptyPropertyForm);
+    setForm({
+      ...emptyPropertyForm,
+      displayOrder: properties.length
+    });
     setMessage("");
     setError("");
+  };
+
+  const handlePropertyDragStart = (event, propertyId) => {
+    setDraggingPropertyId(propertyId);
+    setDropTargetPropertyId("");
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", propertyId);
+  };
+
+  const handlePropertyDragOver = (event, propertyId) => {
+    if (!draggingPropertyId || draggingPropertyId === propertyId) return;
+
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+    setDropTargetPropertyId(propertyId);
+  };
+
+  const handlePropertyDrop = async (event, targetPropertyId) => {
+    event.preventDefault();
+    const sourcePropertyId = draggingPropertyId || event.dataTransfer.getData("text/plain");
+
+    setDraggingPropertyId("");
+    setDropTargetPropertyId("");
+
+    if (!sourcePropertyId || sourcePropertyId === targetPropertyId) return;
+
+    const nextProperties = reorderProperties(properties, sourcePropertyId, targetPropertyId);
+    if (nextProperties === properties) return;
+
+    setProperties(nextProperties);
+    setForm((current) => {
+      const selectedPropertyInOrder = nextProperties.find((property) => property.id === current.databaseId);
+      return selectedPropertyInOrder
+        ? { ...current, displayOrder: selectedPropertyInOrder.displayOrder }
+        : current;
+    });
+    setIsSavingOrder(true);
+    setMessage("");
+    setError("");
+
+    try {
+      await updateAdminPropertyOrder(nextProperties);
+      setMessage("Orden actualizado.");
+    } catch (orderError) {
+      setError(orderError.message);
+      await loadProperties();
+    } finally {
+      setIsSavingOrder(false);
+    }
+  };
+
+  const handlePropertyDragEnd = () => {
+    setDraggingPropertyId("");
+    setDropTargetPropertyId("");
   };
 
   const handleSave = async (event) => {
@@ -344,17 +835,40 @@ function AdminApp() {
               Nueva
             </button>
           </div>
+          {isSavingOrder ? <p className="admin-sidebar-note">Guardando orden...</p> : null}
           {isLoading && !properties.length ? <p>Cargando...</p> : null}
           <div className="admin-property-list">
             {properties.map((property) => (
               <button
                 type="button"
                 key={property.id}
-                className={`admin-property-row ${property.id === selectedId ? "active" : ""}`}
+                draggable
+                className={[
+                  "admin-property-row",
+                  property.id === selectedId ? "active" : "",
+                  property.id === draggingPropertyId ? "is-dragging" : "",
+                  property.id === dropTargetPropertyId ? "is-drop-target" : ""
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
                 onClick={() => setSelectedId(property.id)}
+                onDragStart={(event) => handlePropertyDragStart(event, property.id)}
+                onDragOver={(event) => handlePropertyDragOver(event, property.id)}
+                onDrop={(event) => handlePropertyDrop(event, property.id)}
+                onDragLeave={() => {
+                  setDropTargetPropertyId((currentId) => (currentId === property.id ? "" : currentId));
+                }}
+                onDragEnd={handlePropertyDragEnd}
+                aria-label={`Ordenar ${property.title}`}
               >
+                <span className="admin-property-drag-handle" aria-hidden="true">::</span>
                 <span>{property.title}</span>
-                <small>{CATEGORY_META[property.category]?.label || property.category}</small>
+                <small>
+                  {CATEGORY_META[property.category]?.label || property.category}
+                  <span className={`admin-publish-chip ${property.isPublished ? "is-published" : "is-hidden"}`}>
+                    {property.isPublished ? "Publicada" : "Oculta"}
+                  </span>
+                </small>
               </button>
             ))}
           </div>
@@ -384,16 +898,8 @@ function AdminApp() {
               Titulo
               <input
                 value={form.title}
-                onChange={(event) => updateField("title", event.target.value)}
+                onChange={(event) => updateTitle(event.target.value)}
                 required
-              />
-            </label>
-            <label>
-              Slug
-              <input
-                value={form.slug}
-                onChange={(event) => updateField("slug", event.target.value)}
-                placeholder={slugify(form.title)}
               />
             </label>
             <label>
@@ -407,14 +913,6 @@ function AdminApp() {
               </select>
             </label>
             <label>
-              Orden
-              <input
-                type="number"
-                value={form.displayOrder}
-                onChange={(event) => updateField("displayOrder", event.target.value)}
-              />
-            </label>
-            <label>
               Valor
               <input value={form.price} onChange={(event) => updateField("price", event.target.value)} />
             </label>
@@ -426,33 +924,35 @@ function AdminApp() {
               Ubicación
               <input value={form.location} onChange={(event) => updateField("location", event.target.value)} />
             </label>
-            <label>
-              Latitud
-              <input
-                type="number"
-                step="any"
-                value={form.latitude}
-                onChange={(event) => updateField("latitude", event.target.value)}
-                required
-              />
-            </label>
-            <label>
-              Longitud
-              <input
-                type="number"
-                step="any"
-                value={form.longitude}
-                onChange={(event) => updateField("longitude", event.target.value)}
-                required
-              />
-            </label>
-            <label>
-              Color KML
-              <input value={form.styleColor} onChange={(event) => updateField("styleColor", event.target.value)} />
-            </label>
-            <label>
-              Color marcador
-              <input value={form.markerColor} onChange={(event) => updateField("markerColor", event.target.value)} />
+            <LocationPicker
+              latitude={form.latitude}
+              longitude={form.longitude}
+              location={form.location}
+              markerColor={form.markerColor}
+              onCoordinatesChange={(nextLatitude, nextLongitude) => {
+                setForm((current) => ({
+                  ...current,
+                  latitude: nextLatitude,
+                  longitude: nextLongitude
+                }));
+              }}
+            />
+            <label className="admin-color-field">
+              Color del punto en el mapa
+              <div className="admin-color-picker">
+                <input
+                  type="color"
+                  value={colorValue(form.markerColor, CATEGORY_META[form.category]?.mapColor || "#a65774")}
+                  onChange={(event) => updateField("markerColor", event.target.value)}
+                  aria-label="Color del punto en el mapa"
+                />
+                <input
+                  type="text"
+                  value={form.markerColor}
+                  onChange={(event) => updateField("markerColor", event.target.value)}
+                  placeholder={CATEGORY_META[form.category]?.mapColor || "#a65774"}
+                />
+              </div>
             </label>
           </div>
 
@@ -468,6 +968,13 @@ function AdminApp() {
             <div className="admin-widget-header">
               <h3>Ficha tecnica</h3>
               <div className="admin-segmented-control" aria-label="Vista de ficha tecnica">
+                <button
+                  type="button"
+                  className={descriptionView === "editor" ? "active" : ""}
+                  onClick={() => setDescriptionView("editor")}
+                >
+                  Editor
+                </button>
                 <button
                   type="button"
                   className={descriptionView === "plain" ? "active" : ""}
@@ -492,6 +999,10 @@ function AdminApp() {
               </div>
             </div>
 
+            {descriptionView === "editor" ? (
+              <RichHtmlEditor html={form.descriptionHtml} onChange={updateDescription} />
+            ) : null}
+
             {descriptionView === "plain" ? (
               <label>
                 Texto plano
@@ -509,7 +1020,7 @@ function AdminApp() {
                 <textarea
                   rows="10"
                   value={form.descriptionHtml}
-                  onChange={(event) => updateField("descriptionHtml", event.target.value)}
+                  onChange={(event) => updateDescription(event.target.value)}
                 />
               </label>
             ) : null}

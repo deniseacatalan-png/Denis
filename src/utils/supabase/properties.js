@@ -15,7 +15,6 @@ const PROPERTY_SELECT = `
   category,
   latitude,
   longitude,
-  style_color,
   marker_color,
   summary,
   description_html,
@@ -134,6 +133,19 @@ export async function saveAdminProperty(values) {
   }
 
   return propertyId;
+}
+
+export async function updateAdminPropertyOrder(orderedProperties) {
+  const supabase = createClient();
+
+  for (const [index, property] of orderedProperties.entries()) {
+    const { error } = await supabase
+      .from("properties")
+      .update({ display_order: index })
+      .eq("id", property.id);
+
+    if (error) throw error;
+  }
 }
 
 export async function deleteAdminProperty(propertyId) {

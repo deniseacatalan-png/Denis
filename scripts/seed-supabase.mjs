@@ -29,7 +29,6 @@ function toPropertyRow(property) {
     category: property.category,
     latitude: property.latitude,
     longitude: property.longitude,
-    style_color: property.styleColor,
     marker_color: property.markerColor,
     summary: property.summary,
     description_html: property.descriptionHtml,
