@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import {
   MapContainer,
   CircleMarker,
@@ -18,29 +18,9 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow
 });
 
-const KML_URL = "/webpropiedades.kml";
+const AdminApp = lazy(() => import("./admin/AdminApp"));
+
 const officeWhatsApp = "5492944688613";
-const PUBLIC_IMAGE_FILES = import.meta.glob(
-  "../public/images/**/*.{jpg,JPG,jpeg,JPEG,png,PNG,webp,WEBP,avif,AVIF}",
-  { eager: true, import: "default", query: "?url" }
-);
-
-const PROPERTY_IMAGE_LIBRARY = Object.entries(PUBLIC_IMAGE_FILES).reduce((acc, [filePath, fileUrl]) => {
-  const normalizedPath = filePath.replace(/\\/g, "/");
-  const folderName = normalizedPath.split("/").at(-2) || "";
-  const folderSlug = slugify(folderName);
-
-  if (!folderSlug) return acc;
-  if (!acc[folderSlug]) acc[folderSlug] = [];
-  acc[folderSlug].push(fileUrl);
-  return acc;
-}, {});
-
-function isExcludedProperty(name, styleColor) {
-  const normalizedName = (name || "").toLowerCase();
-  if ((styleColor || "").toLowerCase() === "000000") return true;
-  return /\b(vendid[oa]|inhabilitad[oa])\b/.test(normalizedName);
-}
 
 const CATEGORY_META = {
   venta: {
@@ -65,262 +45,9 @@ const CATEGORY_META = {
   }
 };
 
-function slugify(value, maxLength = Number.POSITIVE_INFINITY) {
-  const normalized = value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-  return Number.isFinite(maxLength) ? normalized.slice(0, maxLength) : normalized;
-}
-
-function htmlToText(html) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html || "", "text/html");
-  const text = doc.body.innerText || doc.body.textContent || "";
-  return text.replace(/\s+/g, " ").trim();
-}
-
-function truncateText(text, maxLength = 180) {
-  if (text.length <= maxLength) return text;
-  return `${text.slice(0, maxLength - 1).trim()}...`;
-}
-
-function extractPrice(text) {
-  const normalizeCurrency = (value) =>
-    value
-      .replace(/U\$S/gi, "USD")
-      .replace(/U\$D/gi, "USD")
-      .replace(/u\$s/gi, "USD")
-      .replace(/u\$d/gi, "USD")
-      .replace(/\s+/g, " ")
-      .trim();
-
-  const pricePatterns = [
-    /(?:U\$D|USD|U\$S)\s*[0-9][0-9.,]*(?:\s*(?:mil|millones?))?/i,
-    /valor[:\s]*((?:U\$D|USD|U\$S)\s*[0-9][0-9.,]*(?:\s*(?:mil|millones?))?)/i
-  ];
-
-  for (const pattern of pricePatterns) {
-    const match = text.match(pattern);
-    if (match) {
-      return normalizeCurrency(match[1] || match[0]);
-    }
-  }
-
-  const fallback = text.match(/\b(?:U\$D|USD|U\$S)\b[\s:]*[0-9][0-9.,]*(?:\s*(?:mil|millones?))?/i);
-  return fallback ? normalizeCurrency(fallback[0]) : "Consultar";
-}
-
-function extractArea(text) {
-  const patterns = [
-    /\b[0-9][0-9.,]*\s?(?:m²|m2)\b(?:\s*cubiertos?)?/i,
-    /\b[0-9][0-9.,]*\s?ha\b/i,
-    /\b[0-9][0-9.,]*\s?hect[aá]reas?\b/i
-  ];
-
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    if (match) return match[0].replace(/\s+/g, " ").trim();
-  }
-
-  return "Superficie a confirmar";
-}
-
-
-const AREA_OVERRIDES = {
-  "HAS ORILLAS DE CALEUFU": "13.000 m²",
-  "LOTES KALEUCHE ALTO": "700 m²",
-  "LOTE CJN BELLO": "800 m²",
-  "LOTE ALIHUEN ALTO": "1.700 m²",
-  "LOTE KALEUCHE MEDIO": "1.135 m²",
-  "LOTE VEGA MAIPU": "1.178 m²",
-  "LOTE ZONA CENTRO": "229,52 m²",
-  "LOTE 102, ESTANCIA MIRALEJOS CLUB DE CAMPO": "6.849 m²",
-  "LOTE 42, ESTANCIA MIRALEJOS CLUB DE CAMPO": "2.507 m²"
-};
-
-function resolveArea(title, text) {
-  if (AREA_OVERRIDES[title]) return AREA_OVERRIDES[title];
-  return extractArea(text);
-}
-
-function extractLocation(text, title) {
-  const locationMatch = text.match(
-    /Ubicaci[oó]n:\s*(.*?)(?=\s*(?:Superficie|Servicios|Caracter[ií]sticas|Valor|Frente|Distribuci[oó]n|Acceso|Amenities|Usos|FOS|FOT|Opcion|Opción|Capacidad|Terreno|Lote|Casa|Departamento|$))/i
-  );
-  if (locationMatch) {
-    return locationMatch[1].replace(/\s+/g, " ").trim();
-  }
-
-  if (/miralejos/i.test(title)) return "Estancia Miralejos, San Martin de los Andes";
-  if (/kaleuche/i.test(title)) return "Kaleuche, San Martin de los Andes";
-  if (/vega/i.test(title)) return "Vega Maipu, San Martin de los Andes";
-
-  return "San Martin de los Andes, Neuquen";
-}
-
-function buildCategory(text, styleColor) {
-  if (styleColor === "ab47bc" || styleColor === "ff78c4") {
-    return "venta";
-  }
-
-  if (styleColor === "ffee58") {
-    return "proceso";
-  }
-
-  if (styleColor === "000000") {
-    return "vendido";
-  }
-
-  if (styleColor === "ef5350") {
-    return "alquiler_turistico";
-  }
-
-  if (/tur[ií]stic|temporada|pax/i.test(text)) {
-    return "alquiler_turistico";
-  }
-
-  if (/no se vende/i.test(text) || /ya se vend/i.test(text)) {
-    return "vendido";
-  }
-
-  if (/antes del .*ingresa a la venta/i.test(text) || /valor cerrado/i.test(text)) {
-    return "proceso";
-  }
-
-  return "venta";
-}
-
-function normalizeKmlColor(styleColor, fallback = "#a65774") {
-  const color = (styleColor || "").replace(/[^a-f0-9]/gi, "").toLowerCase();
-  if (!color) return fallback;
-
-  if (color.length === 6) return `#${color}`;
-  if (color.length === 8) {
-    const rr = color.slice(6, 8);
-    const gg = color.slice(4, 6);
-    const bb = color.slice(2, 4);
-    return `#${rr}${gg}${bb}`;
-  }
-
-  return fallback;
-}
-
 function formatCoords(coords) {
   const [lat, lng] = coords;
   return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-}
-
-function parseKml(kmlText) {
-  const parser = new DOMParser();
-  const xml = parser.parseFromString(kmlText, "application/xml");
-  const styleColorMap = {};
-
-  xml.querySelectorAll("gx\\:CascadingStyle, CascadingStyle").forEach((node) => {
-    const styleId = node.getAttribute("kml:id") || node.getAttribute("id") || "";
-    if (!styleId) return;
-
-    const href = node.querySelector("IconStyle Icon href, IconStyle href")?.textContent || "";
-    const hrefColor = href.match(/color=([a-z0-9]+)/i)?.[1]?.toLowerCase() || "";
-    const iconColor = node.querySelector("IconStyle color")?.textContent?.trim()?.toLowerCase() || "";
-    const color = hrefColor || iconColor;
-    if (!color) return;
-
-    styleColorMap[styleId.replace(/_normal$/i, "")] = color;
-    styleColorMap[styleId] = color;
-  });
-
-  xml.querySelectorAll("StyleMap").forEach((styleMap) => {
-    const styleMapId = styleMap.getAttribute("id") || styleMap.getAttribute("kml:id") || "";
-    if (!styleMapId) return;
-
-    const normalPair = [...styleMap.querySelectorAll("Pair")].find(
-      (pair) => pair.querySelector("key")?.textContent?.trim() === "normal"
-    );
-    const normalStyleUrl = normalPair?.querySelector("styleUrl")?.textContent?.trim().replace(/^#/, "") || "";
-    if (normalStyleUrl && styleColorMap[normalStyleUrl]) {
-      styleColorMap[styleMapId] = styleColorMap[normalStyleUrl];
-    }
-  });
-
-  const placemarks = [...xml.querySelectorAll("Placemark")];
-
-  return placemarks
-    .map((placemark, index) => {
-      const name = placemark.querySelector("name")?.textContent?.trim() || `Propiedad ${index + 1}`;
-      const descriptionHtml = placemark.querySelector("description")?.textContent?.trim() || "";
-      const coordinatesText = placemark.querySelector("coordinates")?.textContent?.trim() || "";
-      const styleUrl = placemark.querySelector("styleUrl")?.textContent?.trim() || "";
-      const styleColor = styleColorMap[styleUrl.replace(/^#/, "")] || "";
-      const [lngText, latText] = coordinatesText.split(",");
-      const lat = Number.parseFloat(latText);
-      const lng = Number.parseFloat(lngText);
-      const plainText = htmlToText(descriptionHtml);
-
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-        return null;
-      }
-
-      if (isExcludedProperty(name, styleColor)) {
-        return null;
-      }
-
-      const inferredCategory = buildCategory(plainText, styleColor);
-      const isHuilquilTouristic = /huilquil\s+casona?\s+de\s+montaña/i.test(name);
-
-      return {
-        id: `${slugify(name, 48)}-${index + 1}`,
-        title: name,
-        location: extractLocation(plainText, name),
-        price: extractPrice(plainText),
-        area: resolveArea(name, plainText),
-        category: isHuilquilTouristic
-          ? "alquiler_turistico"
-          : inferredCategory === "alquiler_turistico"
-            ? "venta"
-            : inferredCategory,
-        styleColor,
-        markerColor: normalizeKmlColor(styleColor),
-        coords: [lat, lng],
-        descriptionHtml,
-        summary: truncateText(plainText, 210),
-        rawDescription: plainText
-      };
-    })
-    .filter(Boolean);
-}
-
-function resolvePropertyImages(property) {
-  const normalizedTitle = slugify(property.title || "");
-  const normalizedLocation = slugify(property.location || "");
-  const titleTokens = normalizedTitle.split("-").filter((token) => token.length > 1);
-  const locationTokens = normalizedLocation.split("-").filter((token) => token.length > 2);
-
-  let bestScore = 0;
-  let bestImages = [];
-
-  if (PROPERTY_IMAGE_LIBRARY[normalizedTitle]) {
-    return PROPERTY_IMAGE_LIBRARY[normalizedTitle];
-  }
-
-  for (const [folderSlug, images] of Object.entries(PROPERTY_IMAGE_LIBRARY)) {
-    const folderTokens = folderSlug.split("-").filter((token) => token.length > 1);
-    const titleHits = folderTokens.filter((token) => titleTokens.includes(token)).length;
-    const locationHits = folderTokens.filter((token) => locationTokens.includes(token)).length;
-    const score = titleHits * 3 + locationHits;
-
-    const hasStrongTitleMatch = titleHits >= 2 || normalizedTitle.includes(folderSlug);
-
-    if (hasStrongTitleMatch && score > bestScore) {
-      bestScore = score;
-      bestImages = images;
-    }
-  }
-
-  return bestImages;
 }
 
 function resolvePropertyCoverImage(property) {
@@ -337,11 +64,12 @@ function MapFocus({ coords }) {
   return null;
 }
 
-function App() {
+function PublicApp() {
   const [properties, setProperties] = useState([]);
   const [selectedId, setSelectedId] = useState("");
   const [expandedGalleryId, setExpandedGalleryId] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [serviceNeed, setServiceNeed] = useState("vender");
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const mapSectionRef = useRef(null);
@@ -349,33 +77,33 @@ function App() {
   useEffect(() => {
     let active = true;
 
-    async function loadKml() {
+    async function loadProperties() {
       try {
-        const response = await fetch(`${KML_URL}?v=${Date.now()}`, { cache: "no-store" });
-        if (!response.ok) {
-          throw new Error(`No se pudo cargar ${KML_URL}`);
-        }
-        const text = await response.text();
-      const parsed = parseKml(text).map((property) => ({
-        ...property,
-        images: resolvePropertyImages(property)
-      }));
+        const { fetchPublishedProperties } = await import("./utils/supabase/properties");
+        const supabaseProperties = await fetchPublishedProperties();
+
+        const parsed = supabaseProperties.map((property) => ({
+          ...property,
+          images: property.images || []
+        }));
 
         if (!active) return;
 
         setProperties(parsed);
         setSelectedId(parsed[0]?.id || "");
+        setLoadError("");
       } catch (error) {
         if (!active) return;
         setProperties([]);
         setSelectedId("");
+        setLoadError("No pudimos cargar las propiedades desde la base de datos.");
       } finally {
         if (active) setLoading(false);
       }
     }
 
-    loadKml();
-    const refreshIntervalId = window.setInterval(loadKml, 60000);
+    loadProperties();
+    const refreshIntervalId = window.setInterval(loadProperties, 60000);
 
     return () => {
       active = false;
@@ -447,7 +175,7 @@ function App() {
           <div className="hero-content">
             <h1>Propiedades reales en San Martin de los Andes, Patagonia.</h1>
             <p>
-              Datos leidos desde <strong>webpropiedades.kml</strong> para mostrar ubicacion, valor y descripcion completa.
+              Propiedades cargadas desde el administrador con ubicacion, valor y descripcion completa.
             </p>
             <p className="contact-line">
               WhatsApp: <strong>+54 9 2944 68-8613</strong>
@@ -584,6 +312,8 @@ function App() {
 
           {loading ? (
             <p className="loading-state">Leyendo las propiedades reales...</p>
+          ) : loadError ? (
+            <p className="loading-state">{loadError}</p>
           ) : (
             <div className="property-grid">
               {visibleProperties.map((property) => (
@@ -695,6 +425,25 @@ function App() {
         </div>
       ) : null}
     </div>
+  );
+}
+
+function App() {
+  const isAdminRoute = window.location.pathname === "/admin" || window.location.hash === "#admin";
+  return isAdminRoute ? (
+    <Suspense
+      fallback={
+        <main className="admin-shell admin-shell--login">
+          <section className="admin-login-panel">
+            <p>Cargando administrador...</p>
+          </section>
+        </main>
+      }
+    >
+      <AdminApp />
+    </Suspense>
+  ) : (
+    <PublicApp />
   );
 }
 

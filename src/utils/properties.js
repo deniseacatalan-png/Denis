@@ -1,0 +1,86 @@
+export const CATEGORY_META = {
+  venta: {
+    label: "En venta",
+    color: "#a65774",
+    mapColor: "#a65774"
+  },
+  alquiler_turistico: {
+    label: "Alquiler turistico",
+    color: "#e45858",
+    mapColor: "#e45858"
+  },
+  vendido: {
+    label: "Vendido",
+    color: "#161616",
+    mapColor: "#161616"
+  },
+  proceso: {
+    label: "En proceso / sin valor",
+    color: "#c9a227",
+    mapColor: "#c9a227"
+  }
+};
+
+export function slugify(value, maxLength = Number.POSITIVE_INFINITY) {
+  const normalized = String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return Number.isFinite(maxLength) ? normalized.slice(0, maxLength) : normalized;
+}
+
+export function normalizeDatabaseProperty(row) {
+  const images = [...(row.property_images || [])]
+    .sort((first, second) => (first.sort_order || 0) - (second.sort_order || 0))
+    .map((image) => image.url);
+
+  return {
+    id: row.id,
+    databaseId: row.id,
+    kmlId: row.kml_id || "",
+    title: row.title,
+    slug: row.slug,
+    location: row.location,
+    price: row.price || "Consultar",
+    area: row.area || "Superficie a confirmar",
+    category: row.category,
+    styleColor: row.style_color || "",
+    markerColor: row.marker_color || CATEGORY_META[row.category]?.mapColor || "#a65774",
+    coords: [Number(row.latitude), Number(row.longitude)],
+    latitude: Number(row.latitude),
+    longitude: Number(row.longitude),
+    descriptionHtml: row.description_html || "",
+    summary: row.summary || "",
+    rawDescription: row.raw_description || "",
+    isPublished: row.is_published,
+    displayOrder: row.display_order || 0,
+    images
+  };
+}
+
+export function propertyToDatabasePayload(values) {
+  const title = values.title.trim();
+  const lat = Number(values.latitude);
+  const lng = Number(values.longitude);
+
+  return {
+    title,
+    slug: values.slug?.trim() || slugify(title),
+    location: values.location.trim(),
+    price: values.price.trim() || "Consultar",
+    area: values.area.trim() || "Superficie a confirmar",
+    category: values.category,
+    latitude: Number.isFinite(lat) ? lat : null,
+    longitude: Number.isFinite(lng) ? lng : null,
+    style_color: values.styleColor.trim(),
+    marker_color: values.markerColor.trim() || CATEGORY_META[values.category]?.mapColor || "#a65774",
+    summary: values.summary.trim(),
+    description_html: values.descriptionHtml.trim(),
+    raw_description: values.rawDescription.trim(),
+    is_published: Boolean(values.isPublished),
+    display_order: Number(values.displayOrder) || 0
+  };
+}
