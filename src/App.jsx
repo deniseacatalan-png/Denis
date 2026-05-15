@@ -129,21 +129,7 @@ function extractArea(text) {
   return "Superficie a confirmar";
 }
 
-
-const AREA_OVERRIDES = {
-  "HAS ORILLAS DE CALEUFU": "13.000 m²",
-  "LOTES KALEUCHE ALTO": "700 m²",
-  "LOTE CJN BELLO": "800 m²",
-  "LOTE ALIHUEN ALTO": "1.700 m²",
-  "LOTE KALEUCHE MEDIO": "1.135 m²",
-  "LOTE VEGA MAIPU": "1.178 m²",
-  "LOTE ZONA CENTRO": "229,52 m²",
-  "LOTE 102, ESTANCIA MIRALEJOS CLUB DE CAMPO": "6.849 m²",
-  "LOTE 42, ESTANCIA MIRALEJOS CLUB DE CAMPO": "2.507 m²"
-};
-
-function resolveArea(title, text) {
-  if (AREA_OVERRIDES[title]) return AREA_OVERRIDES[title];
+function resolveArea(_title, text) {
   return extractArea(text);
 }
 
@@ -211,7 +197,7 @@ function normalizeKmlColor(styleColor, fallback = "#a65774") {
 
 function formatCoords(coords) {
   const [lat, lng] = coords;
-  return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  return `${lat}, ${lng}`;
 }
 
 function parseKml(kmlText) {
@@ -256,6 +242,7 @@ function parseKml(kmlText) {
       const styleUrl = placemark.querySelector("styleUrl")?.textContent?.trim() || "";
       const styleColor = styleColorMap[styleUrl.replace(/^#/, "")] || "";
       const [lngText, latText] = coordinatesText.split(",");
+      const geoExact = `${latText?.trim() || ""}, ${lngText?.trim() || ""}`;
       const lat = Number.parseFloat(latText);
       const lng = Number.parseFloat(lngText);
       const plainText = htmlToText(descriptionHtml);
@@ -285,6 +272,7 @@ function parseKml(kmlText) {
         styleColor,
         markerColor: normalizeKmlColor(styleColor),
         coords: [lat, lng],
+        geoExact,
         descriptionHtml,
         summary: truncateText(plainText, 210),
         rawDescription: plainText
@@ -537,7 +525,7 @@ function App() {
                   </div>
                   <div>
                     <span>Geo</span>
-                    <strong>{selectedProperty ? formatCoords(selectedProperty.coords) : "-"}</strong>
+                    <strong>{selectedProperty?.geoExact || (selectedProperty ? formatCoords(selectedProperty.coords) : "-")}</strong>
                   </div>
                 </div>
                 <details className="tech-sheet">
@@ -626,7 +614,7 @@ function App() {
                       </div>
                       <div>
                         <span>Geo</span>
-                        <strong>{formatCoords(property.coords)}</strong>
+                        <strong>{property.geoExact || formatCoords(property.coords)}</strong>
                       </div>
                     </div>
                     {property.images.length > 1 && expandedGalleryId === property.id ? (
@@ -638,6 +626,7 @@ function App() {
                         ))}
                       </div>
                     ) : null}
+                    <p className="card-description">{property.rawDescription}</p>
                     <div className="card-actions">
                       <button
                         type="button"
