@@ -211,9 +211,12 @@ function PublicApp() {
   };
 
   const selectPropertySlide = (property) => {
-    if (property.id !== selectedProperty?.id) {
-      setSelectedId(property.id);
+    if (property.id === selectedProperty?.id) {
+      openPropertyDetail(property);
+      return;
     }
+
+    setSelectedId(property.id);
   };
 
   const createWhatsAppLink = (property) => {
