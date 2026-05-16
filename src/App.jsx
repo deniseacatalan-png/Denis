@@ -67,12 +67,13 @@ function MapFocus({ coords }) {
 function PublicApp() {
   const [properties, setProperties] = useState([]);
   const [selectedId, setSelectedId] = useState("");
-  const [expandedGalleryId, setExpandedGalleryId] = useState("");
+  const [detailPropertyId, setDetailPropertyId] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [serviceNeed, setServiceNeed] = useState("vender");
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const mapSectionRef = useRef(null);
+  const sliderTrackRef = useRef(null);
 
   useEffect(() => {
     let active = true;
@@ -90,7 +91,9 @@ function PublicApp() {
         if (!active) return;
 
         setProperties(parsed);
-        setSelectedId(parsed[0]?.id || "");
+        setSelectedId((currentId) =>
+          parsed.some((property) => property.id === currentId) ? currentId : parsed[0]?.id || ""
+        );
         setLoadError("");
       } catch (error) {
         if (!active) return;
@@ -135,13 +138,82 @@ function PublicApp() {
 
   const selectedProperty =
     visibleProperties.find((property) => property.id === selectedId) || visibleProperties[0] || null;
+  const detailProperty =
+    visibleProperties.find((property) => property.id === detailPropertyId) || null;
+  const activeSlideIndex = Math.max(
+    0,
+    visibleProperties.findIndex((property) => property.id === selectedProperty?.id)
+  );
+
+  useEffect(() => {
+    if (!selectedId || !sliderTrackRef.current) return;
+
+    const activeSlide = Array.from(sliderTrackRef.current.children).find(
+      (element) => element.dataset.propertyId === selectedId
+    );
+
+    activeSlide?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center"
+    });
+  }, [selectedId]);
+
+  useEffect(() => {
+    if (!detailPropertyId) return;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setDetailPropertyId("");
+      }
+    };
+    const previousOverflow = document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [detailPropertyId]);
+
+  useEffect(() => {
+    if (detailPropertyId || visibleProperties.length <= 1) return;
+
+    const autoplayIntervalId = window.setInterval(() => {
+      setSelectedId((currentId) => {
+        const currentIndex = visibleProperties.findIndex((property) => property.id === currentId);
+        const nextIndex =
+          currentIndex === -1 ? 0 : (currentIndex + 1) % visibleProperties.length;
+
+        return visibleProperties[nextIndex].id;
+      });
+    }, 3000);
+
+    return () => window.clearInterval(autoplayIntervalId);
+  }, [properties, detailPropertyId]);
 
   const formatDisplayedPrice = (property) =>
     property?.category === "proceso" ? "Sin valor" : property?.price || "Consultar";
 
+  const getPropertyIntro = (property) =>
+    property.summary || property.location || "Conoce todos los detalles de esta propiedad.";
+
   const focusPropertyOnMap = (property) => {
     setSelectedId(property.id);
     mapSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const openPropertyDetail = (property) => {
+    setSelectedId(property.id);
+    setDetailPropertyId(property.id);
+  };
+
+  const selectPropertySlide = (property) => {
+    if (property.id !== selectedProperty?.id) {
+      setSelectedId(property.id);
+    }
   };
 
   const createWhatsAppLink = (property) => {
@@ -314,85 +386,172 @@ function PublicApp() {
             <p className="loading-state">Leyendo las propiedades reales...</p>
           ) : loadError ? (
             <p className="loading-state">{loadError}</p>
+          ) : !visibleProperties.length ? (
+            <p className="loading-state">No hay propiedades cargadas todavia.</p>
           ) : (
-            <div className="property-grid">
-              {visibleProperties.map((property) => (
-                <article
-                  className={`property-card ${property.id === selectedProperty?.id ? "active" : ""}`}
-                  key={property.id}
-                >
-                  <button
-                    type="button"
-                    className="property-cover"
-                    style={
-                      property.images.length
-                        ? {
-                            backgroundImage: `linear-gradient(180deg, rgba(22,22,22,0.15), rgba(22,22,22,0.75)), url(${resolvePropertyCoverImage(property)})`
-                          }
-                        : undefined
-                    }
-                    onClick={() =>
-                      setExpandedGalleryId((currentId) =>
-                        currentId === property.id ? "" : property.id
-                      )
-                    }
-                  >
-                    <p className={`status-pill status-pill--${property.category}`}>
-                      {CATEGORY_META[property.category]?.label || "En venta"}
-                    </p>
-                    <h3>{property.title}</h3>
-                    <p className="cover-location">{property.location}</p>
-                  </button>
+            <div className="property-slider-shell">
+              <div className="property-slider-copy">
+                <p>Desliza para ver las propiedades destacadas.</p>
+              </div>
+              <div className="property-slider-counter" aria-label="Propiedad actual">
+                {visibleProperties.length ? activeSlideIndex + 1 : 0} / {visibleProperties.length}
+              </div>
 
-                  <div className="property-body">
-                    <div className="cover-metrics cover-metrics--card">
-                      <div>
-                        <span>Valor</span>
-                        <strong>{formatDisplayedPrice(property)}</strong>
-                      </div>
-                      <div>
-                        <span>Superficie</span>
-                        <strong>{property.area}</strong>
-                      </div>
-                      <div>
-                        <span>Geo</span>
-                        <strong>{formatCoords(property.coords)}</strong>
-                      </div>
+              <div className="property-slider-track" ref={sliderTrackRef}>
+                {visibleProperties.map((property) => (
+                  <article
+                    className={`property-slide ${property.id === selectedProperty?.id ? "active" : ""}`}
+                    data-property-id={property.id}
+                    key={property.id}
+                  >
+                    <div
+                      className="property-slide-card"
+                      role={property.id === selectedProperty?.id ? undefined : "button"}
+                      tabIndex={property.id === selectedProperty?.id ? undefined : 0}
+                      style={
+                        property.images.length
+                          ? {
+                              backgroundImage: `linear-gradient(180deg, rgba(17,17,17,0.2), rgba(17,17,17,0.82)), url(${resolvePropertyCoverImage(property)})`
+                            }
+                          : undefined
+                      }
+                      onClick={() => selectPropertySlide(property)}
+                      onKeyDown={(event) => {
+                        if (
+                          property.id !== selectedProperty?.id &&
+                          (event.key === "Enter" || event.key === " ")
+                        ) {
+                          event.preventDefault();
+                          selectPropertySlide(property);
+                        }
+                      }}
+                    >
+                      <span className={`status-pill status-pill--${property.category}`}>
+                        {CATEGORY_META[property.category]?.label || "En venta"}
+                      </span>
+                      <span className="property-slide-text">
+                        <span className="property-slide-kicker">{formatDisplayedPrice(property)}</span>
+                        <span className="property-slide-title">{property.title}</span>
+                        <span className="property-slide-intro">{getPropertyIntro(property)}</span>
+                      </span>
+                      <span className="property-slide-footer">
+                        <span>{property.location}</span>
+                        <button
+                          type="button"
+                          className="property-slide-detail-btn"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            openPropertyDetail(property);
+                          }}
+                        >
+                          Ver descripcion completa
+                        </button>
+                      </span>
                     </div>
-                    {property.images.length > 1 && expandedGalleryId === property.id ? (
-                      <div className="property-gallery property-gallery--card">
-                        {property.images.slice(1).map((imageUrl) => (
-                          <a href={imageUrl} target="_blank" rel="noreferrer" key={imageUrl}>
-                            <img src={imageUrl} alt={`Foto de ${property.title}`} loading="lazy" />
-                          </a>
-                        ))}
-                      </div>
-                    ) : null}
-                    <div className="card-actions">
-                      <button
-                        type="button"
-                        onClick={() => focusPropertyOnMap(property)}
-                        className="map-btn"
-                      >
-                        Ver en mapa
-                      </button>
-                      <a
-                        href={createWhatsAppLink(property)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="wa-btn"
-                      >
-                        Contactar por WhatsApp
-                      </a>
-                    </div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                ))}
+              </div>
             </div>
           )}
         </section>
 
       </main>
+      {detailProperty ? (
+        <div
+          className="property-detail-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="property-detail-title"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setDetailPropertyId("");
+            }
+          }}
+        >
+          <section className="property-detail-screen">
+            <button
+              type="button"
+              className="property-detail-close"
+              onClick={() => setDetailPropertyId("")}
+              aria-label="Cerrar detalle"
+            >
+              ×
+            </button>
+            <div className="property-detail-hero">
+              {detailProperty.images?.length ? (
+                <img
+                  src={resolvePropertyCoverImage(detailProperty)}
+                  alt={`Foto principal de ${detailProperty.title}`}
+                />
+              ) : null}
+              <div className="property-detail-hero-text">
+                <p className={`status-pill status-pill--${detailProperty.category}`}>
+                  {CATEGORY_META[detailProperty.category]?.label || "En venta"}
+                </p>
+                <h2 id="property-detail-title">{detailProperty.title}</h2>
+                <p>{detailProperty.location}</p>
+              </div>
+            </div>
+
+            <div className="property-detail-content">
+              <div className="detail-stats property-detail-stats">
+                <div>
+                  <span>Valor</span>
+                  <strong>{formatDisplayedPrice(detailProperty)}</strong>
+                </div>
+                <div>
+                  <span>Superficie</span>
+                  <strong>{detailProperty.area}</strong>
+                </div>
+                <div>
+                  <span>Geo</span>
+                  <strong>{formatCoords(detailProperty.coords)}</strong>
+                </div>
+              </div>
+
+              <div
+                className="rich-text property-detail-description"
+                dangerouslySetInnerHTML={{
+                  __html: detailProperty.descriptionHtml || "<p>Sin descripcion disponible.</p>"
+                }}
+              />
+
+              {detailProperty.images?.length ? (
+                <div className="property-gallery property-detail-gallery">
+                  {detailProperty.images.map((imageUrl) => (
+                    <a href={imageUrl} target="_blank" rel="noreferrer" key={imageUrl}>
+                      <img src={imageUrl} alt={`Foto de ${detailProperty.title}`} loading="lazy" />
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <p className="gallery-empty">Esta propiedad todavia no tiene fotos cargadas.</p>
+              )}
+
+              <div className="property-detail-actions">
+                <button
+                  type="button"
+                  className="map-btn"
+                  onClick={() => {
+                    setDetailPropertyId("");
+                    focusPropertyOnMap(detailProperty);
+                  }}
+                >
+                  Ver en mapa
+                </button>
+                <a
+                  href={createWhatsAppLink(detailProperty)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="wa-btn"
+                >
+                  Consultar por WhatsApp
+                </a>
+              </div>
+            </div>
+          </section>
+        </div>
+      ) : null}
       {isServiceModalOpen ? (
         <div className="service-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="service-modal-title">
           <div className="service-modal">
