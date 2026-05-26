@@ -1171,7 +1171,7 @@ body {
 .hero {
   background:
     linear-gradient(132deg, rgba(240, 93, 206, 0.24) 0%, rgba(20, 20, 24, 0.48) 62%, rgba(17, 17, 17, 0.7) 100%),
-    url('/images/HUILQUIL CASONA DE MONTAÑA/DJI_0408.JPG') center/cover no-repeat;
+    url('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/huilquil-casona-de-montana/1-dji-0408-GHmLYhZNuyCjb6QDP06kxaHZVth7Pp.jpg') center/cover no-repeat;
   border-bottom: 1px solid rgba(198, 167, 105, 0.44);
 }
 

@@ -10,7 +10,8 @@
     "db:seed:generate": "node scripts/generate-seed-from-kml.mjs",
     "db:seed": "node scripts/seed-supabase.mjs",
     "admin:create": "node scripts/create-admin.mjs",
-    "images:migrate:blob": "node scripts/migrate-images-to-vercel-blob.mjs"
+    "images:migrate:blob": "node scripts/migrate-images-to-vercel-blob.mjs",
+    "e2e:blob-upload": "node scripts/e2e-blob-upload.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

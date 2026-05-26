@@ -85,13 +85,13 @@ select upserted.id, image_rows.url, image_rows.alt, image_rows.sort_order
 from upserted
 cross join (
   values
-    ('/images/HAS%20ORILLAS%20DE%20CALEUFU/DJI_0051.JPG', 'HAS ORILLAS DE CALEUFU', 0),
-    ('/images/HAS%20ORILLAS%20DE%20CALEUFU/DJI_0054.JPG', 'HAS ORILLAS DE CALEUFU', 1),
-    ('/images/HAS%20ORILLAS%20DE%20CALEUFU/DJI_0055.JPG', 'HAS ORILLAS DE CALEUFU', 2),
-    ('/images/HAS%20ORILLAS%20DE%20CALEUFU/DJI_0056.JPG', 'HAS ORILLAS DE CALEUFU', 3),
-    ('/images/HAS%20ORILLAS%20DE%20CALEUFU/DJI_0059.JPG', 'HAS ORILLAS DE CALEUFU', 4),
-    ('/images/HAS%20ORILLAS%20DE%20CALEUFU/DJI_0061.JPG', 'HAS ORILLAS DE CALEUFU', 5),
-    ('/images/HAS%20ORILLAS%20DE%20CALEUFU/DJI_0062.JPG', 'HAS ORILLAS DE CALEUFU', 6)
+    ('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/has-orillas-de-caleufu/0-dji-0051-CdK51QUKb4Aa4rS0l73swH1vlvWstI.jpg', 'HAS ORILLAS DE CALEUFU', 0),
+    ('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/has-orillas-de-caleufu/1-dji-0054-SHkdUgoNAFDf9eaUK2zmxXlCaHyGgP.jpg', 'HAS ORILLAS DE CALEUFU', 1),
+    ('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/has-orillas-de-caleufu/2-dji-0055-y4Uw2wdJsITKHJJjXYcRcosb9QTC9J.jpg', 'HAS ORILLAS DE CALEUFU', 2),
+    ('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/has-orillas-de-caleufu/3-dji-0056-7s3NGkBBRuUMzM8JmJwSD0q2Ii0bqp.jpg', 'HAS ORILLAS DE CALEUFU', 3),
+    ('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/has-orillas-de-caleufu/4-dji-0059-HNcnOagqPik1AZzcF4bBbbfsIqEsVI.jpg', 'HAS ORILLAS DE CALEUFU', 4),
+    ('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/has-orillas-de-caleufu/5-dji-0061-Hi3IVQb9ZEvb3MYMpwjDTXF4pd00fU.jpg', 'HAS ORILLAS DE CALEUFU', 5),
+    ('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/has-orillas-de-caleufu/6-dji-0062-jGy3gT5bqPpFOSL4aiyNH1RXoovhML.jpg', 'HAS ORILLAS DE CALEUFU', 6)
 ) as image_rows(url, alt, sort_order);
 
 with upserted as (
@@ -224,8 +224,8 @@ select upserted.id, image_rows.url, image_rows.alt, image_rows.sort_order
 from upserted
 cross join (
   values
-    ('/images/HUILQUIL%20CASONA%20DE%20MONTA%C3%91A/DJI_0396.JPG', 'HUILQUIL CASONA DE MONTAÑA', 0),
-    ('/images/HUILQUIL%20CASONA%20DE%20MONTA%C3%91A/DJI_0408.JPG', 'HUILQUIL CASONA DE MONTAÑA', 1)
+    ('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/huilquil-casona-de-montana/0-dji-0396-KWPSTmZtRAyZxBYoEYoG1jF95IQbUX.jpg', 'HUILQUIL CASONA DE MONTAÑA', 0),
+    ('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/huilquil-casona-de-montana/1-dji-0408-GHmLYhZNuyCjb6QDP06kxaHZVth7Pp.jpg', 'HUILQUIL CASONA DE MONTAÑA', 1)
 ) as image_rows(url, alt, sort_order);
 
 with upserted as (
@@ -339,9 +339,9 @@ select upserted.id, image_rows.url, image_rows.alt, image_rows.sort_order
 from upserted
 cross join (
   values
-    ('/images/TERRENO%20ALIHUEN%20ALTO/aa2.jpg', 'LOTE ALIHUEN ALTO', 0),
-    ('/images/TERRENO%20ALIHUEN%20ALTO/aa3.jpg', 'LOTE ALIHUEN ALTO', 1),
-    ('/images/TERRENO%20ALIHUEN%20ALTO/alihuen.JPG', 'LOTE ALIHUEN ALTO', 2)
+    ('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/lote-alihuen-alto/0-aa2-S9ir6T0NcXWi8t6jFwui35w2M1TkNS.jpg', 'LOTE ALIHUEN ALTO', 0),
+    ('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/lote-alihuen-alto/1-aa3-CqgFMMU5Ej3BtRd1V4y4GjNpz5Osry.jpg', 'LOTE ALIHUEN ALTO', 1),
+    ('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/lote-alihuen-alto/2-alihuen-tPZKSqmzG8MdB6107PlKQNXLOnvxz9.jpg', 'LOTE ALIHUEN ALTO', 2)
 ) as image_rows(url, alt, sort_order);
 
 with upserted as (
@@ -398,10 +398,10 @@ select upserted.id, image_rows.url, image_rows.alt, image_rows.sort_order
 from upserted
 cross join (
   values
-    ('/images/LOTE%20VEGA%20MAIPU/CVM.jpg', 'LOTE VEGA MAIPU', 0),
-    ('/images/LOTE%20VEGA%20MAIPU/vm.jpeg', 'LOTE VEGA MAIPU', 1),
-    ('/images/LOTE%20VEGA%20MAIPU/vm3.jpeg', 'LOTE VEGA MAIPU', 2),
-    ('/images/LOTE%20VEGA%20MAIPU/vmaipu.jpeg', 'LOTE VEGA MAIPU', 3)
+    ('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/lote-vega-maipu/0-cvm-OtetAEUTrOfjxXs0jUAEwO3ySWJm30.jpg', 'LOTE VEGA MAIPU', 0),
+    ('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/lote-vega-maipu/1-vm-wRbTy75RxzFYgLfjtvUxlhGRSv8ySe.jpeg', 'LOTE VEGA MAIPU', 1),
+    ('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/lote-vega-maipu/2-vm3-n2kmjI4vRXhBFOmrj29DMvIL0rVbSw.jpeg', 'LOTE VEGA MAIPU', 2),
+    ('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/lote-vega-maipu/3-vmaipu-PBsGVqj4N2Dxq9OOZnxr0dzirqJe3i.jpeg', 'LOTE VEGA MAIPU', 3)
 ) as image_rows(url, alt, sort_order);
 
 with upserted as (
@@ -506,10 +506,10 @@ select upserted.id, image_rows.url, image_rows.alt, image_rows.sort_order
 from upserted
 cross join (
   values
-    ('/images/uf%2042%20E.%20MIRALEJOS/DJI_0339.JPG', 'LOTE 42, ESTANCIA MIRALEJOS CLUB DE CAMPO', 0),
-    ('/images/uf%2042%20E.%20MIRALEJOS/DJI_0356.JPG', 'LOTE 42, ESTANCIA MIRALEJOS CLUB DE CAMPO', 1),
-    ('/images/uf%2042%20E.%20MIRALEJOS/DJI_0371.JPG', 'LOTE 42, ESTANCIA MIRALEJOS CLUB DE CAMPO', 2),
-    ('/images/uf%2042%20E.%20MIRALEJOS/DJI_0377.JPG', 'LOTE 42, ESTANCIA MIRALEJOS CLUB DE CAMPO', 3)
+    ('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/lote-42-estancia-miralejos-club-de-campo/0-dji-0339-f6GGEcRN2gkpuTik3jscw2EQ4uaJhX.jpg', 'LOTE 42, ESTANCIA MIRALEJOS CLUB DE CAMPO', 0),
+    ('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/lote-42-estancia-miralejos-club-de-campo/1-dji-0356-RZ2b0kkG78sOSynfLuIRvkAruN5JUy.jpg', 'LOTE 42, ESTANCIA MIRALEJOS CLUB DE CAMPO', 1),
+    ('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/lote-42-estancia-miralejos-club-de-campo/2-dji-0371-pqRnMB164MgZ4lpxEmLyHCo4HVSSHj.jpg', 'LOTE 42, ESTANCIA MIRALEJOS CLUB DE CAMPO', 2),
+    ('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/lote-42-estancia-miralejos-club-de-campo/3-dji-0377-wzWC8MDQTRcIWob4NIKVnyj3NorWm2.jpg', 'LOTE 42, ESTANCIA MIRALEJOS CLUB DE CAMPO', 3)
 ) as image_rows(url, alt, sort_order);
 
 with upserted as (
