@@ -1,6 +1,23 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 
+async function callApiHandler(module, request) {
+  const methodHandler = module[request.method?.toUpperCase()];
+  if (typeof methodHandler === "function") {
+    return methodHandler(request);
+  }
+
+  if (typeof module.default?.fetch === "function") {
+    return module.default.fetch(request);
+  }
+
+  if (typeof module.default === "function") {
+    return module.default(request);
+  }
+
+  throw new Error("No se encontro un handler para la ruta API local.");
+}
+
 function localApiRoutes() {
   return {
     name: "local-api-routes",
@@ -29,8 +46,8 @@ function localApiRoutes() {
             headers,
             body: body.length ? body : undefined
           });
-          const { default: handler } = await import("./api/blob/upload.js");
-          const apiResponse = await handler(apiRequest);
+          const apiModule = await import("./api/blob/upload.js");
+          const apiResponse = await callApiHandler(apiModule, apiRequest);
 
           response.statusCode = apiResponse.status;
           apiResponse.headers.forEach((value, key) => response.setHeader(key, value));

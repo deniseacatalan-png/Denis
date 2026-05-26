@@ -35,6 +35,7 @@ const emptyPropertyForm = {
 
 const imageContentTypes = ["image/avif", "image/jpeg", "image/png", "image/webp"];
 const imageAccept = imageContentTypes.join(",");
+const maxImageSizeInBytes = 25 * 1024 * 1024;
 const defaultPropertyCoords = [-40.1573, -71.3524];
 
 const mimeExtensions = {
@@ -749,6 +750,12 @@ function AdminApp() {
     const invalidFile = files.find((file) => !imageContentTypes.includes(file.type));
     if (invalidFile) {
       setError(`Formato no permitido: ${invalidFile.name}. Usa JPG, PNG, WEBP o AVIF.`);
+      return;
+    }
+
+    const oversizedFile = files.find((file) => file.size > maxImageSizeInBytes);
+    if (oversizedFile) {
+      setError(`${oversizedFile.name} supera el limite de 25 MB para subir imagenes.`);
       return;
     }
 

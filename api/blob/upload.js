@@ -5,6 +5,8 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUP
 const supabaseKey =
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
   process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const maxImageSizeInBytes = 25 * 1024 * 1024;
+const supabaseRequestTimeoutMs = 10_000;
 
 const allowedContentTypes = [
   "image/avif",
@@ -12,6 +14,69 @@ const allowedContentTypes = [
   "image/png",
   "image/webp"
 ];
+
+class UploadRouteError extends Error {
+  constructor(message, status = 400) {
+    super(message);
+    this.status = status;
+  }
+}
+
+function isJsonRequest(request) {
+  const contentType = request.headers.get("content-type") || "";
+  return contentType.toLowerCase().includes("application/json");
+}
+
+async function readUploadBody(request) {
+  if (!isJsonRequest(request)) {
+    throw new UploadRouteError(
+      "La ruta de subida espera JSON de Vercel Blob, no el archivo completo.",
+      415
+    );
+  }
+
+  return request.json();
+}
+
+async function fetchWithTimeout(input, init = {}) {
+  const controller = new AbortController();
+  const upstreamSignal = init.signal;
+  let didTimeout = false;
+
+  const timeout = setTimeout(() => {
+    didTimeout = true;
+    controller.abort();
+  }, supabaseRequestTimeoutMs);
+
+  const abortFromUpstream = () => controller.abort(upstreamSignal.reason);
+  if (upstreamSignal) {
+    if (upstreamSignal.aborted) {
+      abortFromUpstream();
+    } else {
+      upstreamSignal.addEventListener("abort", abortFromUpstream, { once: true });
+    }
+  }
+
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: controller.signal
+    });
+  } catch (error) {
+    if (didTimeout) {
+      throw new Error(
+        "Supabase no respondio a tiempo. Revisa las variables publicas de Supabase en Vercel."
+      );
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+    if (upstreamSignal) {
+      upstreamSignal.removeEventListener("abort", abortFromUpstream);
+    }
+  }
+}
 
 function parseClientPayload(clientPayload) {
   if (!clientPayload) return {};
@@ -43,7 +108,8 @@ async function verifyAdmin(clientPayload) {
     global: {
       headers: {
         Authorization: `Bearer ${accessToken}`
-      }
+      },
+      fetch: fetchWithTimeout
     }
   });
 
@@ -70,7 +136,7 @@ async function verifyAdmin(clientPayload) {
   };
 }
 
-export default async function handler(request) {
+async function handleBlobUploadRequest(request) {
   if (request.method && request.method !== "POST") {
     return Response.json({ error: "Metodo no permitido." }, { status: 405 });
   }
@@ -80,7 +146,7 @@ export default async function handler(request) {
       throw new Error("Falta BLOB_READ_WRITE_TOKEN para subir imagenes a Vercel Blob.");
     }
 
-    const body = await request.json();
+    const body = await readUploadBody(request);
 
     const jsonResponse = await handleUpload({
       body,
@@ -95,17 +161,25 @@ export default async function handler(request) {
         return {
           allowedContentTypes,
           addRandomSuffix: true,
-          maximumSizeInBytes: 25 * 1024 * 1024,
+          maximumSizeInBytes: maxImageSizeInBytes,
           tokenPayload: JSON.stringify(tokenPayload)
         };
-      },
-      onUploadCompleted: async ({ blob }) => {
-        console.log("Imagen subida a Vercel Blob", blob.url);
       }
     });
 
     return Response.json(jsonResponse);
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 400 });
+    return Response.json(
+      { error: error instanceof Error ? error.message : "No se pudo preparar la subida." },
+      { status: error?.status || 400 }
+    );
   }
 }
+
+export function POST(request) {
+  return handleBlobUploadRequest(request);
+}
+
+export default {
+  fetch: handleBlobUploadRequest
+};
