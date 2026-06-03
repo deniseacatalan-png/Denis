@@ -22,6 +22,38 @@ const AdminApp = lazy(() => import("./admin/AdminApp"));
 
 const officeWhatsApp = "5492944688613";
 
+const PROPERTY_SLIDER_GROUPS = [
+  {
+    category: "venta",
+    eyebrow: "Propiedades en venta",
+    title: "En venta",
+    emptyMessage: "No hay propiedades en venta disponibles por el momento."
+  },
+  {
+    category: "alquiler_turistico",
+    eyebrow: "Estadías y escapadas",
+    title: "Alquiler turístico",
+    emptyMessage: "No hay alquileres turísticos disponibles por el momento."
+  },
+  {
+    category: "alquiler_permanente",
+    eyebrow: "Hogares para vivir la Patagonia",
+    title: "Alquiler permanente",
+    emptyMessage: "No hay alquileres permanentes disponibles por el momento."
+  }
+];
+
+
+const INITIAL_RENTAL_SEARCH = {
+  type: "permanente",
+  searchDetail: "",
+  zone: "",
+  budget: "",
+  rooms: "",
+  preferences: "",
+  mustHaves: ""
+};
+
 const CATEGORY_META = {
   venta: {
     label: "En venta",
@@ -32,6 +64,11 @@ const CATEGORY_META = {
     label: "Alquiler turistico",
     color: "#e45858",
     mapColor: "#e45858"
+  },
+  alquiler_permanente: {
+    label: "Alquiler permanente",
+    color: "#7b8061",
+    mapColor: "#7b8061"
   },
   vendido: {
     label: "Vendido",
@@ -71,9 +108,10 @@ function PublicApp() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [serviceNeed, setServiceNeed] = useState("vender");
+  const [rentalSearch, setRentalSearch] = useState(INITIAL_RENTAL_SEARCH);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
-  const mapSectionRef = useRef(null);
-  const sliderTrackRef = useRef(null);
+  const detailScrollPositionRef = useRef({ x: 0, y: 0 });
+  const propertySliderRefs = useRef({});
 
   useEffect(() => {
     let active = true;
@@ -125,7 +163,8 @@ function PublicApp() {
   const visibleProperties = properties.filter(
     (property) =>
       property.category === "venta" ||
-      property.category === "alquiler_turistico"
+      property.category === "alquiler_turistico" ||
+      property.category === "alquiler_permanente"
   );
 
   useEffect(() => {
@@ -140,31 +179,12 @@ function PublicApp() {
     visibleProperties.find((property) => property.id === selectedId) || visibleProperties[0] || null;
   const detailProperty =
     visibleProperties.find((property) => property.id === detailPropertyId) || null;
-  const activeSlideIndex = Math.max(
-    0,
-    visibleProperties.findIndex((property) => property.id === selectedProperty?.id)
-  );
-
-  useEffect(() => {
-    if (!selectedId || !sliderTrackRef.current) return;
-
-    const activeSlide = Array.from(sliderTrackRef.current.children).find(
-      (element) => element.dataset.propertyId === selectedId
-    );
-
-    activeSlide?.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest",
-      inline: "center"
-    });
-  }, [selectedId]);
-
   useEffect(() => {
     if (!detailPropertyId) return;
 
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
-        setDetailPropertyId("");
+        closePropertyDetail();
       }
     };
     const previousOverflow = document.body.style.overflow;
@@ -178,34 +198,51 @@ function PublicApp() {
     };
   }, [detailPropertyId]);
 
-  useEffect(() => {
-    if (detailPropertyId || visibleProperties.length <= 1) return;
-
-    const autoplayIntervalId = window.setInterval(() => {
-      setSelectedId((currentId) => {
-        const currentIndex = visibleProperties.findIndex((property) => property.id === currentId);
-        const nextIndex =
-          currentIndex === -1 ? 0 : (currentIndex + 1) % visibleProperties.length;
-
-        return visibleProperties[nextIndex].id;
-      });
-    }, 3000);
-
-    return () => window.clearInterval(autoplayIntervalId);
-  }, [properties, detailPropertyId]);
-
   const formatDisplayedPrice = (property) =>
     property?.category === "proceso" ? "Sin valor" : property?.price || "Consultar";
 
   const getPropertyIntro = (property) =>
     property.summary || property.location || "Conoce todos los detalles de esta propiedad.";
 
-  const focusPropertyOnMap = (property) => {
+  const getPropertiesByCategory = (category) =>
+    visibleProperties.filter((property) => property.category === category);
+
+  const getActiveSlideIndex = (categoryProperties) => {
+    const activeIndex = categoryProperties.findIndex(
+      (property) => property.id === selectedProperty?.id
+    );
+
+    return activeIndex === -1 ? 0 : activeIndex;
+  };
+
+  const scrollPropertySlider = (category, direction) => {
+    const sliderTrack = propertySliderRefs.current[category];
+    if (!sliderTrack) return;
+
+    sliderTrack.scrollBy({
+      left: direction * Math.max(sliderTrack.clientWidth * 0.82, 320),
+      behavior: "smooth"
+    });
+  };
+
+  const selectPropertyOnMap = (property) => {
     setSelectedId(property.id);
-    mapSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const closePropertyDetail = () => {
+    setDetailPropertyId("");
+
+    window.requestAnimationFrame(() => {
+      window.scrollTo({
+        left: detailScrollPositionRef.current.x,
+        top: detailScrollPositionRef.current.y,
+        behavior: "auto"
+      });
+    });
   };
 
   const openPropertyDetail = (property) => {
+    detailScrollPositionRef.current = { x: window.scrollX, y: window.scrollY };
     setSelectedId(property.id);
     setDetailPropertyId(property.id);
   };
@@ -229,6 +266,30 @@ function PublicApp() {
     return `https://wa.me/${officeWhatsApp}?text=${encodeURIComponent(message)}`;
   };
 
+  const updateRentalSearch = (field, value) => {
+    setRentalSearch((currentSearch) => ({
+      ...currentSearch,
+      [field]: value
+    }));
+  };
+
+  const createRentalSearchWhatsAppLink = () => {
+    const rentalTypeLabel =
+      rentalSearch.type === "turistico" ? "alquiler turístico" : "alquiler permanente";
+    const details = [
+      `Tipo: ${rentalTypeLabel}`,
+      `Búsqueda: ${rentalSearch.searchDetail || "A conversar"}`,
+      `Zona: ${rentalSearch.zone || "Flexible"}`,
+      `Presupuesto: ${rentalSearch.budget || "A definir"}`,
+      `Ambientes: ${rentalSearch.rooms || "A definir"}`,
+      `Preferencias: ${rentalSearch.preferences || "Sin detalle"}`,
+      `No negociables: ${rentalSearch.mustHaves || "Sin detalle"}`
+    ].join("\n");
+    const message = `Hola Denise, busco alquiler en San Martín de los Andes.\n${details}`;
+
+    return `https://wa.me/${officeWhatsApp}?text=${encodeURIComponent(message)}`;
+  };
+
 
   return (
     <div className="page-shell">
@@ -248,22 +309,29 @@ function PublicApp() {
 
         <div className="hero-layout">
           <div className="hero-content">
-            <h1>Propiedades reales en San Martin de los Andes, Patagonia.</h1>
-            <p>
-              Propiedades cargadas desde el administrador con ubicacion, valor y descripcion completa.
+            <p className="overline">Inmobiliaria boutique en Patagonia</p>
+            <h1>Denise Catalán Bienes Raíces</h1>
+            <p>Invertí en naturaleza con una mirada cercana, profesional y personalizada.</p>
+            <p className="brand-value">
+              Acompañamos cada decisión inmobiliaria con curaduría, escucha y conocimiento local para que encuentres el lugar donde querés estar.
             </p>
             <p className="contact-line">
-              WhatsApp: <strong>+54 9 2944 68-8613</strong>
+              San Martín de los Andes · Patagonia Argentina · WhatsApp: <strong>+54 9 2944 68-8613</strong>
             </p>
+            <ul className="brand-pillars" aria-label="Propuesta de valor">
+              <li>Curaduría boutique</li>
+              <li>Acompañamiento personalizado</li>
+              <li>Conocimiento local</li>
+            </ul>
           </div>
 
-          <section className="map-section hero-map-section" id="mapa" ref={mapSectionRef}>
+          <section className="map-section hero-map-section" id="mapa">
             <div className="section-title map-section-header">
               <div>
                 <p>Geolocalizacion</p>
                 <h2>Plano de ubicaciones</h2>
               </div>
-              <a className="map-btn header-map-btn" href="#propiedades">Ver propiedades</a>
+              <button type="button" className="map-btn header-map-btn" onClick={() => setIsServiceModalOpen(true)}>Hablar con Denise</button>
             </div>
 
             <div className="map-layout">
@@ -380,82 +448,248 @@ function PublicApp() {
       </header>
 
       <main className="content-wrap">
-        <section className="properties" id="propiedades">
+        <section className="properties" aria-labelledby="properties-title">
           <div className="section-title">
-            <h2>PROPIEDADES</h2>
+            <p>Una selección dentro de nuestra propuesta integral</p>
+            <h2 id="properties-title">Propiedades disponibles</h2>
           </div>
 
           {loading ? (
             <p className="loading-state">Leyendo las propiedades reales...</p>
           ) : loadError ? (
             <p className="loading-state">{loadError}</p>
-          ) : !visibleProperties.length ? (
-            <p className="loading-state">No hay propiedades cargadas todavia.</p>
           ) : (
-            <div className="property-slider-shell">
-              <div className="property-slider-copy">
-                <p>Desliza para ver las propiedades destacadas.</p>
-              </div>
-              <div className="property-slider-counter" aria-label="Propiedad actual">
-                {visibleProperties.length ? activeSlideIndex + 1 : 0} / {visibleProperties.length}
-              </div>
+            <div className="property-slider-stack">
+              {PROPERTY_SLIDER_GROUPS.map((group) => {
+                const categoryProperties = getPropertiesByCategory(group.category);
+                const activeSlideIndex = getActiveSlideIndex(categoryProperties);
 
-              <div className="property-slider-track" ref={sliderTrackRef}>
-                {visibleProperties.map((property) => (
-                  <article
-                    className={`property-slide ${property.id === selectedProperty?.id ? "active" : ""}`}
-                    data-property-id={property.id}
-                    key={property.id}
+                return (
+                  <section
+                    className="property-slider-section"
+                    aria-labelledby={`property-slider-${group.category}`}
+                    key={group.category}
                   >
-                    <div
-                      className="property-slide-card"
-                      role={property.id === selectedProperty?.id ? undefined : "button"}
-                      tabIndex={property.id === selectedProperty?.id ? undefined : 0}
-                      style={
-                        property.images.length
-                          ? {
-                              backgroundImage: `linear-gradient(180deg, rgba(17,17,17,0.2), rgba(17,17,17,0.82)), url(${resolvePropertyCoverImage(property)})`
-                            }
-                          : undefined
-                      }
-                      onClick={() => selectPropertySlide(property)}
-                      onKeyDown={(event) => {
-                        if (
-                          property.id !== selectedProperty?.id &&
-                          (event.key === "Enter" || event.key === " ")
-                        ) {
-                          event.preventDefault();
-                          selectPropertySlide(property);
-                        }
-                      }}
-                    >
-                      <span className={`status-pill status-pill--${property.category}`}>
-                        {CATEGORY_META[property.category]?.label || "En venta"}
-                      </span>
-                      <span className="property-slide-text">
-                        <span className="property-slide-kicker">{formatDisplayedPrice(property)}</span>
-                        <span className="property-slide-title">{property.title}</span>
-                        <span className="property-slide-intro">{getPropertyIntro(property)}</span>
-                      </span>
-                      <span className="property-slide-footer">
-                        <span>{property.location}</span>
+                    <div className="property-slider-shell">
+                      <div className="property-slider-copy">
+                        <p>{group.eyebrow}</p>
+                        <h3 id={`property-slider-${group.category}`}>{group.title}</h3>
+                        <span>
+                          Explorá esta categoría manualmente con los botones o deslizando el carril.
+                        </span>
+                      </div>
+                      <div className="property-slider-counter" aria-label={`${group.title}: propiedad actual`}>
+                        {categoryProperties.length ? activeSlideIndex + 1 : 0} / {categoryProperties.length}
+                      </div>
+
+                      <div className="property-slider-viewport">
                         <button
                           type="button"
-                          className="property-slide-detail-btn"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            openPropertyDetail(property);
+                          className="property-slider-nav property-slider-nav--prev"
+                          onClick={() => scrollPropertySlider(group.category, -1)}
+                          disabled={categoryProperties.length <= 1}
+                          aria-label={`Deslizar ${group.title} hacia la izquierda`}
+                        >
+                          ‹
+                        </button>
+                        <div
+                          className="property-slider-track"
+                          ref={(element) => {
+                            if (element) {
+                              propertySliderRefs.current[group.category] = element;
+                            } else {
+                              delete propertySliderRefs.current[group.category];
+                            }
                           }}
                         >
-                          Ver descripcion completa
+                          {categoryProperties.length ? (
+                            categoryProperties.map((property) => (
+                              <article
+                                className={`property-slide ${property.id === selectedProperty?.id ? "active" : ""}`}
+                                data-property-id={property.id}
+                                key={property.id}
+                              >
+                                <div
+                                  className="property-slide-card"
+                                  role={property.id === selectedProperty?.id ? undefined : "button"}
+                                  tabIndex={property.id === selectedProperty?.id ? undefined : 0}
+                                  style={
+                                    property.images.length
+                                      ? {
+                                          backgroundImage: `linear-gradient(180deg, rgba(17,17,17,0.2), rgba(17,17,17,0.82)), url(${resolvePropertyCoverImage(property)})`
+                                        }
+                                      : undefined
+                                  }
+                                  onClick={() => selectPropertySlide(property)}
+                                  onKeyDown={(event) => {
+                                    if (
+                                      property.id !== selectedProperty?.id &&
+                                      (event.key === "Enter" || event.key === " ")
+                                    ) {
+                                      event.preventDefault();
+                                      selectPropertySlide(property);
+                                    }
+                                  }}
+                                >
+                                  <span className={`status-pill status-pill--${property.category}`}>
+                                    {CATEGORY_META[property.category]?.label || "En venta"}
+                                  </span>
+                                  <span className="property-slide-text">
+                                    <span className="property-slide-kicker">{formatDisplayedPrice(property)}</span>
+                                    <span className="property-slide-title">{property.title}</span>
+                                    <span className="property-slide-intro">{getPropertyIntro(property)}</span>
+                                  </span>
+                                  <span className="property-slide-footer">
+                                    <span>{property.location}</span>
+                                    <button
+                                      type="button"
+                                      className="property-slide-detail-btn"
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        openPropertyDetail(property);
+                                      }}
+                                    >
+                                      Ver descripcion completa
+                                    </button>
+                                  </span>
+                                </div>
+                              </article>
+                            ))
+                          ) : (
+                            <div className="property-slider-empty" role="status">
+                              {group.emptyMessage}
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          className="property-slider-nav property-slider-nav--next"
+                          onClick={() => scrollPropertySlider(group.category, 1)}
+                          disabled={categoryProperties.length <= 1}
+                          aria-label={`Deslizar ${group.title} hacia la derecha`}
+                        >
+                          ›
                         </button>
-                      </span>
+                      </div>
                     </div>
-                  </article>
-                ))}
-              </div>
+                  </section>
+                );
+              })}
             </div>
           )}
+        </section>
+
+        <section className="rental-search-section" aria-labelledby="rental-search-title">
+          <div className="property-slider-shell rental-search-shell">
+            <div className="property-slider-copy">
+              <p>Solicitud personalizada</p>
+              <h3 id="rental-search-title">Busco alquiler en San Martín de los Andes</h3>
+              <span>
+                Compartinos el detalle de tu búsqueda para curar opciones permanentes o turísticas
+                con zona, presupuesto, preferencias y no negociables claros.
+              </span>
+            </div>
+
+            <div className="rental-search-card">
+              <div className="rental-type-toggle" role="group" aria-label="Tipo de alquiler buscado">
+                <label>
+                  <input
+                    type="radio"
+                    name="rental-type"
+                    value="permanente"
+                    checked={rentalSearch.type === "permanente"}
+                    onChange={(event) => updateRentalSearch("type", event.target.value)}
+                  />
+                  Permanente
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="rental-type"
+                    value="turistico"
+                    checked={rentalSearch.type === "turistico"}
+                    onChange={(event) => updateRentalSearch("type", event.target.value)}
+                  />
+                  Turístico
+                </label>
+              </div>
+
+              <div className="rental-search-grid">
+                <label className="rental-search-field rental-search-field--wide">
+                  <span>Pequeño detalle de búsqueda</span>
+                  <textarea
+                    value={rentalSearch.searchDetail}
+                    onChange={(event) => updateRentalSearch("searchDetail", event.target.value)}
+                    placeholder="Ej: casa luminosa para familia, estadía de verano, cerca de colegio o con jardín"
+                    rows={3}
+                  />
+                </label>
+                <label className="rental-search-field">
+                  <span>Zona</span>
+                  <input
+                    type="text"
+                    value={rentalSearch.zone}
+                    onChange={(event) => updateRentalSearch("zone", event.target.value)}
+                    placeholder="Centro, Vega, Chapelco, flexible..."
+                  />
+                </label>
+                <label className="rental-search-field">
+                  <span>Presupuesto</span>
+                  <input
+                    type="text"
+                    value={rentalSearch.budget}
+                    onChange={(event) => updateRentalSearch("budget", event.target.value)}
+                    placeholder="Monto estimado / moneda"
+                  />
+                </label>
+                <label className="rental-search-field">
+                  <span>Ambientes</span>
+                  <input
+                    type="text"
+                    value={rentalSearch.rooms}
+                    onChange={(event) => updateRentalSearch("rooms", event.target.value)}
+                    placeholder="Monoambiente, 2 dorm., 3 ambientes..."
+                  />
+                </label>
+                <label className="rental-search-field">
+                  <span>Preferencias</span>
+                  <input
+                    type="text"
+                    value={rentalSearch.preferences}
+                    onChange={(event) => updateRentalSearch("preferences", event.target.value)}
+                    placeholder="Amoblado, patio, vista, mascotas..."
+                  />
+                </label>
+                <label className="rental-search-field rental-search-field--wide">
+                  <span>No negociables</span>
+                  <input
+                    type="text"
+                    value={rentalSearch.mustHaves}
+                    onChange={(event) => updateRentalSearch("mustHaves", event.target.value)}
+                    placeholder="Ej: cochera, internet, calefacción, contrato anual, fechas exactas"
+                  />
+                </label>
+              </div>
+
+              <div className="rental-search-actions">
+                <button
+                  type="button"
+                  className="map-btn"
+                  onClick={() => setRentalSearch(INITIAL_RENTAL_SEARCH)}
+                >
+                  Limpiar búsqueda
+                </button>
+                <a
+                  href={createRentalSearchWhatsAppLink()}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="wa-btn"
+                >
+                  Enviar búsqueda por WhatsApp
+                </a>
+              </div>
+            </div>
+          </div>
         </section>
 
       </main>
@@ -467,7 +701,7 @@ function PublicApp() {
           aria-labelledby="property-detail-title"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) {
-              setDetailPropertyId("");
+              closePropertyDetail();
             }
           }}
         >
@@ -475,7 +709,7 @@ function PublicApp() {
             <button
               type="button"
               className="property-detail-close"
-              onClick={() => setDetailPropertyId("")}
+              onClick={closePropertyDetail}
               aria-label="Cerrar detalle"
             >
               ×
@@ -536,11 +770,11 @@ function PublicApp() {
                   type="button"
                   className="map-btn"
                   onClick={() => {
-                    setDetailPropertyId("");
-                    focusPropertyOnMap(detailProperty);
+                    closePropertyDetail();
+                    selectPropertyOnMap(detailProperty);
                   }}
                 >
-                  Ver en mapa
+                  Seleccionar en mapa
                 </button>
                 <a
                   href={createWhatsAppLink(detailProperty)}

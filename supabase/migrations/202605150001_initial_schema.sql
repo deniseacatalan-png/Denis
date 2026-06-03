@@ -30,7 +30,7 @@ create table if not exists public.properties (
   location text not null default '',
   price text not null default 'Consultar',
   area text not null default 'Superficie a confirmar',
-  category text not null default 'venta' check (category in ('venta', 'alquiler_turistico', 'vendido', 'proceso')),
+  category text not null default 'venta' check (category in ('venta', 'alquiler_turistico', 'alquiler_permanente', 'vendido', 'proceso')),
   latitude double precision not null check (latitude between -90 and 90),
   longitude double precision not null check (longitude between -180 and 180),
   style_color text not null default '',
@@ -76,7 +76,7 @@ alter table public.properties
 
 alter table public.properties
   add constraint properties_category_check
-  check (category in ('venta', 'alquiler_turistico', 'vendido', 'proceso'));
+  check (category in ('venta', 'alquiler_turistico', 'alquiler_permanente', 'vendido', 'proceso'));
 
 alter table public.properties
   drop constraint if exists properties_latitude_check;
