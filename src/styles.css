@@ -2054,3 +2054,115 @@ body {
   font-size: 0.94rem;
   font-weight: 700;
 }
+
+.property-slider-stack {
+  display: grid;
+  gap: clamp(1.2rem, 3vw, 2rem);
+}
+
+.property-slider-section {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 22px;
+  padding: clamp(0.85rem, 2vw, 1.2rem);
+  background: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.05));
+}
+
+.property-slider-copy {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.property-slider-copy h3 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1.45rem, 2.5vw, 2.1rem);
+  line-height: 1;
+}
+
+.property-slider-copy span {
+  color: var(--text-soft);
+  font-size: 0.95rem;
+}
+
+.property-slider-viewport {
+  position: relative;
+  grid-column: 1 / -1;
+}
+
+.property-slider-viewport .property-slider-track {
+  grid-column: auto;
+  padding-inline: clamp(2.6rem, 5vw, 4rem);
+}
+
+.property-slider-nav {
+  position: absolute;
+  top: 50%;
+  z-index: 4;
+  display: inline-grid;
+  place-items: center;
+  width: clamp(2.45rem, 4vw, 3.2rem);
+  height: clamp(2.45rem, 4vw, 3.2rem);
+  border: 1px solid rgba(255, 255, 255, 0.54);
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(135deg, rgba(17,17,17,0.7), rgba(240, 93, 206, 0.54));
+  box-shadow: 0 12px 26px rgba(17, 17, 17, 0.34);
+  cursor: pointer;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(2.1rem, 4vw, 3rem);
+  line-height: 1;
+  transform: translateY(-50%);
+  transition: transform 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.property-slider-nav:hover:not(:disabled),
+.property-slider-nav:focus-visible:not(:disabled) {
+  border-color: rgba(198, 167, 105, 0.9);
+  transform: translateY(-50%) scale(1.04);
+}
+
+.property-slider-nav:disabled {
+  cursor: not-allowed;
+  opacity: 0.36;
+}
+
+.property-slider-nav--prev {
+  left: 0.55rem;
+}
+
+.property-slider-nav--next {
+  right: 0.55rem;
+}
+
+.property-slider-empty {
+  flex: 1 0 100%;
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed rgba(255, 255, 255, 0.34);
+  border-radius: 18px;
+  color: var(--text-soft);
+  background: rgba(17, 17, 17, 0.18);
+  text-align: center;
+  padding: 1rem;
+}
+
+.status-pill--alquiler_permanente,
+.legend-pill--alquiler_permanente {
+  background: rgba(123, 128, 97, 0.22);
+  color: #f7f0d8;
+}
+
+@media (max-width: 600px) {
+  .property-slider-viewport .property-slider-track {
+    padding-inline: 2.35rem;
+  }
+
+  .property-slider-nav--prev {
+    left: 0.25rem;
+  }
+
+  .property-slider-nav--next {
+    right: 0.25rem;
+  }
+}

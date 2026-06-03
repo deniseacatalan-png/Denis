@@ -9,6 +9,11 @@ export const CATEGORY_META = {
     color: "#e45858",
     mapColor: "#e45858"
   },
+  alquiler_permanente: {
+    label: "Alquiler permanente",
+    color: "#7b8061",
+    mapColor: "#7b8061"
+  },
   vendido: {
     label: "Vendido",
     color: "#161616",

@@ -22,6 +22,27 @@ const AdminApp = lazy(() => import("./admin/AdminApp"));
 
 const officeWhatsApp = "5492944688613";
 
+const PROPERTY_SLIDER_GROUPS = [
+  {
+    category: "venta",
+    eyebrow: "Propiedades en venta",
+    title: "En venta",
+    emptyMessage: "No hay propiedades en venta disponibles por el momento."
+  },
+  {
+    category: "alquiler_turistico",
+    eyebrow: "Estadías y escapadas",
+    title: "Alquiler turístico",
+    emptyMessage: "No hay alquileres turísticos disponibles por el momento."
+  },
+  {
+    category: "alquiler_permanente",
+    eyebrow: "Hogares para vivir la Patagonia",
+    title: "Alquiler permanente",
+    emptyMessage: "No hay alquileres permanentes disponibles por el momento."
+  }
+];
+
 const CATEGORY_META = {
   venta: {
     label: "En venta",
@@ -32,6 +53,11 @@ const CATEGORY_META = {
     label: "Alquiler turistico",
     color: "#e45858",
     mapColor: "#e45858"
+  },
+  alquiler_permanente: {
+    label: "Alquiler permanente",
+    color: "#7b8061",
+    mapColor: "#7b8061"
   },
   vendido: {
     label: "Vendido",
@@ -73,6 +99,7 @@ function PublicApp() {
   const [serviceNeed, setServiceNeed] = useState("vender");
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const detailScrollPositionRef = useRef({ x: 0, y: 0 });
+  const propertySliderRefs = useRef({});
 
   useEffect(() => {
     let active = true;
@@ -124,7 +151,8 @@ function PublicApp() {
   const visibleProperties = properties.filter(
     (property) =>
       property.category === "venta" ||
-      property.category === "alquiler_turistico"
+      property.category === "alquiler_turistico" ||
+      property.category === "alquiler_permanente"
   );
 
   useEffect(() => {
@@ -139,11 +167,6 @@ function PublicApp() {
     visibleProperties.find((property) => property.id === selectedId) || visibleProperties[0] || null;
   const detailProperty =
     visibleProperties.find((property) => property.id === detailPropertyId) || null;
-  const activeSlideIndex = Math.max(
-    0,
-    visibleProperties.findIndex((property) => property.id === selectedProperty?.id)
-  );
-
   useEffect(() => {
     if (!detailPropertyId) return;
 
@@ -168,6 +191,27 @@ function PublicApp() {
 
   const getPropertyIntro = (property) =>
     property.summary || property.location || "Conoce todos los detalles de esta propiedad.";
+
+  const getPropertiesByCategory = (category) =>
+    visibleProperties.filter((property) => property.category === category);
+
+  const getActiveSlideIndex = (categoryProperties) => {
+    const activeIndex = categoryProperties.findIndex(
+      (property) => property.id === selectedProperty?.id
+    );
+
+    return activeIndex === -1 ? 0 : activeIndex;
+  };
+
+  const scrollPropertySlider = (category, direction) => {
+    const sliderTrack = propertySliderRefs.current[category];
+    if (!sliderTrack) return;
+
+    sliderTrack.scrollBy({
+      left: direction * Math.max(sliderTrack.clientWidth * 0.82, 320),
+      behavior: "smooth"
+    });
+  };
 
   const selectPropertyOnMap = (property) => {
     setSelectedId(property.id);
@@ -378,71 +422,123 @@ function PublicApp() {
             <p className="loading-state">Leyendo las propiedades reales...</p>
           ) : loadError ? (
             <p className="loading-state">{loadError}</p>
-          ) : !visibleProperties.length ? (
-            <p className="loading-state">No hay propiedades cargadas todavia.</p>
           ) : (
-            <div className="property-slider-shell">
-              <div className="property-slider-copy">
-                <p>Explorá las propiedades disponibles cuando lo necesites; esta sección no altera tu recorrido por el sitio.</p>
-              </div>
-              <div className="property-slider-counter" aria-label="Propiedad actual">
-                {visibleProperties.length ? activeSlideIndex + 1 : 0} / {visibleProperties.length}
-              </div>
+            <div className="property-slider-stack">
+              {PROPERTY_SLIDER_GROUPS.map((group) => {
+                const categoryProperties = getPropertiesByCategory(group.category);
+                const activeSlideIndex = getActiveSlideIndex(categoryProperties);
 
-              <div className="property-slider-track">
-                {visibleProperties.map((property) => (
-                  <article
-                    className={`property-slide ${property.id === selectedProperty?.id ? "active" : ""}`}
-                    data-property-id={property.id}
-                    key={property.id}
+                return (
+                  <section
+                    className="property-slider-section"
+                    aria-labelledby={`property-slider-${group.category}`}
+                    key={group.category}
                   >
-                    <div
-                      className="property-slide-card"
-                      role={property.id === selectedProperty?.id ? undefined : "button"}
-                      tabIndex={property.id === selectedProperty?.id ? undefined : 0}
-                      style={
-                        property.images.length
-                          ? {
-                              backgroundImage: `linear-gradient(180deg, rgba(17,17,17,0.2), rgba(17,17,17,0.82)), url(${resolvePropertyCoverImage(property)})`
-                            }
-                          : undefined
-                      }
-                      onClick={() => selectPropertySlide(property)}
-                      onKeyDown={(event) => {
-                        if (
-                          property.id !== selectedProperty?.id &&
-                          (event.key === "Enter" || event.key === " ")
-                        ) {
-                          event.preventDefault();
-                          selectPropertySlide(property);
-                        }
-                      }}
-                    >
-                      <span className={`status-pill status-pill--${property.category}`}>
-                        {CATEGORY_META[property.category]?.label || "En venta"}
-                      </span>
-                      <span className="property-slide-text">
-                        <span className="property-slide-kicker">{formatDisplayedPrice(property)}</span>
-                        <span className="property-slide-title">{property.title}</span>
-                        <span className="property-slide-intro">{getPropertyIntro(property)}</span>
-                      </span>
-                      <span className="property-slide-footer">
-                        <span>{property.location}</span>
+                    <div className="property-slider-shell">
+                      <div className="property-slider-copy">
+                        <p>{group.eyebrow}</p>
+                        <h3 id={`property-slider-${group.category}`}>{group.title}</h3>
+                        <span>
+                          Explorá esta categoría manualmente con los botones o deslizando el carril.
+                        </span>
+                      </div>
+                      <div className="property-slider-counter" aria-label={`${group.title}: propiedad actual`}>
+                        {categoryProperties.length ? activeSlideIndex + 1 : 0} / {categoryProperties.length}
+                      </div>
+
+                      <div className="property-slider-viewport">
                         <button
                           type="button"
-                          className="property-slide-detail-btn"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            openPropertyDetail(property);
+                          className="property-slider-nav property-slider-nav--prev"
+                          onClick={() => scrollPropertySlider(group.category, -1)}
+                          disabled={categoryProperties.length <= 1}
+                          aria-label={`Deslizar ${group.title} hacia la izquierda`}
+                        >
+                          ‹
+                        </button>
+                        <div
+                          className="property-slider-track"
+                          ref={(element) => {
+                            if (element) {
+                              propertySliderRefs.current[group.category] = element;
+                            } else {
+                              delete propertySliderRefs.current[group.category];
+                            }
                           }}
                         >
-                          Ver descripcion completa
+                          {categoryProperties.length ? (
+                            categoryProperties.map((property) => (
+                              <article
+                                className={`property-slide ${property.id === selectedProperty?.id ? "active" : ""}`}
+                                data-property-id={property.id}
+                                key={property.id}
+                              >
+                                <div
+                                  className="property-slide-card"
+                                  role={property.id === selectedProperty?.id ? undefined : "button"}
+                                  tabIndex={property.id === selectedProperty?.id ? undefined : 0}
+                                  style={
+                                    property.images.length
+                                      ? {
+                                          backgroundImage: `linear-gradient(180deg, rgba(17,17,17,0.2), rgba(17,17,17,0.82)), url(${resolvePropertyCoverImage(property)})`
+                                        }
+                                      : undefined
+                                  }
+                                  onClick={() => selectPropertySlide(property)}
+                                  onKeyDown={(event) => {
+                                    if (
+                                      property.id !== selectedProperty?.id &&
+                                      (event.key === "Enter" || event.key === " ")
+                                    ) {
+                                      event.preventDefault();
+                                      selectPropertySlide(property);
+                                    }
+                                  }}
+                                >
+                                  <span className={`status-pill status-pill--${property.category}`}>
+                                    {CATEGORY_META[property.category]?.label || "En venta"}
+                                  </span>
+                                  <span className="property-slide-text">
+                                    <span className="property-slide-kicker">{formatDisplayedPrice(property)}</span>
+                                    <span className="property-slide-title">{property.title}</span>
+                                    <span className="property-slide-intro">{getPropertyIntro(property)}</span>
+                                  </span>
+                                  <span className="property-slide-footer">
+                                    <span>{property.location}</span>
+                                    <button
+                                      type="button"
+                                      className="property-slide-detail-btn"
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        openPropertyDetail(property);
+                                      }}
+                                    >
+                                      Ver descripcion completa
+                                    </button>
+                                  </span>
+                                </div>
+                              </article>
+                            ))
+                          ) : (
+                            <div className="property-slider-empty" role="status">
+                              {group.emptyMessage}
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          className="property-slider-nav property-slider-nav--next"
+                          onClick={() => scrollPropertySlider(group.category, 1)}
+                          disabled={categoryProperties.length <= 1}
+                          aria-label={`Deslizar ${group.title} hacia la derecha`}
+                        >
+                          ›
                         </button>
-                      </span>
+                      </div>
                     </div>
-                  </article>
-                ))}
-              </div>
+                  </section>
+                );
+              })}
             </div>
           )}
         </section>
