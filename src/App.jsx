@@ -3,8 +3,7 @@ import {
   MapContainer,
   CircleMarker,
   Popup,
-  TileLayer,
-  useMap
+  TileLayer
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -91,26 +90,13 @@ function resolvePropertyCoverImage(property) {
   return property.images?.[0] || "";
 }
 
-function MapFocus({ coords }) {
-  const map = useMap();
-
-  useEffect(() => {
-    map.flyTo(coords, 13, { duration: 1.1 });
-  }, [coords, map]);
-
-  return null;
-}
-
 function PublicApp() {
   const [properties, setProperties] = useState([]);
   const [selectedId, setSelectedId] = useState("");
   const [detailPropertyId, setDetailPropertyId] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
-  const [serviceNeed, setServiceNeed] = useState("vender");
   const [rentalSearch, setRentalSearch] = useState(INITIAL_RENTAL_SEARCH);
-  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
-  const detailScrollPositionRef = useRef({ x: 0, y: 0 });
   const propertySliderRefs = useRef({});
 
   useEffect(() => {
@@ -231,18 +217,9 @@ function PublicApp() {
 
   const closePropertyDetail = () => {
     setDetailPropertyId("");
-
-    window.requestAnimationFrame(() => {
-      window.scrollTo({
-        left: detailScrollPositionRef.current.x,
-        top: detailScrollPositionRef.current.y,
-        behavior: "auto"
-      });
-    });
   };
 
   const openPropertyDetail = (property) => {
-    detailScrollPositionRef.current = { x: window.scrollX, y: window.scrollY };
     setSelectedId(property.id);
     setDetailPropertyId(property.id);
   };
@@ -258,11 +235,6 @@ function PublicApp() {
 
   const createWhatsAppLink = (property) => {
     const message = `Hola Denise, quiero informacion sobre: ${property.title} (${property.price}) en ${property.location}.`;
-    return `https://wa.me/${officeWhatsApp}?text=${encodeURIComponent(message)}`;
-  };
-
-  const createServiceWhatsAppLink = (need = serviceNeed) => {
-    const message = `Hola Denise, quiero solicitar el servicio de ${need}.`;
     return `https://wa.me/${officeWhatsApp}?text=${encodeURIComponent(message)}`;
   };
 
@@ -294,47 +266,36 @@ function PublicApp() {
   return (
     <div className="page-shell">
       <header className="hero" id="inicio">
-        <nav className="top-nav">
-          <img className="brand-logo" src="/isodc.svg" alt="Logo Denise Catalán" />
-          <div className="links">
-            <button
-              type="button"
-              className="status-pill status-pill--venta nav-service-link nav-service-button"
-              onClick={() => setIsServiceModalOpen(true)}
-            >
-              Solicitar servicios
-            </button>
-          </div>
-        </nav>
-
-        <div className="hero-layout">
-          <div className="hero-content">
-            <p className="overline">Inmobiliaria boutique en Patagonia</p>
-            <h1>Denise Catalán Bienes Raíces</h1>
-            <p>Invertí en naturaleza con una mirada cercana, profesional y personalizada.</p>
-            <p className="brand-value">
-              Acompañamos cada decisión inmobiliaria con curaduría, escucha y conocimiento local para que encuentres el lugar donde querés estar.
-            </p>
-            <p className="contact-line">
-              San Martín de los Andes · Patagonia Argentina · WhatsApp: <strong>+54 9 2944 68-8613</strong>
-            </p>
-            <ul className="brand-pillars" aria-label="Propuesta de valor">
-              <li>Curaduría boutique</li>
-              <li>Acompañamiento personalizado</li>
-              <li>Conocimiento local</li>
-            </ul>
-          </div>
-
-          <section className="map-section hero-map-section" id="mapa">
-            <div className="section-title map-section-header">
-              <div>
-                <p>Geolocalizacion</p>
-                <h2>Plano de ubicaciones</h2>
-              </div>
-              <button type="button" className="map-btn header-map-btn" onClick={() => setIsServiceModalOpen(true)}>Hablar con Denise</button>
+        <section className="brand-presentation" aria-labelledby="brand-title">
+          <div className="brand-presentation-copy">
+            <h1 id="brand-title" className="brand-title">
+              <span>DENISE CATALÁN</span>
+              <small>Bienes Raíces</small>
+            </h1>
+            <p className="brand-nature">INVERTÍ EN NATURALEZA.</p>
+            <div className="brand-support">
+              <p>Disfrutá la tranquilidad de estar donde querés estar.</p>
+              <p>Nosotros te acompañamos a lograrlo.</p>
             </div>
+            <p className="brand-location">SAN MARTÍN DE LOS ANDES · PATAGONIA ARGENTINA</p>
+            <p className="brand-boutique">Inmobiliaria boutique en Patagonia</p>
+          </div>
+          <div className="brand-presentation-mark" aria-hidden="true">
+            <img className="brand-logo" src="/isodc.svg" alt="" />
+          </div>
+        </section>
+      </header>
 
-            <div className="map-layout">
+      <main className="content-wrap">
+        <section className="map-section geolocation-section" id="mapa" aria-labelledby="map-title">
+          <div className="section-title map-section-header">
+            <div>
+              <p>Geolocalización</p>
+              <h2 id="map-title">Plano de ubicaciones</h2>
+            </div>
+          </div>
+
+          <div className="map-layout">
               <div className="map-frame">
                 {selectedProperty ? (
                   <MapContainer
@@ -343,7 +304,6 @@ function PublicApp() {
                     scrollWheelZoom={true}
                     className="map-view"
                   >
-                    <MapFocus coords={selectedProperty.coords} />
                     <TileLayer
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -442,12 +402,9 @@ function PublicApp() {
                   </a>
                 ) : null}
               </aside>
-            </div>
-          </section>
-        </div>
-      </header>
+          </div>
+        </section>
 
-      <main className="content-wrap">
         <section className="properties" aria-labelledby="properties-title">
           <div className="section-title">
             <p>Una selección dentro de nuestra propuesta integral</p>
@@ -474,9 +431,6 @@ function PublicApp() {
                       <div className="property-slider-copy">
                         <p>{group.eyebrow}</p>
                         <h3 id={`property-slider-${group.category}`}>{group.title}</h3>
-                        <span>
-                          Explorá esta categoría manualmente con los botones o deslizando el carril.
-                        </span>
                       </div>
                       <div className="property-slider-counter" aria-label={`${group.title}: propiedad actual`}>
                         {categoryProperties.length ? activeSlideIndex + 1 : 0} / {categoryProperties.length}
@@ -787,37 +741,6 @@ function PublicApp() {
               </div>
             </div>
           </section>
-        </div>
-      ) : null}
-      {isServiceModalOpen ? (
-        <div className="service-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="service-modal-title">
-          <div className="service-modal">
-            <label id="service-modal-title" htmlFor="service-need" className="services-label">Quiero solicitar el servicio de:</label>
-            <select
-              id="service-need"
-              value={serviceNeed}
-              onChange={(event) => setServiceNeed(event.target.value)}
-            >
-              <option value="vender">Vender</option>
-              <option value="alquilar">Alquilar</option>
-              <option value="invertir">Invertir</option>
-              <option value="otros">Otros</option>
-            </select>
-            <div className="service-modal-actions">
-              <button type="button" className="map-btn" onClick={() => setIsServiceModalOpen(false)}>
-                Cerrar
-              </button>
-              <a
-                href={createServiceWhatsAppLink(serviceNeed)}
-                target="_blank"
-                rel="noreferrer"
-                className="wa-btn"
-                onClick={() => setIsServiceModalOpen(false)}
-              >
-                Ir a WhatsApp
-              </a>
-            </div>
-          </div>
         </div>
       ) : null}
     </div>
