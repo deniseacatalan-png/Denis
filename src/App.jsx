@@ -43,6 +43,17 @@ const PROPERTY_SLIDER_GROUPS = [
   }
 ];
 
+
+const INITIAL_RENTAL_SEARCH = {
+  type: "permanente",
+  searchDetail: "",
+  zone: "",
+  budget: "",
+  rooms: "",
+  preferences: "",
+  mustHaves: ""
+};
+
 const CATEGORY_META = {
   venta: {
     label: "En venta",
@@ -97,6 +108,7 @@ function PublicApp() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [serviceNeed, setServiceNeed] = useState("vender");
+  const [rentalSearch, setRentalSearch] = useState(INITIAL_RENTAL_SEARCH);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const detailScrollPositionRef = useRef({ x: 0, y: 0 });
   const propertySliderRefs = useRef({});
@@ -251,6 +263,30 @@ function PublicApp() {
 
   const createServiceWhatsAppLink = (need = serviceNeed) => {
     const message = `Hola Denise, quiero solicitar el servicio de ${need}.`;
+    return `https://wa.me/${officeWhatsApp}?text=${encodeURIComponent(message)}`;
+  };
+
+  const updateRentalSearch = (field, value) => {
+    setRentalSearch((currentSearch) => ({
+      ...currentSearch,
+      [field]: value
+    }));
+  };
+
+  const createRentalSearchWhatsAppLink = () => {
+    const rentalTypeLabel =
+      rentalSearch.type === "turistico" ? "alquiler turístico" : "alquiler permanente";
+    const details = [
+      `Tipo: ${rentalTypeLabel}`,
+      `Búsqueda: ${rentalSearch.searchDetail || "A conversar"}`,
+      `Zona: ${rentalSearch.zone || "Flexible"}`,
+      `Presupuesto: ${rentalSearch.budget || "A definir"}`,
+      `Ambientes: ${rentalSearch.rooms || "A definir"}`,
+      `Preferencias: ${rentalSearch.preferences || "Sin detalle"}`,
+      `No negociables: ${rentalSearch.mustHaves || "Sin detalle"}`
+    ].join("\n");
+    const message = `Hola Denise, busco alquiler en San Martín de los Andes.\n${details}`;
+
     return `https://wa.me/${officeWhatsApp}?text=${encodeURIComponent(message)}`;
   };
 
@@ -541,6 +577,119 @@ function PublicApp() {
               })}
             </div>
           )}
+        </section>
+
+        <section className="rental-search-section" aria-labelledby="rental-search-title">
+          <div className="property-slider-shell rental-search-shell">
+            <div className="property-slider-copy">
+              <p>Solicitud personalizada</p>
+              <h3 id="rental-search-title">Busco alquiler en San Martín de los Andes</h3>
+              <span>
+                Compartinos el detalle de tu búsqueda para curar opciones permanentes o turísticas
+                con zona, presupuesto, preferencias y no negociables claros.
+              </span>
+            </div>
+
+            <div className="rental-search-card">
+              <div className="rental-type-toggle" role="group" aria-label="Tipo de alquiler buscado">
+                <label>
+                  <input
+                    type="radio"
+                    name="rental-type"
+                    value="permanente"
+                    checked={rentalSearch.type === "permanente"}
+                    onChange={(event) => updateRentalSearch("type", event.target.value)}
+                  />
+                  Permanente
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="rental-type"
+                    value="turistico"
+                    checked={rentalSearch.type === "turistico"}
+                    onChange={(event) => updateRentalSearch("type", event.target.value)}
+                  />
+                  Turístico
+                </label>
+              </div>
+
+              <div className="rental-search-grid">
+                <label className="rental-search-field rental-search-field--wide">
+                  <span>Pequeño detalle de búsqueda</span>
+                  <textarea
+                    value={rentalSearch.searchDetail}
+                    onChange={(event) => updateRentalSearch("searchDetail", event.target.value)}
+                    placeholder="Ej: casa luminosa para familia, estadía de verano, cerca de colegio o con jardín"
+                    rows={3}
+                  />
+                </label>
+                <label className="rental-search-field">
+                  <span>Zona</span>
+                  <input
+                    type="text"
+                    value={rentalSearch.zone}
+                    onChange={(event) => updateRentalSearch("zone", event.target.value)}
+                    placeholder="Centro, Vega, Chapelco, flexible..."
+                  />
+                </label>
+                <label className="rental-search-field">
+                  <span>Presupuesto</span>
+                  <input
+                    type="text"
+                    value={rentalSearch.budget}
+                    onChange={(event) => updateRentalSearch("budget", event.target.value)}
+                    placeholder="Monto estimado / moneda"
+                  />
+                </label>
+                <label className="rental-search-field">
+                  <span>Ambientes</span>
+                  <input
+                    type="text"
+                    value={rentalSearch.rooms}
+                    onChange={(event) => updateRentalSearch("rooms", event.target.value)}
+                    placeholder="Monoambiente, 2 dorm., 3 ambientes..."
+                  />
+                </label>
+                <label className="rental-search-field">
+                  <span>Preferencias</span>
+                  <input
+                    type="text"
+                    value={rentalSearch.preferences}
+                    onChange={(event) => updateRentalSearch("preferences", event.target.value)}
+                    placeholder="Amoblado, patio, vista, mascotas..."
+                  />
+                </label>
+                <label className="rental-search-field rental-search-field--wide">
+                  <span>No negociables</span>
+                  <input
+                    type="text"
+                    value={rentalSearch.mustHaves}
+                    onChange={(event) => updateRentalSearch("mustHaves", event.target.value)}
+                    placeholder="Ej: cochera, internet, calefacción, contrato anual, fechas exactas"
+                  />
+                </label>
+              </div>
+
+              <div className="rental-search-actions">
+                <button
+                  type="button"
+                  className="map-btn"
+                  onClick={() => setRentalSearch(INITIAL_RENTAL_SEARCH)}
+                >
+                  Limpiar búsqueda
+                </button>
+                <a
+                  href={createRentalSearchWhatsAppLink()}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="wa-btn"
+                >
+                  Enviar búsqueda por WhatsApp
+                </a>
+              </div>
+            </div>
+          </div>
         </section>
 
       </main>

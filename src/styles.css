@@ -2166,3 +2166,138 @@ body {
     right: 0.25rem;
   }
 }
+
+.property-slider-track {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.property-slider-track::-webkit-scrollbar {
+  display: none;
+}
+
+.rental-search-section {
+  margin-top: clamp(1.2rem, 3vw, 2rem);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 26px;
+  padding: clamp(1rem, 2.4vw, 2rem);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.07));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 14px 34px rgba(19, 12, 18, 0.22);
+  backdrop-filter: blur(16px);
+}
+
+.rental-search-shell {
+  align-items: start;
+}
+
+.rental-search-card {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 1rem;
+  border-radius: 22px;
+  padding: clamp(1rem, 2.6vw, 1.5rem);
+  background:
+    linear-gradient(145deg, rgba(17,17,17,0.46), rgba(240, 93, 206, 0.18)),
+    radial-gradient(circle at top right, rgba(198, 167, 105, 0.22), transparent 36%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.rental-type-toggle {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.rental-type-toggle label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 999px;
+  padding: 0.48rem 0.85rem;
+  color: #ffeec9;
+  background: rgba(255, 255, 255, 0.1);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.rental-type-toggle input {
+  accent-color: var(--gold);
+}
+
+.rental-search-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.rental-search-field {
+  display: grid;
+  gap: 0.38rem;
+  color: #fff;
+  font-weight: 800;
+}
+
+.rental-search-field--wide {
+  grid-column: 1 / -1;
+}
+
+.rental-search-field span {
+  font-size: 0.92rem;
+  color: #ffeec9;
+}
+
+.rental-search-field input,
+.rental-search-field textarea {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 16px;
+  padding: 0.78rem 0.9rem;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  font: inherit;
+  outline: none;
+}
+
+.rental-search-field textarea {
+  resize: vertical;
+}
+
+.rental-search-field input::placeholder,
+.rental-search-field textarea::placeholder {
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.rental-search-field input:focus,
+.rental-search-field textarea:focus {
+  border-color: rgba(198, 167, 105, 0.86);
+  box-shadow: 0 0 0 3px rgba(198, 167, 105, 0.16);
+}
+
+.rental-search-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.7rem;
+}
+
+@media (max-width: 700px) {
+  .rental-search-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rental-search-field--wide {
+    grid-column: auto;
+  }
+
+  .rental-search-actions {
+    justify-content: stretch;
+  }
+
+  .rental-search-actions .map-btn,
+  .rental-search-actions .wa-btn {
+    width: 100%;
+  }
+}
