@@ -2276,3 +2276,599 @@ body {
     width: 100%;
   }
 }
+
+/* Institutional front-page redesign: brand first, map second, properties third. */
+:root {
+  --negro-profundo: #1B1B1F;
+  --blanco-calido-ui: #F8F8F6;
+  --rosa-principal: #A0446A;
+  --rosa-acento: #F07CFF;
+  --text-soft: rgba(27, 27, 31, 0.72);
+  --gold: var(--rosa-principal);
+  --border: rgba(27, 27, 31, 0.14);
+  --shadow: 0 24px 70px rgba(27, 27, 31, 0.16);
+}
+
+body {
+  font-family: "Manrope", sans-serif;
+  color: var(--negro-profundo);
+  background:
+    linear-gradient(180deg, rgba(248, 248, 246, 0.97), rgba(248, 248, 246, 0.93)),
+    radial-gradient(circle at 8% 12%, rgba(160, 68, 106, 0.14), transparent 28%),
+    radial-gradient(circle at 92% 4%, rgba(240, 124, 255, 0.13), transparent 30%),
+    var(--blanco-calido-ui);
+  font-size: 1rem;
+}
+
+h1,
+h2,
+h3,
+.section-title p,
+.property-slider-copy p,
+.status-pill,
+.chip,
+.detail-stats span,
+.cover-metrics span,
+.property-slide-kicker,
+.property-slide-title,
+.property-slide-footer > span,
+.property-detail-hero-text p,
+.rental-search-field span,
+.rental-type-toggle label,
+.map-btn,
+.wa-btn {
+  text-transform: uppercase;
+}
+
+.hero {
+  position: relative;
+  padding: clamp(1.25rem, 3vw, 2.75rem) clamp(1rem, 5vw, 4rem);
+  overflow: hidden;
+  color: var(--blanco-calido-ui);
+  background:
+    linear-gradient(120deg, rgba(27, 27, 31, 0.96) 0%, rgba(27, 27, 31, 0.91) 52%, rgba(160, 68, 106, 0.88) 100%),
+    radial-gradient(circle at 86% 18%, rgba(240, 124, 255, 0.22), transparent 28%);
+  border-bottom: 1px solid rgba(27, 27, 31, 0.18);
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(27, 27, 31, 0.28), transparent 62%),
+    radial-gradient(circle at 16% 18%, rgba(248, 248, 246, 0.08), transparent 24%);
+  pointer-events: none;
+}
+
+.brand-presentation {
+  position: relative;
+  z-index: 1;
+  width: min(1240px, 100%);
+  min-height: clamp(420px, 58vh, 620px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(220px, 0.6fr);
+  gap: clamp(1.5rem, 5vw, 5rem);
+  align-items: center;
+}
+
+.brand-presentation-copy {
+  display: grid;
+  justify-items: start;
+  gap: clamp(0.75rem, 1.6vw, 1.15rem);
+}
+
+.brand-title,
+.hero h1.brand-title {
+  margin: 0;
+  max-width: none;
+  display: grid;
+  gap: 0.25rem;
+  color: var(--blanco-calido-ui);
+  line-height: 0.9;
+  text-shadow: 0 18px 44px rgba(0, 0, 0, 0.4);
+}
+
+.brand-title::before,
+.hero h1.brand-title::before {
+  content: none;
+}
+
+.brand-title span {
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(4.25rem, 11.5vw, 10.5rem);
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  line-height: 0.82;
+}
+
+.brand-title small {
+  font-family: "Manrope", sans-serif;
+  font-size: clamp(1.3rem, 3.1vw, 2.6rem);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  line-height: 1.2;
+  text-transform: none;
+}
+
+.brand-nature {
+  margin: clamp(0.55rem, 1.8vw, 1.2rem) 0 0;
+  color: var(--blanco-calido-ui);
+  font-size: clamp(1.25rem, 2.7vw, 2.15rem);
+  font-weight: 800;
+  letter-spacing: 0.19em;
+  line-height: 1.15;
+}
+
+.brand-nature::after {
+  content: "";
+  display: block;
+  width: min(240px, 60vw);
+  height: 2px;
+  margin-top: 0.85rem;
+  background: linear-gradient(90deg, var(--rosa-acento), rgba(248, 248, 246, 0));
+}
+
+.brand-support {
+  display: grid;
+  gap: 0.2rem;
+  max-width: 760px;
+  color: rgba(248, 248, 246, 0.92);
+  font-size: clamp(1.08rem, 2vw, 1.55rem);
+  line-height: 1.55;
+}
+
+.brand-support p,
+.brand-location,
+.brand-boutique {
+  margin: 0;
+}
+
+.brand-location {
+  margin-top: 0.35rem;
+  color: var(--blanco-calido-ui);
+  font-size: clamp(0.82rem, 1.3vw, 1.02rem);
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  line-height: 1.55;
+}
+
+.brand-boutique {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(248, 248, 246, 0.28);
+  border-left: 3px solid var(--rosa-acento);
+  padding: 0.62rem 0.95rem;
+  color: rgba(248, 248, 246, 0.92);
+  background: rgba(248, 248, 246, 0.08);
+  border-radius: 999px;
+  font-size: clamp(0.88rem, 1.3vw, 1rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.brand-presentation-mark {
+  justify-self: end;
+  display: grid;
+  place-items: center;
+  width: min(340px, 100%);
+  aspect-ratio: 1;
+  border: 1px solid rgba(248, 248, 246, 0.2);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(248, 248, 246, 0.16), rgba(248, 248, 246, 0.04) 62%, transparent 64%),
+    rgba(27, 27, 31, 0.16);
+  box-shadow: inset 0 0 42px rgba(248, 248, 246, 0.08), 0 24px 70px rgba(0, 0, 0, 0.24);
+}
+
+.brand-logo {
+  width: min(210px, 58%);
+  height: auto;
+  filter: brightness(0) invert(1);
+}
+
+.content-wrap {
+  width: min(1240px, 92vw);
+  margin: clamp(1.4rem, 4vw, 3rem) auto 3.5rem;
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 2.2rem);
+}
+
+.properties,
+.map-section,
+.rental-search-section {
+  border: 1px solid rgba(27, 27, 31, 0.12);
+  border-radius: 30px;
+  background: rgba(248, 248, 246, 0.94);
+  box-shadow: var(--shadow);
+  backdrop-filter: none;
+}
+
+.geolocation-section {
+  margin-top: 0;
+  padding: clamp(1.1rem, 2.4vw, 2rem);
+  background:
+    linear-gradient(135deg, rgba(248, 248, 246, 0.98), rgba(248, 248, 246, 0.92)),
+    radial-gradient(circle at 100% 0%, rgba(160, 68, 106, 0.12), transparent 34%);
+}
+
+.properties {
+  padding: clamp(1rem, 2.2vw, 1.65rem);
+  background: var(--negro-profundo);
+}
+
+.section-title h2,
+.property-slider-copy h3,
+.property-detail-hero-text h2,
+.details-cover h3,
+.map-highlight > h3,
+.property-cover h3,
+.property-body h3 {
+  font-family: "Manrope", sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.section-title h2 {
+  margin: 0.35rem 0 1.25rem;
+  color: var(--negro-profundo);
+  font-size: clamp(1.5rem, 2.8vw, 2.35rem);
+}
+
+.properties .section-title h2,
+.properties .section-title p,
+.properties .property-slider-copy h3,
+.properties .property-slider-copy p {
+  color: var(--blanco-calido-ui);
+}
+
+.section-title p,
+.property-slider-copy p {
+  color: var(--rosa-principal);
+  font-family: "Manrope", sans-serif;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+}
+
+.map-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+  gap: clamp(1rem, 2.4vw, 1.5rem);
+  align-items: stretch;
+}
+
+.map-frame,
+.map-view {
+  min-height: clamp(420px, 48vw, 620px);
+}
+
+.map-frame {
+  border-radius: 24px;
+  border: 1px solid rgba(27, 27, 31, 0.16);
+  box-shadow: 0 18px 44px rgba(27, 27, 31, 0.16);
+}
+
+.map-highlight {
+  border-radius: 24px;
+  border: 1px solid rgba(27, 27, 31, 0.12);
+  background: var(--blanco-calido-ui);
+  color: var(--negro-profundo);
+  box-shadow: inset 0 0 0 1px rgba(248, 248, 246, 0.7);
+}
+
+.map-highlight p,
+.map-highlight h3,
+.rich-text,
+.rich-text p,
+.rich-text li {
+  color: var(--negro-profundo);
+}
+
+.details-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(27, 27, 31, 0.08), rgba(27, 27, 31, 0.88));
+  pointer-events: none;
+}
+
+.details-cover h3 {
+  z-index: 1;
+  color: var(--blanco-calido-ui);
+  text-shadow: 0 4px 22px rgba(0, 0, 0, 0.72);
+}
+
+.chip {
+  color: var(--negro-profundo);
+  background: rgba(240, 124, 255, 0.14);
+  border: 1px solid rgba(160, 68, 106, 0.22);
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+}
+
+.status-pill {
+  color: var(--blanco-calido-ui);
+  background: var(--rosa-principal);
+  border: 1px solid rgba(248, 248, 246, 0.28);
+  font-family: "Manrope", sans-serif;
+  font-weight: 800;
+}
+
+.status-pill--venta,
+.status-pill--alquiler_turistico,
+.status-pill--alquiler_permanente,
+.status-pill--vendido,
+.status-pill--proceso {
+  background: var(--rosa-principal);
+  color: var(--blanco-calido-ui);
+}
+
+.detail-stats div,
+.cover-metrics div {
+  background: var(--negro-profundo);
+  border: 1px solid rgba(27, 27, 31, 0.16);
+}
+
+.detail-stats span,
+.cover-metrics span {
+  color: rgba(248, 248, 246, 0.78);
+  font-family: "Manrope", sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.detail-stats strong,
+.cover-metrics strong {
+  color: var(--blanco-calido-ui);
+  font-family: "Manrope", sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.map-btn,
+.wa-btn,
+.property-slide-detail-btn {
+  font-family: "Manrope", sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.map-btn {
+  color: var(--negro-profundo);
+  background: var(--blanco-calido-ui);
+  border: 1px solid rgba(27, 27, 31, 0.18);
+}
+
+.wa-btn,
+.property-detail-close {
+  color: var(--blanco-calido-ui);
+  background: var(--rosa-principal);
+}
+
+.property-slider-stack {
+  gap: clamp(0.9rem, 2vw, 1.35rem);
+}
+
+.property-slider-section {
+  border: 1px solid rgba(248, 248, 246, 0.14);
+  border-radius: 22px;
+  padding: clamp(0.75rem, 1.7vw, 1.05rem);
+  background: rgba(248, 248, 246, 0.055);
+  box-shadow: none;
+}
+
+.property-slider-shell {
+  gap: 0.75rem;
+}
+
+.property-slider-copy h3 {
+  color: var(--blanco-calido-ui);
+  font-size: clamp(1.05rem, 1.9vw, 1.45rem);
+  line-height: 1.15;
+}
+
+.property-slider-counter {
+  color: var(--blanco-calido-ui);
+  border: 1px solid rgba(248, 248, 246, 0.28);
+  background: rgba(248, 248, 246, 0.08);
+  font-family: "Manrope", sans-serif;
+}
+
+.property-slide {
+  flex-basis: min(560px, 82%);
+}
+
+.property-slide-card {
+  min-height: 340px;
+  border: 1px solid rgba(248, 248, 246, 0.18);
+  border-radius: 20px;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
+  background:
+    linear-gradient(145deg, rgba(27, 27, 31, 0.94), rgba(27, 27, 31, 0.88)),
+    radial-gradient(circle at top right, rgba(240, 124, 255, 0.18), transparent 34%);
+}
+
+.property-slide-card::before {
+  background:
+    linear-gradient(180deg, rgba(27, 27, 31, 0.34), rgba(27, 27, 31, 0.5) 42%, rgba(27, 27, 31, 0.94)),
+    linear-gradient(90deg, rgba(27, 27, 31, 0.7), rgba(27, 27, 31, 0.12) 72%);
+}
+
+.property-slide.active .property-slide-card,
+.property-slide-card:hover {
+  border-color: rgba(240, 124, 255, 0.58);
+  box-shadow: 0 20px 42px rgba(0, 0, 0, 0.34);
+}
+
+.property-slide-kicker {
+  color: var(--blanco-calido-ui);
+  font-family: "Manrope", sans-serif;
+  font-size: clamp(0.92rem, 1.5vw, 1rem);
+  letter-spacing: 0.08em;
+  text-shadow: 0 3px 14px rgba(0, 0, 0, 0.76);
+}
+
+.property-slide-title {
+  color: var(--blanco-calido-ui);
+  font-family: "Manrope", sans-serif;
+  font-size: clamp(1.55rem, 3.4vw, 2.65rem);
+  letter-spacing: 0.055em;
+  line-height: 1.08;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.86);
+}
+
+.property-slide-intro {
+  color: rgba(248, 248, 246, 0.9);
+  font-family: "Manrope", sans-serif;
+  font-size: 0.96rem;
+  text-shadow: 0 3px 14px rgba(0, 0, 0, 0.8);
+}
+
+.property-slide-footer,
+.property-slide-detail-btn {
+  color: var(--blanco-calido-ui);
+  text-shadow: 0 3px 14px rgba(0, 0, 0, 0.88);
+}
+
+.property-slider-nav {
+  color: var(--blanco-calido-ui);
+  background: rgba(27, 27, 31, 0.86);
+  border: 1px solid rgba(248, 248, 246, 0.32);
+  font-family: "Manrope", sans-serif;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.34);
+}
+
+.property-slider-nav:hover:not(:disabled),
+.property-slider-nav:focus-visible:not(:disabled) {
+  border-color: var(--rosa-acento);
+}
+
+.property-slider-empty {
+  color: var(--blanco-calido-ui);
+  background: rgba(248, 248, 246, 0.06);
+}
+
+.rental-search-section {
+  background: var(--blanco-calido-ui);
+  border-color: rgba(27, 27, 31, 0.12);
+  box-shadow: var(--shadow);
+}
+
+.rental-search-section .property-slider-copy h3,
+.rental-search-section .property-slider-copy p {
+  color: var(--negro-profundo);
+}
+
+.rental-search-card {
+  background: var(--negro-profundo);
+  border: 1px solid rgba(27, 27, 31, 0.16);
+}
+
+.rental-type-toggle label,
+.rental-search-field,
+.rental-search-field span {
+  color: var(--blanco-calido-ui);
+}
+
+.rental-search-field input,
+.rental-search-field textarea {
+  color: var(--blanco-calido-ui);
+  background: rgba(248, 248, 246, 0.1);
+  border-color: rgba(248, 248, 246, 0.28);
+}
+
+.property-detail-screen {
+  font-family: "Manrope", sans-serif;
+}
+
+.property-detail-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(27, 27, 31, 0.16), rgba(27, 27, 31, 0.86));
+  pointer-events: none;
+}
+
+.property-detail-hero-text {
+  z-index: 1;
+}
+
+@media (max-width: 980px) {
+  .brand-presentation,
+  .map-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .brand-presentation {
+    min-height: auto;
+    padding-block: clamp(2.5rem, 8vw, 5rem);
+  }
+
+  .brand-presentation-mark {
+    justify-self: start;
+    width: min(220px, 54vw);
+  }
+}
+
+@media (max-width: 680px) {
+  .hero {
+    padding-inline: 1rem;
+  }
+
+  .brand-title span {
+    font-size: clamp(3.05rem, 18vw, 5rem);
+  }
+
+  .brand-title small,
+  .brand-location,
+  .brand-boutique,
+  .brand-nature {
+    letter-spacing: 0.1em;
+  }
+
+  .brand-presentation-mark {
+    display: none;
+  }
+
+  .map-frame,
+  .map-view {
+    min-height: 360px;
+  }
+
+  .detail-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .property-slide {
+    flex-basis: min(360px, 88%);
+  }
+
+  .property-slide-card {
+    min-height: 360px;
+  }
+}
+
+.leaflet-popup-content,
+.leaflet-popup-content strong,
+.property-detail-description h1,
+.property-detail-description h2,
+.property-detail-description h3,
+.rich-text h1,
+.rich-text h2,
+.rich-text h3,
+.details-panel > p:not(.chip):not(.status-pill),
+.property-detail-hero-text > p:not(.status-pill) {
+  text-transform: uppercase;
+}
+
+.leaflet-popup-content strong,
+.leaflet-popup-content br + * {
+  color: var(--negro-profundo);
+  font-family: "Manrope", sans-serif;
+  font-weight: 800;
+}
