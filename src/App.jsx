@@ -72,8 +72,7 @@ function PublicApp() {
   const [loadError, setLoadError] = useState("");
   const [serviceNeed, setServiceNeed] = useState("vender");
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
-  const mapSectionRef = useRef(null);
-  const sliderTrackRef = useRef(null);
+  const detailScrollPositionRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     let active = true;
@@ -146,25 +145,11 @@ function PublicApp() {
   );
 
   useEffect(() => {
-    if (!selectedId || !sliderTrackRef.current) return;
-
-    const activeSlide = Array.from(sliderTrackRef.current.children).find(
-      (element) => element.dataset.propertyId === selectedId
-    );
-
-    activeSlide?.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest",
-      inline: "center"
-    });
-  }, [selectedId]);
-
-  useEffect(() => {
     if (!detailPropertyId) return;
 
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
-        setDetailPropertyId("");
+        closePropertyDetail();
       }
     };
     const previousOverflow = document.body.style.overflow;
@@ -178,34 +163,30 @@ function PublicApp() {
     };
   }, [detailPropertyId]);
 
-  useEffect(() => {
-    if (detailPropertyId || visibleProperties.length <= 1) return;
-
-    const autoplayIntervalId = window.setInterval(() => {
-      setSelectedId((currentId) => {
-        const currentIndex = visibleProperties.findIndex((property) => property.id === currentId);
-        const nextIndex =
-          currentIndex === -1 ? 0 : (currentIndex + 1) % visibleProperties.length;
-
-        return visibleProperties[nextIndex].id;
-      });
-    }, 3000);
-
-    return () => window.clearInterval(autoplayIntervalId);
-  }, [properties, detailPropertyId]);
-
   const formatDisplayedPrice = (property) =>
     property?.category === "proceso" ? "Sin valor" : property?.price || "Consultar";
 
   const getPropertyIntro = (property) =>
     property.summary || property.location || "Conoce todos los detalles de esta propiedad.";
 
-  const focusPropertyOnMap = (property) => {
+  const selectPropertyOnMap = (property) => {
     setSelectedId(property.id);
-    mapSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const closePropertyDetail = () => {
+    setDetailPropertyId("");
+
+    window.requestAnimationFrame(() => {
+      window.scrollTo({
+        left: detailScrollPositionRef.current.x,
+        top: detailScrollPositionRef.current.y,
+        behavior: "auto"
+      });
+    });
   };
 
   const openPropertyDetail = (property) => {
+    detailScrollPositionRef.current = { x: window.scrollX, y: window.scrollY };
     setSelectedId(property.id);
     setDetailPropertyId(property.id);
   };
@@ -248,22 +229,29 @@ function PublicApp() {
 
         <div className="hero-layout">
           <div className="hero-content">
-            <h1>Propiedades reales en San Martin de los Andes, Patagonia.</h1>
-            <p>
-              Propiedades cargadas desde el administrador con ubicacion, valor y descripcion completa.
+            <p className="overline">Inmobiliaria boutique en Patagonia</p>
+            <h1>Denise Catalán Bienes Raíces</h1>
+            <p>Invertí en naturaleza con una mirada cercana, profesional y personalizada.</p>
+            <p className="brand-value">
+              Acompañamos cada decisión inmobiliaria con curaduría, escucha y conocimiento local para que encuentres el lugar donde querés estar.
             </p>
             <p className="contact-line">
-              WhatsApp: <strong>+54 9 2944 68-8613</strong>
+              San Martín de los Andes · Patagonia Argentina · WhatsApp: <strong>+54 9 2944 68-8613</strong>
             </p>
+            <ul className="brand-pillars" aria-label="Propuesta de valor">
+              <li>Curaduría boutique</li>
+              <li>Acompañamiento personalizado</li>
+              <li>Conocimiento local</li>
+            </ul>
           </div>
 
-          <section className="map-section hero-map-section" id="mapa" ref={mapSectionRef}>
+          <section className="map-section hero-map-section" id="mapa">
             <div className="section-title map-section-header">
               <div>
                 <p>Geolocalizacion</p>
                 <h2>Plano de ubicaciones</h2>
               </div>
-              <a className="map-btn header-map-btn" href="#propiedades">Ver propiedades</a>
+              <button type="button" className="map-btn header-map-btn" onClick={() => setIsServiceModalOpen(true)}>Hablar con Denise</button>
             </div>
 
             <div className="map-layout">
@@ -380,9 +368,10 @@ function PublicApp() {
       </header>
 
       <main className="content-wrap">
-        <section className="properties" id="propiedades">
+        <section className="properties" aria-labelledby="properties-title">
           <div className="section-title">
-            <h2>PROPIEDADES</h2>
+            <p>Una selección dentro de nuestra propuesta integral</p>
+            <h2 id="properties-title">Propiedades disponibles</h2>
           </div>
 
           {loading ? (
@@ -394,13 +383,13 @@ function PublicApp() {
           ) : (
             <div className="property-slider-shell">
               <div className="property-slider-copy">
-                <p>Desliza para ver las propiedades destacadas.</p>
+                <p>Explorá las propiedades disponibles cuando lo necesites; esta sección no altera tu recorrido por el sitio.</p>
               </div>
               <div className="property-slider-counter" aria-label="Propiedad actual">
                 {visibleProperties.length ? activeSlideIndex + 1 : 0} / {visibleProperties.length}
               </div>
 
-              <div className="property-slider-track" ref={sliderTrackRef}>
+              <div className="property-slider-track">
                 {visibleProperties.map((property) => (
                   <article
                     className={`property-slide ${property.id === selectedProperty?.id ? "active" : ""}`}
@@ -467,7 +456,7 @@ function PublicApp() {
           aria-labelledby="property-detail-title"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) {
-              setDetailPropertyId("");
+              closePropertyDetail();
             }
           }}
         >
@@ -475,7 +464,7 @@ function PublicApp() {
             <button
               type="button"
               className="property-detail-close"
-              onClick={() => setDetailPropertyId("")}
+              onClick={closePropertyDetail}
               aria-label="Cerrar detalle"
             >
               ×
@@ -536,11 +525,11 @@ function PublicApp() {
                   type="button"
                   className="map-btn"
                   onClick={() => {
-                    setDetailPropertyId("");
-                    focusPropertyOnMap(detailProperty);
+                    closePropertyDetail();
+                    selectPropertyOnMap(detailProperty);
                   }}
                 >
-                  Ver en mapa
+                  Seleccionar en mapa
                 </button>
                 <a
                   href={createWhatsAppLink(detailProperty)}
