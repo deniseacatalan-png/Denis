@@ -311,18 +311,9 @@ function PublicApp() {
           <div className="hero-content">
             <p className="overline">Inmobiliaria boutique en Patagonia</p>
             <h1>Denise Catalán Bienes Raíces</h1>
-            <p>Invertí en naturaleza con una mirada cercana, profesional y personalizada.</p>
-            <p className="brand-value">
-              Acompañamos cada decisión inmobiliaria con curaduría, escucha y conocimiento local para que encuentres el lugar donde querés estar.
-            </p>
             <p className="contact-line">
               San Martín de los Andes · Patagonia Argentina · WhatsApp: <strong>+54 9 2944 68-8613</strong>
             </p>
-            <ul className="brand-pillars" aria-label="Propuesta de valor">
-              <li>Curaduría boutique</li>
-              <li>Acompañamiento personalizado</li>
-              <li>Conocimiento local</li>
-            </ul>
           </div>
 
           <section className="map-section hero-map-section" id="mapa">
@@ -331,7 +322,6 @@ function PublicApp() {
                 <p>Geolocalizacion</p>
                 <h2>Plano de ubicaciones</h2>
               </div>
-              <button type="button" className="map-btn header-map-btn" onClick={() => setIsServiceModalOpen(true)}>Hablar con Denise</button>
             </div>
 
             <div className="map-layout">
@@ -474,9 +464,6 @@ function PublicApp() {
                       <div className="property-slider-copy">
                         <p>{group.eyebrow}</p>
                         <h3 id={`property-slider-${group.category}`}>{group.title}</h3>
-                        <span>
-                          Explorá esta categoría manualmente con los botones o deslizando el carril.
-                        </span>
                       </div>
                       <div className="property-slider-counter" aria-label={`${group.title}: propiedad actual`}>
                         {categoryProperties.length ? activeSlideIndex + 1 : 0} / {categoryProperties.length}

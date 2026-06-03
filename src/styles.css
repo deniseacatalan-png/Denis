@@ -301,10 +301,6 @@ body {
   gap: 0.8rem;
 }
 
-.header-map-btn {
-  align-self: center;
-  white-space: nowrap;
-}
 
 .section-title h2 {
   margin: 0.35rem 0 1.2rem;
@@ -2002,7 +1998,7 @@ body {
 }
 
 .hero h1::before,
-.hero-content > p:not(.overline):not(.contact-line):not(.brand-value)::before,
+.hero-content > p:not(.overline):not(.contact-line)::before,
 .contact-line::before,
 .contact-line::after {
   content: none;
@@ -2020,9 +2016,6 @@ body {
   margin: 0 0 0.85rem;
 }
 
-.brand-value {
-  color: #ffe8f8 !important;
-}
 
 .contact-line {
   margin-top: 1rem !important;
@@ -2036,24 +2029,6 @@ body {
   gap: clamp(1.2rem, 3vw, 2.4rem);
 }
 
-.brand-pillars {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-  margin: 1.4rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.brand-pillars li {
-  border: 1px solid rgba(255, 255, 255, 0.34);
-  border-radius: 999px;
-  padding: 0.48rem 0.78rem;
-  background: linear-gradient(135deg, rgba(240, 93, 206, 0.18), rgba(198, 167, 105, 0.18));
-  color: #ffeec9;
-  font-size: 0.94rem;
-  font-weight: 700;
-}
 
 .property-slider-stack {
   display: grid;
