@@ -45,6 +45,8 @@ const emptyPropertyForm = {
 };
 
 const emptySellerForm = {
+  sellerId: "",
+  currentEmail: "",
   username: "",
   fullName: "",
   password: "",
@@ -101,6 +103,8 @@ function clientToForm(client) {
 
 function sellerToForm(seller) {
   return {
+    sellerId: seller.id || "",
+    currentEmail: seller.email || "",
     username: seller.username || "",
     fullName: seller.fullName || "",
     password: "",
@@ -1115,7 +1119,7 @@ function AdminApp() {
     setClientMessage("");
     setSellerMessage("");
     setSellerError("");
-    setSellerForm(emptySellerForm);
+    setSellerForm({ ...emptySellerForm });
     navigateAdmin("/admin/vendedores/nuevo");
   };
 
@@ -1348,6 +1352,25 @@ function AdminApp() {
       return;
     }
 
+    const isSellerEdit = route.section === "sellers" && route.mode === "edit";
+    if (isSellerEdit && !routedSeller) {
+      setSellerError("El editor todavia se esta preparando. Espera unos segundos e intenta nuevamente.");
+      return;
+    }
+
+    const sellerPayload = isSellerEdit
+      ? {
+          ...sellerForm,
+          sellerId: routedSeller.id,
+          currentEmail: routedSeller.email
+        }
+      : {
+          username: sellerForm.username,
+          fullName: sellerForm.fullName,
+          password: sellerForm.password,
+          isActive: sellerForm.isActive
+        };
+
     setIsSavingSeller(true);
     setSellerMessage("");
     setSellerError("");
@@ -1355,7 +1378,7 @@ function AdminApp() {
     try {
       const savedSeller = await createSellerFromAdmin({
         accessToken: session.access_token,
-        seller: sellerForm
+        seller: sellerPayload
       });
       setSellers((currentSellers) => {
         const existingIndex = currentSellers.findIndex((seller) => seller.id === savedSeller.id);

@@ -8,6 +8,7 @@ const supabaseKey =
   process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabaseRequestTimeoutMs = 10_000;
+const sellerProfileSelect = "id, username, email, full_name, is_active, created_by, created_at, updated_at";
 
 class SellerRouteError extends Error {
   constructor(message, status = 400) {
@@ -37,6 +38,8 @@ export function getBearerToken(request) {
 
 export function sanitizeSellerRequest(body = {}) {
   const action = body.action === "set_active" ? "set_active" : "upsert";
+  const sellerId = textValue(body.sellerId || body.seller_id || body.id);
+  const currentEmail = normalizeUsername(body.currentEmail || body.current_email || body.originalEmail || body.original_email);
   const rawUsername = normalizeUsername(body.username);
   const rawEmail = normalizeUsername(body.email);
   const username = rawUsername || (rawEmail.includes("@") ? rawEmail.split("@")[0] : rawEmail);
@@ -55,7 +58,7 @@ export function sanitizeSellerRequest(body = {}) {
     }
   }
 
-  return {
+  const sanitizedSeller = {
     action,
     username,
     email,
@@ -63,6 +66,11 @@ export function sanitizeSellerRequest(body = {}) {
     password,
     isActive: Boolean(isActive)
   };
+
+  if (sellerId) sanitizedSeller.sellerId = sellerId;
+  if (currentEmail) sanitizedSeller.currentEmail = currentEmail;
+
+  return sanitizedSeller;
 }
 
 function normalizeSellerProfile(row) {
@@ -179,8 +187,98 @@ async function findUserByEmail(supabase, email) {
   return null;
 }
 
-async function upsertSeller({ adminUser, seller }) {
-  const supabase = createServiceClient();
+async function findSellerProfileById(supabase, sellerId) {
+  if (!sellerId) return null;
+
+  const { data, error } = await supabase
+    .from("seller_profiles")
+    .select(sellerProfileSelect)
+    .eq("id", sellerId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+async function findSellerProfileByField(supabase, field, value) {
+  if (!value) return null;
+
+  const { data, error } = await supabase
+    .from("seller_profiles")
+    .select("id")
+    .eq(field, value)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+function isSameSeller(candidateId, sellerId) {
+  return String(candidateId || "") === String(sellerId || "");
+}
+
+async function ensureSellerIdentityIsAvailable(supabase, seller) {
+  const matchingUser = await findUserByEmail(supabase, seller.email);
+  if (matchingUser && !isSameSeller(matchingUser.id, seller.sellerId)) {
+    throw new SellerRouteError("Ya existe un vendedor con ese usuario o email.", 409);
+  }
+
+  const matchingUsernameProfile = await findSellerProfileByField(supabase, "username", seller.username);
+  if (matchingUsernameProfile && !isSameSeller(matchingUsernameProfile.id, seller.sellerId)) {
+    throw new SellerRouteError("Ya existe un vendedor con ese usuario o email.", 409);
+  }
+
+  const matchingEmailProfile = await findSellerProfileByField(supabase, "email", seller.email);
+  if (matchingEmailProfile && !isSameSeller(matchingEmailProfile.id, seller.sellerId)) {
+    throw new SellerRouteError("Ya existe un vendedor con ese usuario o email.", 409);
+  }
+}
+
+async function updateSellerById({ seller, supabase }) {
+  const existingProfile = await findSellerProfileById(supabase, seller.sellerId);
+  if (!existingProfile) {
+    throw new SellerRouteError("No encontramos ese vendedor.", 404);
+  }
+
+  await ensureSellerIdentityIsAvailable(supabase, seller);
+
+  const attributes = {
+    email: seller.email,
+    email_confirm: true,
+    user_metadata: {
+      username: seller.username,
+      full_name: seller.fullName
+    }
+  };
+
+  if (seller.password) {
+    attributes.password = seller.password;
+  }
+
+  const { error } = await supabase.auth.admin.updateUserById(seller.sellerId, attributes);
+  if (error) throw error;
+
+  const { data: profile, error: profileError } = await supabase
+    .from("seller_profiles")
+    .update({
+      username: seller.username,
+      email: seller.email,
+      full_name: seller.fullName,
+      is_active: seller.isActive
+    })
+    .eq("id", seller.sellerId)
+    .select(sellerProfileSelect)
+    .single();
+
+  if (profileError) throw profileError;
+  return normalizeSellerProfile(profile);
+}
+
+export async function upsertSeller({ adminUser, seller, supabase = createServiceClient() }) {
+  if (seller.sellerId) {
+    return updateSellerById({ seller, supabase });
+  }
+
   let user = await findUserByEmail(supabase, seller.email);
 
   if (user) {
@@ -228,7 +326,7 @@ async function upsertSeller({ adminUser, seller }) {
       is_active: seller.isActive,
       created_by: adminUser.id
     })
-    .select("id, username, email, full_name, is_active, created_by, created_at, updated_at")
+    .select(sellerProfileSelect)
     .single();
 
   if (profileError) throw profileError;
@@ -245,7 +343,7 @@ async function setSellerActive({ sellerId, isActive }) {
     .from("seller_profiles")
     .update({ is_active: Boolean(isActive) })
     .eq("id", sellerId)
-    .select("id, username, email, full_name, is_active, created_by, created_at, updated_at")
+    .select(sellerProfileSelect)
     .single();
 
   if (error) throw error;
@@ -265,7 +363,7 @@ async function handleSellerAdminRequest(request) {
     const profile =
       seller.action === "set_active"
         ? await setSellerActive({
-            sellerId: body.sellerId,
+            sellerId: seller.sellerId,
             isActive: seller.isActive
           })
         : await upsertSeller({ adminUser, seller });
