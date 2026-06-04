@@ -58,13 +58,13 @@ const INITIAL_RENTAL_SEARCH = {
 const CATEGORY_META = {
   venta: {
     label: "En venta",
-    color: "#a65774",
-    mapColor: "#a65774"
+    color: "#a86f7a",
+    mapColor: "#a86f7a"
   },
   alquiler_turistico: {
     label: "Alquiler turistico",
-    color: "#e45858",
-    mapColor: "#e45858"
+    color: "#8a6a4f",
+    mapColor: "#8a6a4f"
   },
   alquiler_permanente: {
     label: "Alquiler permanente",
@@ -73,13 +73,13 @@ const CATEGORY_META = {
   },
   vendido: {
     label: "Vendido",
-    color: "#161616",
-    mapColor: "#161616"
+    color: "#2f4f3e",
+    mapColor: "#2f4f3e"
   },
   proceso: {
     label: "En proceso / sin valor",
-    color: "#c9a227",
-    mapColor: "#c9a227"
+    color: "#d8bf8f",
+    mapColor: "#d8bf8f"
   }
 };
 
@@ -504,7 +504,7 @@ function PublicApp() {
                                   style={
                                     property.images.length
                                       ? {
-                                          backgroundImage: `linear-gradient(180deg, rgba(17,17,17,0.2), rgba(17,17,17,0.82)), url(${resolvePropertyCoverImage(property)})`
+                                          backgroundImage: `linear-gradient(180deg, rgba(47,79,62,0.18), rgba(35,35,31,0.64)), url(${resolvePropertyCoverImage(property)})`
                                         }
                                       : undefined
                                   }

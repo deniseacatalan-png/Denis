@@ -1,13 +1,13 @@
 export const CATEGORY_META = {
   venta: {
     label: "En venta",
-    color: "#a65774",
-    mapColor: "#a65774"
+    color: "#a86f7a",
+    mapColor: "#a86f7a"
   },
   alquiler_turistico: {
     label: "Alquiler turistico",
-    color: "#e45858",
-    mapColor: "#e45858"
+    color: "#8a6a4f",
+    mapColor: "#8a6a4f"
   },
   alquiler_permanente: {
     label: "Alquiler permanente",
@@ -16,13 +16,13 @@ export const CATEGORY_META = {
   },
   vendido: {
     label: "Vendido",
-    color: "#161616",
-    mapColor: "#161616"
+    color: "#2f4f3e",
+    mapColor: "#2f4f3e"
   },
   proceso: {
     label: "En proceso / sin valor",
-    color: "#c9a227",
-    mapColor: "#c9a227"
+    color: "#d8bf8f",
+    mapColor: "#d8bf8f"
   }
 };
 

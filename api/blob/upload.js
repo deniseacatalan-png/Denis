@@ -5,15 +5,25 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUP
 const supabaseKey =
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
   process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-const maxImageSizeInBytes = 25 * 1024 * 1024;
+const maxUploadSizeInBytes = 25 * 1024 * 1024;
 const supabaseRequestTimeoutMs = 10_000;
 
-const allowedContentTypes = [
+const imageContentTypes = [
   "image/avif",
   "image/jpeg",
   "image/png",
   "image/webp"
 ];
+
+const documentContentTypes = [
+  "application/msword",
+  "application/pdf",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+];
+
+const allowedAttachmentContentTypes = [...imageContentTypes, ...documentContentTypes];
 
 class UploadRouteError extends Error {
   constructor(message, status = 400) {
@@ -88,19 +98,12 @@ function parseClientPayload(clientPayload) {
   }
 }
 
-async function verifyAdmin(clientPayload) {
+function makeSupabaseClient(accessToken) {
   if (!supabaseUrl || !supabaseKey) {
     throw new Error("Faltan variables publicas de Supabase.");
   }
 
-  const payload = parseClientPayload(clientPayload);
-  const accessToken = payload.accessToken;
-
-  if (!accessToken) {
-    throw new Error("Tenes que iniciar sesion para subir imagenes.");
-  }
-
-  const supabase = createClient(supabaseUrl, supabaseKey, {
+  return createClient(supabaseUrl, supabaseKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false
@@ -112,28 +115,144 @@ async function verifyAdmin(clientPayload) {
       fetch: fetchWithTimeout
     }
   });
+}
+
+async function resolveInternalUser(clientPayload) {
+  const payload = parseClientPayload(clientPayload);
+  const accessToken = payload.accessToken;
+
+  if (!accessToken) {
+    throw new Error("Tenes que iniciar sesion para subir archivos.");
+  }
+
+  const supabase = makeSupabaseClient(accessToken);
 
   const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
 
   if (userError || !userData.user) {
-    throw new Error("La sesion de administrador no es valida.");
+    throw new Error("La sesion interna no es valida.");
   }
 
-  const { data: profile, error: profileError } = await supabase
+  const { data: adminProfile, error: adminError } = await supabase
     .from("admin_profiles")
     .select("id")
     .eq("id", userData.user.id)
     .eq("is_active", true)
     .maybeSingle();
 
-  if (profileError || !profile) {
-    throw new Error("El usuario no tiene permiso para subir imagenes.");
+  if (adminError) {
+    throw adminError;
+  }
+
+  if (adminProfile) {
+    return {
+      payload,
+      role: "admin",
+      userId: userData.user.id
+    };
+  }
+
+  const { data: sellerProfile, error: sellerError } = await supabase
+    .from("seller_profiles")
+    .select("id")
+    .eq("id", userData.user.id)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (sellerError) {
+    throw sellerError;
+  }
+
+  if (!sellerProfile) {
+    throw new Error("El usuario no tiene permiso para subir archivos.");
   }
 
   return {
-    propertyId: payload.propertyId || null,
+    payload,
+    role: "seller",
     userId: userData.user.id
   };
+}
+
+function assertPathStartsWith(pathname, expectedPrefix, message) {
+  if (!pathname.startsWith(expectedPrefix)) {
+    throw new Error(message);
+  }
+}
+
+async function authorizeUpload(pathname, clientPayload) {
+  const internalUser = await resolveInternalUser(clientPayload);
+  const uploadType = internalUser.payload.uploadType || "property-image";
+  const propertyId = internalUser.payload.propertyId || null;
+  const clientId = internalUser.payload.clientId || null;
+
+  if (uploadType === "property-image") {
+    if (internalUser.role !== "admin") {
+      throw new Error("El usuario no tiene permiso para subir imagenes.");
+    }
+
+    assertPathStartsWith(pathname, "properties/", "Las imagenes deben guardarse dentro de properties/.");
+
+    return {
+      allowedContentTypes: imageContentTypes,
+      tokenPayload: {
+        propertyId,
+        uploadType,
+        userId: internalUser.userId,
+        userRole: internalUser.role
+      }
+    };
+  }
+
+  if (uploadType === "property-document") {
+    if (internalUser.role !== "admin") {
+      throw new Error("Solo un administrador puede adjuntar archivos a propiedades.");
+    }
+
+    if (!propertyId) {
+      throw new Error("Falta la propiedad para adjuntar el archivo.");
+    }
+
+    assertPathStartsWith(
+      pathname,
+      `property-documents/${propertyId}/`,
+      "Los documentos de propiedades deben guardarse dentro de property-documents/<property_id>/."
+    );
+
+    return {
+      allowedContentTypes: allowedAttachmentContentTypes,
+      tokenPayload: {
+        propertyId,
+        uploadType,
+        userId: internalUser.userId,
+        userRole: internalUser.role
+      }
+    };
+  }
+
+  if (uploadType === "client-document") {
+    if (!clientId) {
+      throw new Error("Falta el cliente para adjuntar el archivo.");
+    }
+
+    assertPathStartsWith(
+      pathname,
+      `client-documents/${clientId}/`,
+      "Los documentos de clientes deben guardarse dentro de client-documents/<client_id>/."
+    );
+
+    return {
+      allowedContentTypes: allowedAttachmentContentTypes,
+      tokenPayload: {
+        clientId,
+        uploadType,
+        userId: internalUser.userId,
+        userRole: internalUser.role
+      }
+    };
+  }
+
+  throw new Error("Tipo de subida invalido.");
 }
 
 async function handleBlobUploadRequest(request) {
@@ -152,17 +271,13 @@ async function handleBlobUploadRequest(request) {
       body,
       request,
       onBeforeGenerateToken: async (pathname, clientPayload) => {
-        const tokenPayload = await verifyAdmin(clientPayload);
-
-        if (!pathname.startsWith("properties/")) {
-          throw new Error("Las imagenes deben guardarse dentro de properties/.");
-        }
+        const uploadAuthorization = await authorizeUpload(pathname, clientPayload);
 
         return {
-          allowedContentTypes,
+          allowedContentTypes: uploadAuthorization.allowedContentTypes,
           addRandomSuffix: true,
-          maximumSizeInBytes: maxImageSizeInBytes,
-          tokenPayload: JSON.stringify(tokenPayload)
+          maximumSizeInBytes: maxUploadSizeInBytes,
+          tokenPayload: JSON.stringify(uploadAuthorization.tokenPayload)
         };
       }
     });

@@ -15,8 +15,8 @@
   --champagne: #d8bf8f;
   --champagne-suave: #efe1c3;
   --tinta: #23231f;
-  --border: rgba(47, 79, 62, 0.16);
-  --shadow: 0 22px 48px rgba(47, 79, 62, 0.14);
+  --border: rgba(47, 79, 62, 0.13);
+  --shadow: 0 18px 36px rgba(47, 79, 62, 0.12);
 }
 
 * {
@@ -38,6 +38,7 @@ body {
     radial-gradient(circle at 88% 0%, rgba(216, 191, 143, 0.3) 0%, transparent 34%),
     linear-gradient(180deg, var(--blanco-calido) 0%, var(--blanco-roto) 58%, #efe8dc 100%);
   font-size: 1.08rem;
+  overflow-x: hidden;
 }
 
 .page-shell {
@@ -2691,5 +2692,969 @@ body {
   .rental-search-actions .map-btn,
   .rental-search-actions .wa-btn {
     width: 100%;
+  }
+}
+
+/* --- Soft responsive polish: existing palette, calmer contrast --- */
+:root {
+  --bg-rose: var(--rosa-empolvado);
+  --bg-rose-mid: #ba858e;
+  --bg-rose-deep: var(--rosa-profundo);
+  --bg-black: var(--tinta);
+  --gold: var(--champagne);
+  --chrome: #f0e6d4;
+  --text-main: var(--tinta);
+  --text-soft: #6d655d;
+  --glass: rgba(255, 250, 244, 0.72);
+  --glass-strong: rgba(255, 250, 244, 0.9);
+  --glass-border: rgba(47, 79, 62, 0.14);
+  --rose-border: rgba(168, 111, 122, 0.2);
+  --surface-warm: rgba(255, 250, 244, 0.88);
+  --surface-muted: rgba(251, 247, 240, 0.78);
+  --button-gradient: linear-gradient(135deg, #5f7765 0%, var(--verde-bosque) 100%);
+  --button-shadow: 0 10px 22px rgba(47, 79, 62, 0.18);
+}
+
+body {
+  color: var(--tinta);
+  background:
+    radial-gradient(circle at 10% 4%, rgba(217, 168, 173, 0.24), transparent 34%),
+    radial-gradient(circle at 88% 8%, rgba(216, 191, 143, 0.22), transparent 32%),
+    radial-gradient(circle at 72% 92%, rgba(123, 128, 97, 0.16), transparent 34%),
+    linear-gradient(160deg, var(--blanco-calido) 0%, #f3e9e1 48%, #e5e2d0 100%);
+}
+
+.hero {
+  padding: clamp(1rem, 2.4vw, 1.5rem) clamp(1rem, 4vw, 3rem) clamp(2.4rem, 5vw, 4.2rem);
+  background:
+    linear-gradient(132deg, rgba(47, 79, 62, 0.5) 0%, rgba(138, 106, 79, 0.34) 54%, rgba(251, 247, 240, 0.22) 100%),
+    url('https://1w4q7ynjqb8kcqzw.public.blob.vercel-storage.com/properties/huilquil-casona-de-montana/1-dji-0408-GHmLYhZNuyCjb6QDP06kxaHZVth7Pp.jpg') center/cover no-repeat;
+  border-bottom: 1px solid rgba(216, 191, 143, 0.38);
+}
+
+.hero::before {
+  background:
+    linear-gradient(180deg, rgba(35, 35, 31, 0.12), rgba(35, 35, 31, 0.28)),
+    linear-gradient(90deg, rgba(47, 79, 62, 0.28), transparent 72%);
+}
+
+.hero h1 {
+  max-width: 760px;
+  color: var(--blanco-calido);
+  letter-spacing: 0;
+  text-shadow: 0 8px 24px rgba(35, 35, 31, 0.28);
+}
+
+.hero-content > p:not(.overline):not(.contact-line),
+.contact-line {
+  color: rgba(255, 250, 244, 0.9);
+  text-shadow: 0 6px 18px rgba(35, 35, 31, 0.24);
+}
+
+.contact-line {
+  letter-spacing: 0.06em;
+}
+
+.links a,
+.services-label,
+.section-title p {
+  color: var(--marron-tierra);
+}
+
+.hero .links a,
+.hero .services-label {
+  color: var(--blanco-calido);
+}
+
+.links a:hover {
+  color: var(--verde-bosque);
+}
+
+.overline,
+.legend-pill,
+.chip {
+  background: rgba(239, 225, 195, 0.72);
+  color: var(--verde-bosque);
+  border: 1px solid rgba(216, 191, 143, 0.44);
+}
+
+.properties,
+.map-section,
+.service-modal,
+.property-card,
+.map-highlight,
+.property-slider-section,
+.rental-search-section {
+  color: var(--tinta);
+  background: var(--surface-warm);
+  border: 1px solid var(--glass-border);
+  border-image: none;
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+}
+
+.hero-map-section {
+  background: rgba(255, 250, 244, 0.84);
+}
+
+.section-title h2,
+.price,
+.rich-text h3,
+.service-modal h3,
+.property-slider-copy h3,
+.rental-search-field,
+.rental-search-field span {
+  color: var(--verde-bosque);
+}
+
+.section-title p,
+.property-slider-copy p,
+.summary,
+.meta,
+.services-intro,
+.rich-text,
+.service-modal p,
+.gallery-empty,
+.property-slider-copy span {
+  color: var(--text-soft);
+}
+
+.property-slider-counter {
+  color: var(--verde-bosque);
+  background: rgba(239, 225, 195, 0.74);
+  border: 1px solid rgba(216, 191, 143, 0.46);
+}
+
+.property-slider-section {
+  background: rgba(255, 250, 244, 0.72);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.property-slider-shell,
+.property-slider-viewport,
+.property-slider-track,
+.rental-search-shell,
+.rental-search-card {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.property-slider-viewport {
+  overflow: hidden;
+}
+
+.property-slider-track {
+  width: 100%;
+}
+
+.property-slide {
+  max-width: 100%;
+}
+
+.property-slider-nav {
+  color: var(--blanco-calido);
+  background: var(--button-gradient);
+  border-color: rgba(255, 250, 244, 0.58);
+  box-shadow: var(--button-shadow);
+}
+
+.property-slider-nav:hover:not(:disabled),
+.property-slider-nav:focus-visible:not(:disabled) {
+  border-color: rgba(216, 191, 143, 0.86);
+  box-shadow: 0 12px 24px rgba(47, 79, 62, 0.2);
+}
+
+.property-slider-empty {
+  color: var(--text-soft);
+  background: rgba(255, 250, 244, 0.7);
+  border-color: rgba(47, 79, 62, 0.18);
+}
+
+.property-slide-card {
+  color: var(--blanco-calido);
+  border-color: rgba(255, 250, 244, 0.34);
+  background:
+    linear-gradient(145deg, rgba(47, 79, 62, 0.62), rgba(35, 35, 31, 0.62)),
+    radial-gradient(circle at top right, rgba(216, 191, 143, 0.2), transparent 34%);
+  box-shadow: 0 16px 32px rgba(47, 79, 62, 0.18);
+}
+
+.property-slide-card::before {
+  background:
+    linear-gradient(180deg, rgba(35, 35, 31, 0.06), rgba(35, 35, 31, 0.2) 38%, rgba(35, 35, 31, 0.64)),
+    linear-gradient(90deg, rgba(47, 79, 62, 0.32), transparent 64%);
+}
+
+.property-slide:not(.active) .property-slide-card::after {
+  background: rgba(35, 35, 31, 0.12);
+}
+
+.property-slide.active .property-slide-card,
+.property-slide-card:hover {
+  border-color: rgba(216, 191, 143, 0.74);
+  box-shadow: 0 18px 40px rgba(47, 79, 62, 0.2);
+}
+
+.property-slide-kicker,
+.property-slide-footer,
+.property-slide-detail-btn {
+  color: #f6ead1;
+}
+
+.property-slide-title {
+  color: var(--blanco-calido);
+  text-shadow: 0 8px 22px rgba(35, 35, 31, 0.28);
+}
+
+.property-slide-intro {
+  color: rgba(255, 250, 244, 0.86);
+}
+
+.property-cover {
+  position: relative;
+  background:
+    radial-gradient(circle at top right, rgba(216, 191, 143, 0.28), transparent 36%),
+    linear-gradient(145deg, rgba(47, 79, 62, 0.88) 0%, rgba(95, 119, 101, 0.88) 52%, rgba(138, 106, 79, 0.84) 100%);
+}
+
+.property-cover::after,
+.details-cover::after {
+  background: linear-gradient(180deg, rgba(35, 35, 31, 0.02), rgba(35, 35, 31, 0.42));
+}
+
+.cover-metrics div,
+.detail-stats div {
+  background: rgba(255, 250, 244, 0.68);
+  border: 1px solid rgba(47, 79, 62, 0.12);
+  box-shadow: none;
+}
+
+.cover-metrics span,
+.detail-stats span {
+  color: var(--marron-tierra);
+}
+
+.cover-metrics strong,
+.detail-stats strong {
+  color: var(--verde-bosque);
+}
+
+.status-pill {
+  color: var(--verde-bosque);
+  border-color: rgba(47, 79, 62, 0.12);
+}
+
+.status-pill--venta,
+.legend-pill--venta {
+  background: rgba(217, 168, 173, 0.48);
+  color: #71444e;
+}
+
+.status-pill--alquiler_turistico,
+.legend-pill--alquiler_turistico {
+  background: rgba(138, 106, 79, 0.22);
+  color: var(--marron-tierra);
+}
+
+.status-pill--alquiler_permanente,
+.legend-pill--alquiler_permanente,
+.status-pill--vendido,
+.legend-pill--vendido {
+  background: rgba(123, 128, 97, 0.22);
+  color: var(--verde-bosque);
+}
+
+.status-pill--proceso,
+.legend-pill--proceso {
+  background: rgba(216, 191, 143, 0.38);
+  color: var(--marron-tierra);
+}
+
+.map-btn,
+.wa-btn,
+.cta,
+.nav-service-button {
+  border: 1px solid rgba(47, 79, 62, 0.14);
+  box-shadow: var(--button-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, filter 0.2s ease;
+}
+
+.map-btn {
+  color: var(--verde-bosque);
+  background: rgba(239, 225, 195, 0.82);
+}
+
+.wa-btn,
+.cta,
+.nav-service-button {
+  color: var(--blanco-calido);
+  background: var(--button-gradient);
+}
+
+.map-btn::before,
+.wa-btn::before,
+.cta::before,
+.nav-service-button::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 250, 244, 0.36), transparent);
+}
+
+.map-btn:hover,
+.wa-btn:hover,
+.cta:hover,
+.nav-service-button:hover {
+  border-color: rgba(216, 191, 143, 0.74);
+  box-shadow: 0 12px 24px rgba(47, 79, 62, 0.18);
+  filter: none;
+}
+
+.nav-service-button.status-pill {
+  color: var(--blanco-calido);
+  border-color: rgba(255, 250, 244, 0.42);
+}
+
+.map-frame,
+.map-view,
+.admin-location-map {
+  color: #1e1a1f;
+}
+
+.map-highlight {
+  background: rgba(255, 250, 244, 0.9);
+}
+
+.map-highlight .detail-stats {
+  grid-template-columns: 1fr;
+}
+
+.map-highlight .detail-stats div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.map-highlight .detail-stats strong {
+  text-align: right;
+}
+
+.hero-map-section .map-highlight {
+  max-height: min(520px, calc(100vh - 230px));
+  overflow: auto;
+}
+
+.property-detail-backdrop {
+  background: rgba(35, 35, 31, 0.54);
+}
+
+.property-detail-screen {
+  color: var(--blanco-calido);
+  background:
+    linear-gradient(145deg, rgba(47, 79, 62, 0.96), rgba(75, 58, 48, 0.94));
+  border-color: rgba(239, 225, 195, 0.34);
+  box-shadow: 0 24px 58px rgba(35, 35, 31, 0.36);
+}
+
+.property-detail-close {
+  color: var(--verde-bosque);
+  background: rgba(255, 250, 244, 0.84);
+  border-color: rgba(47, 79, 62, 0.14);
+}
+
+.property-detail-hero {
+  background: linear-gradient(145deg, rgba(47, 79, 62, 0.72), rgba(35, 35, 31, 0.68));
+}
+
+.property-detail-hero::after {
+  background:
+    linear-gradient(180deg, rgba(35, 35, 31, 0.08), rgba(35, 35, 31, 0.32) 44%, rgba(35, 35, 31, 0.68)),
+    linear-gradient(90deg, rgba(47, 79, 62, 0.42), transparent 68%);
+}
+
+.property-detail-description {
+  color: rgba(255, 250, 244, 0.88);
+}
+
+.property-detail-description h1,
+.property-detail-description h2,
+.property-detail-description h3 {
+  color: var(--blanco-calido);
+}
+
+.rental-search-section {
+  background: rgba(255, 250, 244, 0.8);
+}
+
+.rental-search-card {
+  color: var(--tinta);
+  background:
+    linear-gradient(145deg, rgba(255, 250, 244, 0.9), rgba(239, 225, 195, 0.54)),
+    radial-gradient(circle at top right, rgba(217, 168, 173, 0.2), transparent 36%);
+  border: 1px solid rgba(47, 79, 62, 0.12);
+}
+
+.rental-type-toggle label {
+  color: var(--verde-bosque);
+  background: rgba(255, 250, 244, 0.78);
+  border-color: rgba(47, 79, 62, 0.14);
+}
+
+.rental-type-toggle input {
+  accent-color: var(--verde-bosque);
+}
+
+.rental-search-field input,
+.rental-search-field textarea {
+  color: var(--tinta);
+  background: rgba(255, 250, 244, 0.82);
+  border-color: rgba(47, 79, 62, 0.14);
+}
+
+.rental-search-field input::placeholder,
+.rental-search-field textarea::placeholder {
+  color: rgba(98, 95, 89, 0.64);
+}
+
+.rental-search-field input:focus,
+.rental-search-field textarea:focus {
+  border-color: rgba(123, 128, 97, 0.62);
+  box-shadow: 0 0 0 3px rgba(123, 128, 97, 0.14);
+}
+
+.admin-shell {
+  color: var(--tinta);
+}
+
+.admin-login-panel,
+.admin-header,
+.admin-navbar,
+.admin-layout,
+.admin-sidebar,
+.admin-editor,
+.admin-panel,
+.admin-metric-card,
+.admin-sellers-panel,
+.seller-layout,
+.seller-contact-list,
+.seller-contact-editor {
+  color: var(--tinta);
+  background: rgba(255, 250, 244, 0.86);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+}
+
+.admin-login-panel h1,
+.admin-header h1,
+.admin-editor h2,
+.admin-sidebar h2,
+.admin-sellers-header h2,
+.seller-contact-list h2,
+.seller-contact-editor h2,
+.admin-section-header h2,
+.admin-panel h2,
+.admin-location-picker-header h3,
+.admin-widget-header h3 {
+  color: var(--verde-bosque);
+}
+
+.admin-form label,
+.admin-editor label,
+.admin-seller-form label,
+.seller-contact-editor label,
+.seller-filters label,
+.admin-images-header span,
+.admin-location-picker-header p,
+.admin-location-message,
+.admin-seller-row span,
+.admin-seller-row small {
+  color: var(--text-soft);
+}
+
+.admin-header p,
+.admin-editor-title p,
+.admin-sellers-header p,
+.admin-metric-card span,
+.admin-detail-grid span,
+.admin-sidebar-note {
+  color: var(--marron-tierra);
+}
+
+.admin-metric-card strong,
+.admin-detail-grid strong,
+.admin-detail-copy {
+  color: var(--verde-bosque);
+}
+
+.admin-navbar button {
+  color: var(--verde-bosque);
+}
+
+.admin-navbar button:hover,
+.admin-navbar button:focus-visible {
+  color: var(--verde-bosque);
+  background: rgba(239, 225, 195, 0.58);
+}
+
+.admin-navbar button.active,
+.admin-segmented-control button.active {
+  color: var(--blanco-calido);
+  background: var(--verde-bosque);
+}
+
+.admin-form input,
+.admin-editor input,
+.admin-editor select,
+.admin-editor textarea,
+.admin-seller-form input,
+.seller-contact-editor input,
+.seller-contact-editor select,
+.seller-contact-editor textarea,
+.seller-filters select {
+  color: var(--tinta);
+  background: rgba(255, 250, 244, 0.92);
+  border-color: rgba(47, 79, 62, 0.16);
+}
+
+.admin-table-row,
+.admin-property-row,
+.admin-seller-row,
+.seller-contact-row {
+  color: var(--tinta);
+  background: rgba(255, 250, 244, 0.88);
+  border-color: rgba(47, 79, 62, 0.12);
+}
+
+.admin-table-row > div:first-child span,
+.admin-table-row > div:first-child small,
+.seller-contact-row small,
+.admin-property-row small {
+  color: var(--text-soft);
+}
+
+.admin-detail-grid > div,
+.admin-location-picker,
+.admin-segmented-control,
+.admin-location-results button,
+.seller-empty-state {
+  color: var(--tinta);
+  background: rgba(239, 225, 195, 0.34);
+  border-color: rgba(47, 79, 62, 0.12);
+}
+
+.admin-location-results button {
+  color: var(--verde-bosque);
+}
+
+.admin-location-results button:hover {
+  background: rgba(217, 168, 173, 0.18);
+  border-color: rgba(168, 111, 122, 0.28);
+}
+
+.admin-segmented-control button {
+  color: var(--verde-bosque);
+}
+
+.admin-back-link {
+  color: var(--verde-bosque);
+}
+
+.admin-location-marker-pin {
+  background: var(--marker-color, #a86f7a);
+}
+
+.admin-property-drag-handle {
+  letter-spacing: 0;
+}
+
+.admin-danger {
+  background: linear-gradient(128deg, rgba(168, 111, 122, 0.78), rgba(138, 106, 79, 0.68));
+}
+
+@media (max-width: 1100px) {
+  .hero-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hero-map-section {
+    width: 100%;
+  }
+}
+
+@media (max-width: 900px) {
+  .content-wrap {
+    width: min(100% - 1.5rem, 1200px);
+  }
+
+  .map-frame,
+  .map-view {
+    min-height: 360px;
+  }
+
+  .hero-map-section .map-highlight {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .property-slide {
+    flex-basis: 88%;
+  }
+
+  .admin-layout,
+  .admin-sellers-layout,
+  .seller-layout,
+  .admin-crm-grid,
+  .admin-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .hero {
+    padding: 0.9rem 0.85rem 2.4rem;
+  }
+
+  .top-nav {
+    align-items: stretch;
+  }
+
+  .brand-logo {
+    height: 52px;
+  }
+
+  .links,
+  .links .nav-service-link,
+  .nav-service-button {
+    width: 100%;
+  }
+
+  .links .nav-service-link,
+  .nav-service-button {
+    justify-content: center;
+  }
+
+  .hero-layout {
+    margin-top: 1.4rem;
+    gap: 1rem;
+  }
+
+  .hero-content {
+    margin-top: 0;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.15rem, 12vw, 3.35rem);
+    line-height: 1;
+  }
+
+  .hero-content > p:not(.overline):not(.contact-line),
+  .contact-line {
+    font-size: 1rem !important;
+  }
+
+  .contact-line {
+    letter-spacing: 0.04em;
+  }
+
+  .properties,
+  .map-section,
+  .rental-search-section {
+    border-radius: 16px;
+    padding: 0.85rem;
+  }
+
+  .content-wrap {
+    width: min(100% - 0.8rem, 1200px);
+    margin-top: -1rem;
+  }
+
+  .map-frame,
+  .map-view {
+    min-height: 320px;
+  }
+
+  .map-highlight,
+  .property-card,
+  .property-slide-card,
+  .rental-search-card {
+    border-radius: 14px;
+  }
+
+  .property-slider-shell {
+    gap: 0.75rem;
+  }
+
+  .property-slider-counter {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .property-slider-viewport .property-slider-track {
+    padding-inline: 2.1rem;
+  }
+
+  .property-slider-nav {
+    width: 2.15rem;
+    height: 2.15rem;
+    font-size: 2rem;
+  }
+
+  .property-slide {
+    flex-basis: 100%;
+  }
+
+  .property-slide-card {
+    min-height: 360px;
+    padding: 1rem;
+  }
+
+  .property-slide-title,
+  .property-detail-hero-text h2 {
+    font-size: clamp(2rem, 10vw, 2.75rem);
+  }
+
+  .property-slide-footer {
+    gap: 0.55rem;
+  }
+
+  .detail-stats,
+  .cover-metrics,
+  .property-detail-stats,
+  .rental-search-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rental-search-field--wide {
+    grid-column: auto;
+  }
+
+  .rental-type-toggle label,
+  .rental-search-actions .map-btn,
+  .rental-search-actions .wa-btn,
+  .property-detail-actions .map-btn,
+  .property-detail-actions .wa-btn,
+  .service-modal-actions .map-btn,
+  .service-modal-actions .wa-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .property-detail-hero {
+    min-height: 300px;
+  }
+
+  .property-detail-content {
+    padding: 1rem;
+  }
+
+  .admin-shell {
+    padding: 0.75rem;
+  }
+
+  .admin-header-actions,
+  .admin-editor-actions,
+  .admin-quick-actions,
+  .service-modal-actions {
+    align-items: stretch;
+  }
+
+  .admin-header-actions .map-btn,
+  .admin-header-actions .wa-btn,
+  .admin-editor-actions .map-btn,
+  .admin-editor-actions .wa-btn,
+  .admin-quick-actions .map-btn,
+  .admin-quick-actions .wa-btn {
+    flex: 1 1 100%;
+  }
+
+  .admin-location-search,
+  .admin-location-coordinates,
+  .seller-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-segmented-control {
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 430px) {
+  .brand-logo {
+    height: 46px;
+  }
+
+  .hero h1 {
+    font-size: clamp(1.95rem, 13vw, 2.7rem);
+  }
+
+  .property-slider-viewport .property-slider-track {
+    padding-inline: 0;
+  }
+
+  .property-slider-nav {
+    top: auto;
+    bottom: 0.8rem;
+    transform: none;
+  }
+
+  .property-slider-nav:hover:not(:disabled),
+  .property-slider-nav:focus-visible:not(:disabled) {
+    transform: scale(1.04);
+  }
+
+  .property-slide-card {
+    padding-bottom: 3.5rem;
+  }
+
+  .admin-navbar {
+    grid-template-columns: 1fr;
+  }
+}
+
+.activity-panel {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.1rem;
+  padding: 1rem;
+  color: var(--tinta);
+  background: rgba(255, 250, 244, 0.84);
+  border: 1px solid rgba(47, 79, 62, 0.12);
+  border-radius: 14px;
+}
+
+.activity-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.activity-panel-header p {
+  margin: 0 0 0.25rem;
+  color: var(--marron-tierra);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.activity-panel-header h3 {
+  margin: 0;
+  color: var(--verde-bosque);
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+}
+
+.activity-form {
+  display: grid;
+  gap: 0.8rem;
+  padding: 0.9rem;
+  background: rgba(239, 225, 195, 0.34);
+  border: 1px solid rgba(47, 79, 62, 0.1);
+  border-radius: 12px;
+}
+
+.activity-form label {
+  display: grid;
+  gap: 0.45rem;
+  color: var(--text-soft);
+  font-weight: 800;
+}
+
+.activity-list,
+.activity-document-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.activity-item,
+.activity-document-item {
+  background: rgba(255, 250, 244, 0.9);
+  border: 1px solid rgba(47, 79, 62, 0.11);
+  border-radius: 12px;
+}
+
+.activity-item {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.85rem;
+}
+
+.activity-item p {
+  margin: 0;
+  color: var(--tinta);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.activity-item small,
+.activity-document-item small {
+  color: var(--text-soft);
+}
+
+.activity-document-item {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: center;
+  padding: 0.75rem;
+}
+
+.activity-document-item img,
+.activity-file-icon {
+  width: 72px;
+  height: 58px;
+  border-radius: 10px;
+  border: 1px solid rgba(47, 79, 62, 0.12);
+}
+
+.activity-document-item img {
+  object-fit: cover;
+  background: rgba(239, 225, 195, 0.5);
+}
+
+.activity-file-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--verde-bosque);
+  background: rgba(239, 225, 195, 0.58);
+  font-weight: 900;
+  font-size: 0.8rem;
+}
+
+.activity-document-item div {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.activity-document-item a {
+  color: var(--verde-bosque);
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 700px) {
+  .activity-panel-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .activity-panel-header .map-btn,
+  .activity-form .wa-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .activity-document-item {
+    grid-template-columns: 58px minmax(0, 1fr);
+  }
+
+  .activity-document-item img,
+  .activity-file-icon {
+    width: 58px;
+    height: 52px;
   }
 }

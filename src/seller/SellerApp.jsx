@@ -1,4 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import { DocumentsPanel, NotesPanel } from "../components/ActivityPanels";
+import {
+  activityAuthorFromProfile,
+  createClientDocument,
+  createClientNote,
+  fetchClientDocuments,
+  fetchClientNotes
+} from "../utils/supabase/activity";
 import {
   CLIENT_OPERATIONS,
   CLIENT_STATUSES,
@@ -26,11 +34,16 @@ const statusLabels = {
   pausado: "Pausado"
 };
 
+function clientSideLabel(client) {
+  return client?.isOwner ? "Propietario" : "Busca comprar/alquilar";
+}
+
 const emptyClientForm = {
   id: "",
   fullName: "",
   phone: "",
   email: "",
+  isOwner: false,
   operation: "alquilar",
   zone: "",
   budget: "",
@@ -45,6 +58,7 @@ function clientToForm(client) {
     fullName: client.fullName || "",
     phone: client.phone || "",
     email: client.email || "",
+    isOwner: Boolean(client.isOwner),
     operation: CLIENT_OPERATIONS.includes(client.operation) ? client.operation : "alquilar",
     zone: client.zone || "",
     budget: client.budget || "",
@@ -139,6 +153,10 @@ function SellerApp() {
     () => clients.find((client) => client.id === selectedClientId) || null,
     [clients, selectedClientId]
   );
+  const activityAuthor = useMemo(() => {
+    if (!session?.user?.id) return null;
+    return activityAuthorFromProfile(session.user.id, internalProfile);
+  }, [internalProfile, session?.user?.id]);
 
   useEffect(() => {
     let active = true;
@@ -354,6 +372,7 @@ function SellerApp() {
                     {statusLabels[client.status] || client.status}
                   </span>
                 </small>
+                <small>{clientSideLabel(client)}</small>
                 <small>{client.zone || "Sin zona"} · {formatClientDate(client.updatedAt || client.createdAt)}</small>
               </button>
             ))}
@@ -404,6 +423,16 @@ function SellerApp() {
               </select>
             </label>
             <label>
+              Lado del cliente
+              <select
+                value={form.isOwner ? "owner" : "seeker"}
+                onChange={(event) => updateForm("isOwner", event.target.value === "owner")}
+              >
+                <option value="seeker">Busca comprar/alquilar</option>
+                <option value="owner">Propietario</option>
+              </select>
+            </label>
+            <label>
               Zona
               <input value={form.zone} onChange={(event) => updateForm("zone", event.target.value)} />
             </label>
@@ -439,6 +468,25 @@ function SellerApp() {
               Limpiar
             </button>
           </div>
+
+          {form.id ? (
+            <>
+              <NotesPanel
+                entityId={form.id}
+                author={activityAuthor}
+                fetchNotes={fetchClientNotes}
+                createNote={createClientNote}
+              />
+              <DocumentsPanel
+                entityType="client"
+                entityId={form.id}
+                accessToken={session?.access_token || ""}
+                author={activityAuthor}
+                fetchDocuments={fetchClientDocuments}
+                createDocument={createClientDocument}
+              />
+            </>
+          ) : null}
         </form>
       </section>
     </main>

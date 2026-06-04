@@ -2,7 +2,19 @@ import { upload } from "@vercel/blob/client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import { DocumentsPanel, NotesPanel } from "../components/ActivityPanels";
 import { CATEGORY_META, slugify } from "../utils/properties";
+import {
+  activityAuthorFromProfile,
+  createClientDocument,
+  createClientNote,
+  createPropertyDocument,
+  createPropertyNote,
+  fetchClientDocuments,
+  fetchClientNotes,
+  fetchPropertyDocuments,
+  fetchPropertyNotes
+} from "../utils/supabase/activity";
 import {
   deleteAdminProperty,
   fetchAdminProperties,
@@ -21,6 +33,7 @@ import {
 } from "../utils/supabase/clients";
 import {
   createSellerFromAdmin,
+  fetchInternalProfile,
   fetchSellerProfiles,
   setSellerActiveFromAdmin
 } from "../utils/supabase/sellers";
@@ -35,7 +48,7 @@ const emptyPropertyForm = {
   category: "venta",
   latitude: "-40.1573",
   longitude: "-71.3524",
-  markerColor: "#a65774",
+  markerColor: "#a86f7a",
   summary: "",
   descriptionHtml: "",
   rawDescription: "",
@@ -73,11 +86,16 @@ const statusLabels = {
   pausado: "Pausado"
 };
 
+function clientSideLabel(client) {
+  return client?.isOwner ? "Propietario" : "Busca comprar/alquilar";
+}
+
 const emptyClientForm = {
   id: "",
   fullName: "",
   phone: "",
   email: "",
+  isOwner: false,
   operation: "alquilar",
   zone: "",
   budget: "",
@@ -92,6 +110,7 @@ function clientToForm(client) {
     fullName: client.fullName || "",
     phone: client.phone || "",
     email: client.email || "",
+    isOwner: Boolean(client.isOwner),
     operation: CLIENT_OPERATIONS.includes(client.operation) ? client.operation : "alquilar",
     zone: client.zone || "",
     budget: client.budget || "",
@@ -137,7 +156,7 @@ const mimeExtensions = {
   "image/webp": ".webp"
 };
 
-function colorValue(value, fallback = "#a65774") {
+function colorValue(value, fallback = "#a86f7a") {
   return /^#[0-9a-f]{6}$/i.test(value || "") ? value : fallback;
 }
 
@@ -610,7 +629,7 @@ function propertyToForm(property) {
     category: property.category || "venta",
     latitude: String(property.latitude ?? property.coords?.[0] ?? ""),
     longitude: String(property.longitude ?? property.coords?.[1] ?? ""),
-    markerColor: property.markerColor || CATEGORY_META[property.category]?.mapColor || "#a65774",
+    markerColor: property.markerColor || CATEGORY_META[property.category]?.mapColor || "#a86f7a",
     summary: property.summary || "",
     descriptionHtml: property.descriptionHtml || textToParagraphHtml(rawDescription),
     rawDescription,
@@ -774,6 +793,7 @@ function AdminNotFound({ navigateAdmin }) {
 
 function AdminApp() {
   const [session, setSession] = useState(undefined);
+  const [internalProfile, setInternalProfile] = useState(null);
   const [properties, setProperties] = useState([]);
   const [clients, setClients] = useState([]);
   const [allClients, setAllClients] = useState([]);
@@ -819,6 +839,10 @@ function AdminApp() {
 
     return sellers.find((seller) => seller.id === route.id) || null;
   }, [route.id, route.section, sellers]);
+  const activityAuthor = useMemo(() => {
+    if (!session?.user?.id) return null;
+    return activityAuthorFromProfile(session.user.id, internalProfile);
+  }, [internalProfile, session?.user?.id]);
 
   useEffect(() => {
     const handlePopState = () => setRoute(parseAdminRoute());
@@ -847,6 +871,33 @@ function AdminApp() {
       listener.data.subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadInternalProfile() {
+      if (!session?.user?.id) {
+        setInternalProfile(null);
+        return;
+      }
+
+      try {
+        const profile = await fetchInternalProfile(session.user.id);
+        if (active) setInternalProfile(profile);
+      } catch (profileError) {
+        if (active) {
+          setInternalProfile(null);
+          setError(profileError.message);
+        }
+      }
+    }
+
+    loadInternalProfile();
+
+    return () => {
+      active = false;
+    };
+  }, [session?.user?.id]);
 
   useEffect(() => {
     if (route.section === "properties" || !selectedProperty) return;
@@ -1597,6 +1648,21 @@ function AdminApp() {
         </div>
         <p className="seller-empty-state">{property.summary || "Sin resumen cargado."}</p>
       </section>
+
+      <NotesPanel
+        entityId={property.databaseId || property.id}
+        author={activityAuthor}
+        fetchNotes={fetchPropertyNotes}
+        createNote={createPropertyNote}
+      />
+      <DocumentsPanel
+        entityType="property"
+        entityId={property.databaseId || property.id}
+        accessToken={session?.access_token || ""}
+        author={activityAuthor}
+        fetchDocuments={fetchPropertyDocuments}
+        createDocument={createPropertyDocument}
+      />
     </section>
   );
 
@@ -1676,7 +1742,7 @@ function AdminApp() {
           <div className="admin-color-picker">
             <input
               type="color"
-              value={colorValue(form.markerColor, CATEGORY_META[form.category]?.mapColor || "#a65774")}
+              value={colorValue(form.markerColor, CATEGORY_META[form.category]?.mapColor || "#a86f7a")}
               onChange={(event) => updateField("markerColor", event.target.value)}
               aria-label="Color del punto en el mapa"
             />
@@ -1684,7 +1750,7 @@ function AdminApp() {
               type="text"
               value={form.markerColor}
               onChange={(event) => updateField("markerColor", event.target.value)}
-              placeholder={CATEGORY_META[form.category]?.mapColor || "#a65774"}
+              placeholder={CATEGORY_META[form.category]?.mapColor || "#a86f7a"}
             />
           </div>
         </label>
@@ -1893,6 +1959,7 @@ function AdminApp() {
               <small>
                 {client.zone || "Sin zona"} - {formatAdminDate(client.updatedAt || client.createdAt)}
               </small>
+              <small>Lado: {clientSideLabel(client)}</small>
               <small>Creado por: {getInternalUserLabel(client.createdBy)}</small>
             </div>
             <span className={`seller-status-pill seller-status-pill--${client.status}`}>
@@ -1955,6 +2022,10 @@ function AdminApp() {
           <input readOnly value={operationLabels[client.operation] || client.operation || "Sin operacion"} />
         </label>
         <label>
+          Lado del cliente
+          <input readOnly value={clientSideLabel(client)} />
+        </label>
+        <label>
           Zona
           <input readOnly value={client.zone || "Sin zona"} />
         </label>
@@ -1987,10 +2058,25 @@ function AdminApp() {
           <input readOnly value={getInternalUserLabel(client.updatedBy)} />
         </label>
         <label className="admin-field-wide">
-          Notas
+          Notas generales
           <textarea readOnly rows="7" value={client.notes || "Sin notas"} />
         </label>
       </div>
+
+      <NotesPanel
+        entityId={client.id}
+        author={activityAuthor}
+        fetchNotes={fetchClientNotes}
+        createNote={createClientNote}
+      />
+      <DocumentsPanel
+        entityType="client"
+        entityId={client.id}
+        accessToken={session?.access_token || ""}
+        author={activityAuthor}
+        fetchDocuments={fetchClientDocuments}
+        createDocument={createClientDocument}
+      />
     </section>
   );
 
@@ -2040,6 +2126,16 @@ function AdminApp() {
                 {operationLabels[operation]}
               </option>
             ))}
+          </select>
+        </label>
+        <label>
+          Lado del cliente
+          <select
+            value={clientForm.isOwner ? "owner" : "seeker"}
+            onChange={(event) => updateClientField("isOwner", event.target.value === "owner")}
+          >
+            <option value="seeker">Busca comprar/alquilar</option>
+            <option value="owner">Propietario</option>
           </select>
         </label>
         <label>
