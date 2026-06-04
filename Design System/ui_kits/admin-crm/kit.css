@@ -1,0 +1,145 @@
+/* Denise Catalán — Admin CRM kit styles. Warm "soft glass" on the brand page wash. */
+
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-ui); }
+
+.admin-shell { min-height: 100vh; padding: clamp(1rem, 3vw, 2rem); color: var(--fg-1); }
+.admin-shell--login { display: grid; place-items: center; }
+
+/* ---------- Shared text ---------- */
+.a-eyebrow { margin: 0 0 0.2rem; font-family: var(--font-ui); font-size: 0.74rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--marron-tierra); }
+.admin-shell h1 { font-family: var(--font-display); font-size: clamp(1.5rem, 3vw, 2rem); color: var(--brand); line-height: 1.05; margin: 0; }
+.admin-login-panel h1 { margin-bottom: 0.4rem; }
+.admin-shell h2 { font-family: var(--font-display); font-size: 1.45rem; color: var(--brand); margin: 0; line-height: 1.12; }
+.a-muted { color: var(--fg-2); font-size: 0.9rem; line-height: 1.5; }
+.icon { display: inline-flex; align-items: center; }
+.icon svg { stroke-width: 1.75; }
+
+/* ---------- Buttons ---------- */
+.a-btn {
+  display: inline-flex; align-items: center; gap: 0.45rem; border-radius: 999px; cursor: pointer; white-space: nowrap;
+  font-family: var(--font-ui); font-weight: 700; font-size: 0.92rem; padding: 0.6rem 1rem;
+  border: 1px solid rgba(77,54,97,0.14); transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+.a-btn--sm { padding: 0.42rem 0.8rem; font-size: 0.85rem; }
+.a-btn--primary { color: var(--blanco-calido); background: var(--button-gradient); box-shadow: var(--shadow-soft); }
+.a-btn--primary:hover { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(77,54,97,0.2); }
+.a-btn--soft { color: var(--brand); background: rgba(239,225,195,0.85); }
+.a-btn--soft:hover { background: rgba(239,225,195,1); }
+.a-btn--ghost { color: var(--brand); background: transparent; border-color: rgba(77,54,97,0.18); }
+.a-btn--ghost:hover { background: rgba(77,54,97,0.06); }
+
+/* ---------- Login ---------- */
+.admin-login-panel {
+  width: min(420px, 100%); padding: 1.8rem; border-radius: 18px; text-align: left;
+  background: var(--glass-strong); border: 1px solid var(--border-gold); box-shadow: var(--shadow); backdrop-filter: blur(10px);
+}
+.admin-login-panel img { height: 70px; display: block; margin: 0 auto 1.2rem; }
+.a-form { display: flex; flex-direction: column; gap: 0.9rem; margin-top: 1rem; }
+.a-form label { display: flex; flex-direction: column; gap: 0.35rem; }
+.a-form label > span { font-size: 0.88rem; font-weight: 700; color: var(--brand); }
+.a-form input, .a-form select, .a-form textarea {
+  width: 100%; border: 1px solid var(--border); background: var(--blanco-calido); color: #1e1a1f;
+  border-radius: 10px; padding: 0.7rem 0.8rem; font-family: var(--font-ui); font-size: 0.95rem;
+}
+.a-form textarea { resize: vertical; min-height: 92px; }
+.a-form .a-btn { justify-content: center; margin-top: 0.4rem; }
+
+/* ---------- Header + navbar ---------- */
+.admin-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.2rem; margin-bottom: 1rem;
+  border-radius: 14px; background: var(--glass-strong); border: 1px solid var(--border-gold); box-shadow: var(--shadow); backdrop-filter: blur(10px);
+}
+.admin-header-brand { display: flex; align-items: center; gap: 0.9rem; }
+.admin-header-brand img { height: 48px; }
+.admin-navbar {
+  display: flex; gap: 0.4rem; flex-wrap: wrap; padding: 0.5rem; margin-bottom: 1.2rem; border-radius: 12px;
+  background: rgba(255,250,244,0.7); border: 1px solid var(--border); box-shadow: var(--shadow-soft);
+}
+.admin-navbar button {
+  display: inline-flex; align-items: center; gap: 0.45rem; min-height: 42px; border: 0; border-radius: 8px; padding: 0.55rem 0.95rem;
+  color: var(--fg-2); background: transparent; cursor: pointer; font-family: var(--font-ui); font-weight: 800; font-size: 0.92rem;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.admin-navbar button:hover { background: rgba(77,54,97,0.07); color: var(--brand); }
+.admin-navbar button.active { color: var(--blanco-calido); background: var(--button-gradient); box-shadow: var(--shadow-soft); }
+
+/* ---------- Panels ---------- */
+.admin-panel {
+  border-radius: 14px; padding: 1.2rem; background: var(--surface-warm); border: 1px solid var(--border);
+  box-shadow: var(--shadow); backdrop-filter: blur(8px); margin-bottom: 1.2rem;
+}
+.admin-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+
+/* ---------- Dashboard ---------- */
+.admin-crm-dashboard { display: grid; gap: 1.2rem; }
+.admin-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+@media (max-width: 800px) { .admin-metrics { grid-template-columns: repeat(2, 1fr); } }
+.admin-metric-card {
+  border-radius: 14px; padding: 1.1rem 1.2rem; background: var(--surface-warm); border: 1px solid var(--border); box-shadow: var(--shadow-soft);
+}
+.admin-metric-card strong { display: block; font-family: var(--font-display); font-size: 2.6rem; font-weight: 600; color: var(--brand); line-height: 1; margin: 0.2rem 0; }
+.admin-metric-card span { font-size: 0.82rem; color: var(--fg-2); }
+.admin-dash-cols { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.2rem; align-items: start; }
+@media (max-width: 800px) { .admin-dash-cols { grid-template-columns: 1fr; } }
+.admin-dash-cols .admin-panel { margin: 0; }
+
+.admin-activity { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.85rem; }
+.admin-activity li { display: flex; gap: 0.7rem; align-items: flex-start; }
+.admin-activity .dot { width: 10px; height: 10px; border-radius: 999px; margin-top: 6px; flex-shrink: 0; background: #6e4f82; }
+.admin-activity .dot[data-kind="venta"] { background: #b0528c; }
+.admin-activity .dot[data-kind="cliente"] { background: #8e6a96; }
+.admin-activity .dot[data-kind="vendido"] { background: #4d3661; }
+.admin-activity strong { display: block; font-size: 0.95rem; color: var(--fg-1); }
+.admin-activity em { font-style: normal; font-size: 0.82rem; color: var(--fg-2); }
+.admin-quick { display: grid; gap: 0.6rem; }
+.admin-quick .a-btn { justify-content: flex-start; }
+
+/* ---------- Toolbar / filters ---------- */
+.admin-toolbar { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: flex-end; }
+.a-search { flex: 1; min-width: 240px; display: flex; align-items: center; gap: 0.5rem; padding: 0.55rem 0.85rem; border-radius: 999px; background: var(--blanco-calido); border: 1px solid var(--border); color: var(--fg-3); }
+.a-search input { flex: 1; border: 0; background: transparent; font-family: var(--font-ui); font-size: 0.95rem; color: #1e1a1f; outline: none; }
+.a-filter { display: flex; flex-direction: column; gap: 0.3rem; }
+.a-filter span { font-size: 0.78rem; font-weight: 700; color: var(--marron-tierra); }
+.a-filter select { border: 1px solid var(--border); background: var(--blanco-calido); border-radius: 10px; padding: 0.55rem 0.8rem; font-family: var(--font-ui); font-size: 0.9rem; min-width: 150px; }
+
+/* ---------- Tables ---------- */
+.admin-table { width: 100%; border-collapse: collapse; }
+.admin-table thead th { text-align: left; font-size: 0.74rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--marron-tierra); padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); }
+.admin-table tbody td { padding: 0.85rem 0.75rem; border-bottom: 1px solid rgba(77,54,97,0.08); font-size: 0.95rem; color: var(--fg-1); vertical-align: middle; }
+.admin-table tbody tr:hover { background: rgba(110,79,130,0.08); }
+.admin-table strong { display: block; font-weight: 700; color: var(--fg-1); }
+.admin-table em { font-style: normal; font-size: 0.82rem; color: var(--fg-2); }
+.a-num { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--brand); }
+.a-actions { text-align: right; white-space: nowrap; }
+.a-actions .a-btn { margin-left: 0.4rem; }
+.a-dot { display: inline-block; width: 9px; height: 9px; border-radius: 999px; background: var(--gris-suave); margin-right: 0.45rem; }
+.a-dot.on { background: #6e4f82; }
+
+/* ---------- Category + status pills ---------- */
+.a-pill, .a-status {
+  display: inline-flex; border-radius: 999px; padding: 0.28rem 0.7rem; font-size: 0.74rem; font-weight: 700;
+  letter-spacing: 0.04em; text-transform: uppercase; border: 1px solid rgba(77,54,97,0.12); color: var(--brand);
+}
+.a-pill--venta { background: rgba(180,82,140,0.18); color: #93386b; }
+.a-pill--alquiler_turistico { background: rgba(142,106,150,0.22); color: #6a4f78; }
+.a-pill--alquiler_permanente { background: rgba(110,79,130,0.20); color: #4d3661; }
+.a-pill--vendido { background: rgba(77,54,97,0.92); color: var(--blanco-calido); }
+.a-pill--proceso { background: rgba(193,160,208,0.34); color: #6e4f82; }
+.a-status--nuevo { background: rgba(180,82,140,0.16); color: #93386b; }
+.a-status--seguimiento { background: rgba(142,106,150,0.24); color: #6a4f78; }
+.a-status--cerrado { background: rgba(77,54,97,0.20); color: #4d3661; }
+
+/* ---------- Editor layout ---------- */
+.admin-layout { display: grid; grid-template-columns: minmax(240px, 320px) 1fr; gap: 1.2rem; align-items: start; }
+@media (max-width: 800px) { .admin-layout { grid-template-columns: 1fr; } }
+.admin-sidebar, .admin-editor { border-radius: 14px; padding: 1.2rem; background: var(--surface-warm); border: 1px solid var(--border); box-shadow: var(--shadow); }
+.admin-sidebar { display: grid; gap: 0.9rem; align-content: start; }
+.admin-sidebar-header { display: flex; align-items: center; justify-content: space-between; }
+.admin-thumb { height: 150px; border-radius: 12px; background-size: cover; background-position: center; border: 1px solid var(--border); }
+.admin-editor-title { margin-bottom: 1.1rem; }
+.a-form--grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.a-form--grid .wide { grid-column: 1 / -1; }
+.a-check { flex-direction: row !important; align-items: center; gap: 0.5rem !important; }
+.a-check input { width: auto; }
+.admin-editor-actions { display: flex; gap: 0.7rem; justify-content: flex-end; margin-top: 1.2rem; }

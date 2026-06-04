@@ -1,0 +1,28 @@
+<!-- @dsCard group="Colors" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 22px; background: var(--surface-solid); }
+  .row { display: flex; gap: 14px; }
+  .sw { flex: 1; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-soft); }
+  .chip { height: 84px; }
+  .meta { padding: 10px 12px; background: #fff; }
+  .name { font-family: var(--font-ui); font-weight: 700; font-size: 13px; color: var(--fg-1); }
+  .hex { font-family: var(--font-ui); font-size: 12px; color: var(--fg-2); letter-spacing: 0.04em; margin-top: 2px; }
+  .role { font-family: var(--font-display); font-style: italic; font-size: 12px; color: var(--fg-3); margin-top: 3px; }
+  .chip.line { border-bottom: 1px solid var(--border); }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="sw"><div class="chip" style="background:#23231f"></div><div class="meta"><div class="name">Tinta</div><div class="hex">#23231F</div><div class="role">Primary text</div></div></div>
+    <div class="sw"><div class="chip" style="background:#6d655d"></div><div class="meta"><div class="name">Gris Texto</div><div class="hex">#6D655D</div><div class="role">Secondary text</div></div></div>
+    <div class="sw"><div class="chip line" style="background:#d9d5cf"></div><div class="meta"><div class="name">Gris Suave</div><div class="hex">#D9D5CF</div><div class="role">Dividers</div></div></div>
+    <div class="sw"><div class="chip line" style="background:#fbf7f0"></div><div class="meta"><div class="name">Blanco Roto</div><div class="hex">#FBF7F0</div><div class="role">Off-white</div></div></div>
+    <div class="sw"><div class="chip line" style="background:#fffaf4"></div><div class="meta"><div class="name">Blanco Cálido</div><div class="hex">#FFFAF4</div><div class="role">Warm white surfaces</div></div></div>
+  </div>
+</body>
+</html>

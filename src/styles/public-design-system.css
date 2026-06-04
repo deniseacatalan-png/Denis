@@ -1,0 +1,269 @@
+.page-shell {
+  --brand: var(--violeta);
+  --brand-deep: var(--violeta-profundo);
+  --gold: var(--champagne);
+  --chrome: rgba(255, 250, 244, 0.92);
+  --text-main: var(--fg-1);
+  --text-soft: var(--fg-2);
+  --border: rgba(110, 79, 130, 0.15);
+  --glass-border: var(--border);
+  --shadow: 0 18px 36px rgba(77, 54, 97, 0.14);
+  --shadow-soft: 0 10px 22px rgba(77, 54, 97, 0.2);
+  --shadow-media: 0 16px 32px rgba(77, 54, 97, 0.22);
+  --shadow-lift: 0 18px 40px rgba(77, 54, 97, 0.24);
+  --surface-warm: rgba(255, 250, 244, 0.9);
+  --surface-muted: rgba(251, 247, 240, 0.82);
+  --button-gradient: linear-gradient(135deg, #9a6aa0 0%, var(--violeta) 100%);
+  --button-shadow: var(--shadow-soft);
+  min-height: 100vh;
+  background: var(--page-bg);
+  background-attachment: fixed;
+}
+
+.page-shell .hero {
+  background:
+    linear-gradient(132deg, rgba(77, 54, 97, 0.72) 0%, rgba(142, 106, 150, 0.48) 52%, rgba(168, 111, 122, 0.28) 100%),
+    url("../../Design System/assets/patagonia-lake.jpg") center/cover no-repeat;
+  border-bottom: 1px solid rgba(216, 191, 143, 0.46);
+}
+
+.page-shell .hero::before {
+  background:
+    linear-gradient(180deg, rgba(35, 35, 31, 0.08), rgba(35, 35, 31, 0.26)),
+    linear-gradient(90deg, rgba(77, 54, 97, 0.3), transparent 72%);
+}
+
+.page-shell .hero h1,
+.page-shell .property-slide-title,
+.page-shell .property-detail-hero-text h2 {
+  color: var(--blanco-calido);
+  letter-spacing: 0;
+  text-shadow: 0 8px 24px rgba(35, 35, 31, 0.3);
+}
+
+.page-shell .hero-content > p:not(.overline):not(.contact-line),
+.page-shell .contact-line {
+  color: rgba(255, 250, 244, 0.92);
+}
+
+.page-shell .contact-line {
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+}
+
+.page-shell .links a,
+.page-shell .services-label {
+  color: var(--marron-tierra);
+}
+
+.page-shell .hero .links a,
+.page-shell .hero .services-label {
+  color: var(--blanco-calido);
+}
+
+.page-shell .links a:hover,
+.page-shell .section-title h2,
+.page-shell .price,
+.page-shell .rich-text h3,
+.page-shell .service-modal h3,
+.page-shell .property-slider-copy h3,
+.page-shell .rental-search-field,
+.page-shell .rental-search-field span {
+  color: var(--brand);
+}
+
+.page-shell .overline,
+.page-shell .legend-pill,
+.page-shell .chip,
+.page-shell .property-slider-counter {
+  color: var(--brand-deep);
+  background: rgba(239, 225, 195, 0.76);
+  border: 1px solid var(--border-gold);
+}
+
+.page-shell :is(.properties, .map-section, .service-modal, .property-card, .map-highlight, .property-slider-section, .rental-search-section) {
+  color: var(--fg-1);
+  background: var(--surface-warm);
+  border: 1px solid var(--border);
+  border-image: none;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+}
+
+.page-shell .hero-map-section {
+  background: rgba(255, 250, 244, 0.86);
+}
+
+.page-shell :is(.summary, .meta, .services-intro, .rich-text, .service-modal p, .gallery-empty, .section-title p, .property-slider-copy p, .property-slider-copy span) {
+  color: var(--fg-2);
+}
+
+.page-shell .property-detail-description.rich-text,
+.page-shell .property-detail-description.rich-text :is(p, li, a) {
+  color: rgba(255, 250, 244, 0.88);
+}
+
+.page-shell .property-detail-description.rich-text :is(h1, h2, h3, h4) {
+  color: var(--blanco-calido);
+}
+
+.page-shell .rich-text {
+  overflow-wrap: anywhere;
+}
+
+.page-shell .rich-text :is(img, table, iframe) {
+  max-width: 100%;
+}
+
+.page-shell .property-slide-card {
+  color: var(--blanco-calido);
+  border-color: rgba(255, 250, 244, 0.36);
+  background:
+    linear-gradient(145deg, rgba(77, 54, 97, 0.62), rgba(35, 35, 31, 0.62)),
+    radial-gradient(circle at top right, rgba(216, 191, 143, 0.22), transparent 34%);
+  box-shadow: var(--shadow-media);
+}
+
+.page-shell .property-slide-card::before {
+  background:
+    linear-gradient(180deg, rgba(35, 35, 31, 0.04), rgba(35, 35, 31, 0.2) 38%, rgba(35, 35, 31, 0.66)),
+    linear-gradient(90deg, rgba(77, 54, 97, 0.34), transparent 64%);
+}
+
+.page-shell .property-slide.active .property-slide-card,
+.page-shell .property-slide-card:hover {
+  border-color: rgba(216, 191, 143, 0.78);
+  box-shadow: var(--shadow-lift);
+}
+
+.page-shell .property-cover {
+  background:
+    radial-gradient(circle at top right, rgba(216, 191, 143, 0.26), transparent 36%),
+    var(--media-gradient);
+}
+
+.page-shell .cover-metrics div,
+.page-shell .detail-stats div {
+  background: rgba(255, 250, 244, 0.7);
+  border: 1px solid var(--border);
+}
+
+.page-shell .cover-metrics span,
+.page-shell .detail-stats span {
+  color: var(--fg-3);
+}
+
+.page-shell .cover-metrics strong,
+.page-shell .detail-stats strong {
+  color: var(--brand);
+}
+
+.page-shell .status-pill {
+  border-color: rgba(77, 54, 97, 0.14);
+}
+
+.page-shell :is(.status-pill--venta, .legend-pill--venta) {
+  color: #8d3568;
+  background: rgba(176, 82, 140, 0.18);
+}
+
+.page-shell :is(.status-pill--alquiler_turistico, .legend-pill--alquiler_turistico) {
+  color: #6a4f78;
+  background: rgba(142, 106, 150, 0.22);
+}
+
+.page-shell :is(.status-pill--alquiler_permanente, .legend-pill--alquiler_permanente) {
+  color: var(--violeta-profundo);
+  background: rgba(110, 79, 130, 0.2);
+}
+
+.page-shell :is(.status-pill--vendido, .legend-pill--vendido) {
+  color: var(--blanco-calido);
+  background: rgba(77, 54, 97, 0.92);
+}
+
+.page-shell :is(.status-pill--proceso, .legend-pill--proceso) {
+  color: var(--violeta);
+  background: rgba(192, 160, 207, 0.34);
+}
+
+.page-shell :is(.map-btn, .wa-btn, .cta, .nav-service-button) {
+  border: 1px solid rgba(77, 54, 97, 0.14);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.page-shell .map-btn {
+  color: var(--brand);
+  background: rgba(239, 225, 195, 0.86);
+}
+
+.page-shell :is(.wa-btn, .cta, .nav-service-button) {
+  color: var(--blanco-calido);
+  background: var(--button-gradient);
+}
+
+.page-shell :is(.map-btn, .wa-btn, .cta, .nav-service-button):hover {
+  border-color: rgba(216, 191, 143, 0.76);
+  box-shadow: 0 14px 28px rgba(77, 54, 97, 0.2);
+}
+
+.page-shell .property-slider-nav {
+  color: var(--blanco-calido);
+  background: var(--button-gradient);
+  border-color: rgba(255, 250, 244, 0.58);
+  box-shadow: var(--shadow-soft);
+}
+
+.page-shell .property-detail-screen {
+  color: var(--blanco-calido);
+  background:
+    linear-gradient(145deg, rgba(77, 54, 97, 0.96), rgba(91, 58, 85, 0.94));
+  border-color: rgba(239, 225, 195, 0.36);
+  box-shadow: 0 24px 58px rgba(35, 35, 31, 0.36);
+}
+
+.page-shell .property-detail-close {
+  color: var(--brand);
+  background: rgba(255, 250, 244, 0.86);
+  border-color: var(--border);
+}
+
+.page-shell .property-detail-hero::after {
+  background:
+    linear-gradient(180deg, rgba(35, 35, 31, 0.08), rgba(35, 35, 31, 0.34) 44%, rgba(35, 35, 31, 0.68)),
+    linear-gradient(90deg, rgba(77, 54, 97, 0.48), transparent 68%);
+}
+
+.page-shell .rental-search-card {
+  color: var(--fg-1);
+  background:
+    linear-gradient(145deg, rgba(255, 250, 244, 0.92), rgba(239, 225, 195, 0.54)),
+    radial-gradient(circle at top right, rgba(217, 168, 173, 0.22), transparent 36%);
+  border: 1px solid var(--border);
+}
+
+.page-shell .rental-type-toggle label {
+  color: var(--brand);
+  background: rgba(255, 250, 244, 0.82);
+  border-color: var(--border);
+}
+
+.page-shell .rental-type-toggle input {
+  accent-color: var(--brand);
+}
+
+.page-shell .rental-search-field input,
+.page-shell .rental-search-field textarea {
+  color: var(--fg-1);
+  background: rgba(255, 250, 244, 0.86);
+  border-color: var(--border);
+}
+
+.page-shell .rental-search-field input:focus,
+.page-shell .rental-search-field textarea:focus {
+  border-color: rgba(110, 79, 130, 0.62);
+  box-shadow: 0 0 0 3px rgba(110, 79, 130, 0.14);
+}

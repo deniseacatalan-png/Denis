@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Denise Catalán — CRM · UI Kit</title>
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../colors_and_type.css">
+<link rel="stylesheet" href="kit.css">
+<script src="https://unpkg.com/lucide@0.456.0/dist/umd/lucide.min.js"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="components.jsx"></script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const BRAND_OPTIONS = ["#6e4f82", "#a86f7a", "#8e6a96", "#7a3f66"];
+function shade(hex, p) {
+  const n = parseInt(hex.slice(1), 16); let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const t = p < 0 ? 0 : 255, a = Math.abs(p) / 100;
+  r = Math.round((t - r) * a) + r; g = Math.round((t - g) * a) + g; b = Math.round((t - b) * a) + b;
+  return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+function applyBrand(hex) {
+  const root = document.documentElement;
+  root.style.setProperty("--brand", hex);
+  root.style.setProperty("--brand-deep", shade(hex, -28));
+  root.style.setProperty("--button-gradient", `linear-gradient(135deg, ${shade(hex, 18)} 0%, ${hex} 100%)`);
+}
+
+const DATA = {
+  properties: [
+    { id: "p1", title: "Casona de montaña", location: "Lago Lácar · SMA", category: "venta", price: "USD 320.000", area: "320 m²", coords: "-40.1573, -71.3526", published: true, image: "../../assets/patagonia-lake.jpg", description: "Casona de montaña de 320 m² sobre lote arbolado con vista al Lago Lácar. Tres dormitorios en suite, hogar a leña, galería con quincho. Escritura al día." },
+    { id: "p2", title: "Lote Vega Maipú", location: "Vega Maipú · SMA", category: "venta", price: "USD 145.000", area: "1.200 m²", coords: "-40.1259, -71.2515", published: true, image: "../../assets/property-vega-maipu-3.jpg", description: "Terreno de 1.200 m² con todos los servicios y orientación norte. Apto vivienda unifamiliar." },
+    { id: "p3", title: "Cabaña del bosque", location: "Chapelco · SMA", category: "alquiler_turistico", price: "USD 180 / noche", area: "85 m²", coords: "-40.1620, -71.3601", published: true, image: "../../assets/property-calderon.jpeg", description: "Cabaña para cuatro personas entre lengas, a minutos del cerro Chapelco." },
+    { id: "p4", title: "Departamento céntrico", location: "Centro · SMA", category: "alquiler_permanente", price: "$ 480.000 / mes", area: "62 m²", coords: "-40.1580, -71.3530", published: false, image: "../../assets/property-vega-maipu-2.jpeg", description: "Dos ambientes luminosos en el centro, contrato anual." },
+    { id: "p5", title: "Terreno Alihuén Alto", location: "Alihuén Alto · SMA", category: "proceso", price: "Sin valor", area: "800 m²", coords: "-40.1490, -71.3320", published: false, image: "../../assets/property-alihuen.jpg", description: "Lote de 800 m² en barrio residencial entre arboleda nativa." },
+  ],
+  clients: [
+    { id: "c1", name: "Familia Rossi", phone: "+54 9 2944 55-1020", operation: "Compra", status: "Nuevo", statusKey: "nuevo", zone: "Vega Maipú", createdBy: "Denise C." },
+    { id: "c2", name: "Lucía Méndez", phone: "+54 9 11 4422-9087", operation: "Alquiler", status: "En seguimiento", statusKey: "seguimiento", zone: "Centro", createdBy: "Martín R." },
+    { id: "c3", name: "Estudio Andes SA", phone: "+54 9 2944 60-7711", operation: "Venta", status: "Cerrado", statusKey: "cerrado", zone: "Chapelco", createdBy: "Denise C." },
+    { id: "c4", name: "Pablo Ferreyra", phone: "+54 9 299 415-3360", operation: "Compra", status: "En seguimiento", statusKey: "seguimiento", zone: "Alihuén Alto", createdBy: "Martín R." },
+  ],
+  sellers: [
+    { id: "s1", name: "Denise Catalán", email: "denise@catalan.com.ar", active: true, clients: 12 },
+    { id: "s2", name: "Martín Robledo", email: "martin@catalan.com.ar", active: true, clients: 7 },
+    { id: "s3", name: "Carla Suárez", email: "carla@catalan.com.ar", active: false, clients: 3 },
+  ],
+  activity: [
+    { kind: "venta", title: "Nueva propiedad: Lote Vega Maipú", who: "Denise C.", when: "hoy, 10:24" },
+    { kind: "cliente", title: "Cliente cargado: Lucía Méndez", who: "Martín R.", when: "ayer, 18:02" },
+    { kind: "vendido", title: "Marcada como vendida: Casa del Arroyo", who: "Denise C.", when: "2 días" },
+    { kind: "cliente", title: "Seguimiento actualizado: Pablo Ferreyra", who: "Martín R.", when: "3 días" },
+  ],
+};
+
+function App() {
+  const [t, setTweak] = useTweaks({ brand: "#6e4f82" });
+  useEffect(() => { applyBrand(t.brand); }, [t.brand]);
+  const [authed, setAuthed] = useState(false);
+  const [view, setView] = useState("resumen");
+  const [editing, setEditing] = useState(null);
+
+  let body;
+  if (!authed) {
+    body = <Login onLogin={() => setAuthed(true)} />;
+  } else if (editing) {
+    body = (
+      <main className="admin-shell">
+        <Header onLogout={() => setAuthed(false)} />
+        <PropertyEdit property={editing} onBack={() => setEditing(null)} />
+      </main>
+    );
+  } else {
+    body = (
+      <main className="admin-shell">
+        <Header onLogout={() => setAuthed(false)} />
+        <Navbar active={view} onNav={setView} />
+        {view === "resumen" && <Dashboard data={DATA} onNav={setView} />}
+        {view === "propiedades" && <PropertiesList data={DATA} onEdit={setEditing} />}
+        {view === "clientes" && <ClientsList data={DATA} />}
+        {view === "vendedores" && <SellersList data={DATA} />}
+      </main>
+    );
+  }
+
+  return (
+    <React.Fragment>
+      {body}
+      <TweaksPanel>
+        <TweakSection label="Marca" />
+        <TweakColor label="Color primario" value={t.brand} options={BRAND_OPTIONS} onChange={(v) => setTweak("brand", v)} />
+      </TweaksPanel>
+    </React.Fragment>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

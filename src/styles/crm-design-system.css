@@ -1,0 +1,361 @@
+:where(.admin-shell, .seller-shell) {
+  --brand: var(--violeta);
+  --brand-deep: var(--violeta-profundo);
+  --gold: var(--champagne);
+  --text-main: var(--fg-1);
+  --text-soft: var(--fg-2);
+  --border: rgba(110, 79, 130, 0.15);
+  --glass-border: var(--border);
+  --shadow: 0 18px 36px rgba(77, 54, 97, 0.14);
+  --shadow-soft: 0 10px 22px rgba(77, 54, 97, 0.2);
+  --shadow-lift: 0 18px 40px rgba(77, 54, 97, 0.24);
+  --button-gradient: linear-gradient(135deg, #9a6aa0 0%, var(--violeta) 100%);
+  --button-shadow: var(--shadow-soft);
+  min-height: 100vh;
+  color: var(--fg-1);
+  background: var(--page-bg);
+  background-attachment: fixed;
+  font-family: var(--font-ui);
+}
+
+:where(.admin-shell, .seller-shell) :is(.admin-login-panel, .admin-header, .admin-navbar, .admin-layout, .admin-sidebar, .admin-editor, .admin-panel, .admin-metric-card, .admin-sellers-panel, .seller-layout, .seller-contact-list, .seller-contact-editor) {
+  color: var(--fg-1);
+  background: rgba(255, 250, 244, 0.88);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+}
+
+:where(.admin-shell, .seller-shell) :is(.admin-layout, .seller-layout) {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+:where(.admin-shell, .seller-shell) :is(.admin-login-panel h1, .admin-header h1, .admin-editor h2, .admin-sidebar h2, .admin-sellers-header h2, .seller-contact-list h2, .seller-contact-editor h2, .admin-section-header h2, .admin-panel h2, .admin-location-picker-header h3, .admin-widget-header h3) {
+  color: var(--brand);
+  font-family: var(--font-display);
+  letter-spacing: 0;
+}
+
+:where(.admin-shell, .seller-shell) .admin-login-panel h1 {
+  font-size: clamp(1.7rem, 4vw, 2.25rem);
+}
+
+:where(.admin-shell, .seller-shell) .admin-header h1 {
+  font-size: clamp(1.45rem, 3vw, 1.95rem);
+}
+
+:where(.admin-shell, .seller-shell) :is(.admin-editor h2, .admin-sidebar h2, .admin-sellers-header h2, .seller-contact-list h2, .seller-contact-editor h2, .admin-panel h2) {
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+}
+
+:where(.admin-shell, .seller-shell) :is(.admin-header p, .admin-editor-title p, .admin-sellers-header p, .admin-metric-card span, .admin-detail-grid span, .admin-sidebar-note) {
+  color: var(--fg-3);
+}
+
+:where(.admin-shell, .seller-shell) :is(.admin-form label, .admin-editor label, .admin-seller-form label, .seller-contact-editor label, .seller-filters label, .admin-images-header span, .admin-location-picker-header p, .admin-location-message, .admin-seller-row span, .admin-seller-row small) {
+  color: var(--fg-2);
+}
+
+:where(.admin-shell, .seller-shell) :is(.admin-metric-card strong, .admin-detail-grid strong, .admin-detail-copy) {
+  color: var(--brand);
+}
+
+:where(.admin-shell, .seller-shell) .admin-login-panel img {
+  height: 70px;
+  margin-inline: auto;
+}
+
+:where(.admin-shell, .seller-shell) .admin-navbar {
+  border-radius: var(--radius-md);
+  background: rgba(255, 250, 244, 0.78);
+}
+
+:where(.admin-shell, .seller-shell) .admin-navbar button {
+  color: var(--fg-2);
+  border-radius: var(--radius-sm);
+}
+
+:where(.admin-shell, .seller-shell) .admin-navbar button:hover,
+:where(.admin-shell, .seller-shell) .admin-navbar button:focus-visible {
+  color: var(--brand);
+  background: rgba(110, 79, 130, 0.08);
+}
+
+:where(.admin-shell, .seller-shell) .admin-navbar button.active,
+:where(.admin-shell, .seller-shell) .admin-segmented-control button.active {
+  color: var(--blanco-calido);
+  background: var(--button-gradient);
+  box-shadow: var(--shadow-soft);
+}
+
+:where(.admin-shell, .seller-shell) :is(.map-btn, .wa-btn) {
+  border: 1px solid rgba(77, 54, 97, 0.14);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-soft);
+  font-weight: 800;
+  overflow: hidden;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+:where(.admin-shell, .seller-shell) :is(.map-btn, .wa-btn)::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 250, 244, 0.34), transparent);
+}
+
+:where(.admin-shell, .seller-shell) .map-btn {
+  color: var(--brand);
+  background: rgba(239, 225, 195, 0.86);
+}
+
+:where(.admin-shell, .seller-shell) .wa-btn {
+  color: var(--blanco-calido);
+  background: var(--button-gradient);
+}
+
+:where(.admin-shell, .seller-shell) :is(.map-btn, .wa-btn):hover {
+  border-color: rgba(216, 191, 143, 0.76);
+  box-shadow: 0 14px 28px rgba(77, 54, 97, 0.2);
+}
+
+:where(.admin-shell, .seller-shell) .admin-error,
+:where(.admin-shell, .seller-shell) .admin-success {
+  border-radius: var(--radius-md);
+  font-weight: 800;
+}
+
+:where(.admin-shell, .seller-shell) .admin-error {
+  color: var(--rosa-texto);
+  background: rgba(217, 168, 173, 0.22);
+  border: 1px solid rgba(168, 111, 122, 0.24);
+}
+
+:where(.admin-shell, .seller-shell) .admin-success {
+  color: var(--violeta-profundo);
+  background: rgba(192, 160, 207, 0.24);
+  border: 1px solid rgba(110, 79, 130, 0.2);
+}
+
+:where(.admin-shell, .seller-shell) :is(.admin-form input, .admin-editor input, .admin-editor select, .admin-editor textarea, .admin-grid input, .admin-grid select, .admin-grid textarea, .admin-seller-form input, .seller-contact-editor input, .seller-contact-editor select, .seller-contact-editor textarea, .seller-filters select, .admin-property-search input) {
+  color: var(--fg-1);
+  background: rgba(255, 250, 244, 0.94);
+  border-color: rgba(77, 54, 97, 0.16);
+  border-radius: var(--radius-sm);
+}
+
+:where(.admin-shell, .seller-shell) :is(.admin-form input, .admin-editor input, .admin-editor select, .admin-editor textarea, .admin-grid input, .admin-grid select, .admin-grid textarea, .admin-seller-form input, .seller-contact-editor input, .seller-contact-editor select, .seller-contact-editor textarea, .seller-filters select, .admin-property-search input):focus {
+  border-color: rgba(110, 79, 130, 0.62);
+  box-shadow: 0 0 0 3px rgba(110, 79, 130, 0.14);
+  outline: none;
+}
+
+:where(.admin-shell, .seller-shell) :is(input, textarea)[readonly] {
+  color: var(--fg-2);
+  background: rgba(251, 247, 240, 0.72);
+  border-style: dashed;
+}
+
+:where(.admin-shell, .seller-shell) :is(.map-btn, .wa-btn):disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
+  transform: none;
+  box-shadow: none;
+}
+
+:where(.admin-shell, .seller-shell) :is(.map-btn, .wa-btn):disabled::before {
+  display: none;
+}
+
+:where(.admin-shell, .seller-shell) :is(.admin-table-row, .admin-property-row, .admin-seller-row, .seller-contact-row) {
+  color: var(--fg-1);
+  background: rgba(255, 250, 244, 0.9);
+  border-color: rgba(77, 54, 97, 0.12);
+  border-radius: var(--radius-md);
+}
+
+:where(.admin-shell, .seller-shell) :is(.admin-table-row:hover, .admin-property-row:hover, .admin-property-row.active, .seller-contact-row:hover, .seller-contact-row.active) {
+  border-color: rgba(216, 191, 143, 0.72);
+  background: rgba(255, 250, 244, 0.98);
+}
+
+:where(.admin-shell, .seller-shell) .seller-contact-row.active {
+  box-shadow: inset 4px 0 0 rgba(110, 79, 130, 0.72);
+}
+
+:where(.admin-shell, .seller-shell) :is(.admin-table-row > div:first-child span, .admin-table-row > div:first-child small, .seller-contact-row small, .admin-property-row small) {
+  color: var(--fg-2);
+}
+
+:where(.admin-shell, .seller-shell) :is(.admin-detail-grid > div, .admin-location-picker, .admin-segmented-control, .admin-location-results button, .seller-empty-state, .admin-property-search) {
+  color: var(--fg-1);
+  background: rgba(239, 225, 195, 0.34);
+  border-color: rgba(77, 54, 97, 0.12);
+  border-radius: var(--radius-md);
+}
+
+:where(.admin-shell, .seller-shell) .admin-location-results button {
+  color: var(--brand);
+}
+
+:where(.admin-shell, .seller-shell) .admin-location-results button:hover {
+  background: rgba(217, 168, 173, 0.18);
+  border-color: rgba(168, 111, 122, 0.28);
+}
+
+:where(.admin-shell, .seller-shell) .admin-segmented-control button {
+  color: var(--brand);
+}
+
+:where(.admin-shell, .seller-shell) .seller-status-pill,
+:where(.admin-shell, .seller-shell) .seller-profile-chip,
+:where(.admin-shell, .seller-shell) .admin-publish-chip {
+  border: 1px solid rgba(77, 54, 97, 0.12);
+  border-radius: var(--radius-pill);
+  font-weight: 900;
+}
+
+:where(.admin-shell, .seller-shell) .seller-status-pill {
+  color: #8d3568;
+  background: rgba(176, 82, 140, 0.16);
+}
+
+:where(.admin-shell, .seller-shell) .seller-status-pill--nuevo {
+  color: #8d3568;
+  background: rgba(176, 82, 140, 0.16);
+}
+
+:where(.admin-shell, .seller-shell) .seller-status-pill--contactado {
+  color: #6a4f78;
+  background: rgba(142, 106, 150, 0.22);
+}
+
+:where(.admin-shell, .seller-shell) .seller-status-pill--visitando {
+  color: var(--violeta-profundo);
+  background: rgba(110, 79, 130, 0.2);
+}
+
+:where(.admin-shell, .seller-shell) .seller-status-pill--cerrado {
+  color: var(--blanco-calido);
+  background: rgba(77, 54, 97, 0.92);
+}
+
+:where(.admin-shell, .seller-shell) .seller-status-pill--pausado {
+  color: var(--rosa-texto);
+  background: rgba(217, 168, 173, 0.24);
+}
+
+:where(.admin-shell, .seller-shell) .admin-publish-chip.is-published {
+  color: var(--violeta-profundo);
+  background: rgba(110, 79, 130, 0.18);
+}
+
+:where(.admin-shell, .seller-shell) .admin-publish-chip.is-hidden {
+  color: var(--rosa-texto);
+  background: rgba(217, 168, 173, 0.22);
+}
+
+:where(.admin-shell, .seller-shell) .seller-profile-chip {
+  color: var(--brand);
+  background: rgba(255, 250, 244, 0.92);
+}
+
+:where(.admin-shell, .seller-shell) .admin-rich-editor,
+:where(.admin-shell, .seller-shell) .admin-preview-pane {
+  border-color: rgba(77, 54, 97, 0.16);
+  border-radius: var(--radius-md);
+}
+
+:where(.admin-shell, .seller-shell) .admin-rich-toolbar {
+  background: rgba(255, 250, 244, 0.78);
+}
+
+:where(.admin-shell, .seller-shell) .admin-rich-editor-surface {
+  color: var(--fg-1);
+  background: rgba(255, 250, 244, 0.96);
+}
+
+:where(.admin-shell, .seller-shell) :is(.admin-rich-editor-surface, .admin-preview-pane, .rich-text) {
+  overflow-wrap: anywhere;
+}
+
+:where(.admin-shell, .seller-shell) :is(.admin-rich-editor-surface, .admin-preview-pane, .rich-text) :is(img, table, iframe) {
+  max-width: 100%;
+}
+
+:where(.admin-shell, .seller-shell) .admin-upload-control input[type="file"] {
+  background: rgba(255, 250, 244, 0.94);
+}
+
+:where(.admin-shell, .seller-shell) .admin-upload-control input[type="file"]::file-selector-button {
+  margin-right: 0.75rem;
+  border: 1px solid rgba(77, 54, 97, 0.14);
+  border-radius: var(--radius-pill);
+  padding: 0.46rem 0.75rem;
+  color: var(--brand);
+  background: rgba(239, 225, 195, 0.86);
+  font: inherit;
+  font-weight: 800;
+}
+
+:where(.admin-shell, .seller-shell) .admin-location-marker-pin {
+  background: var(--marker-color, var(--cat-venta));
+}
+
+:where(.admin-shell, .seller-shell) .admin-property-row.is-drop-target {
+  border-color: rgba(216, 191, 143, 0.9);
+  background: rgba(239, 225, 195, 0.8);
+  box-shadow: inset 4px 0 0 rgba(110, 79, 130, 0.72), var(--shadow-soft);
+}
+
+:where(.admin-shell, .seller-shell) .admin-property-drag-handle {
+  color: rgba(110, 79, 130, 0.74);
+  letter-spacing: 0;
+}
+
+:where(.admin-shell, .seller-shell) .admin-danger {
+  color: var(--blanco-calido);
+  background: linear-gradient(128deg, rgba(168, 111, 122, 0.82), rgba(77, 54, 97, 0.78));
+}
+
+:where(.admin-shell, .seller-shell) .admin-back-link {
+  color: var(--brand);
+  font-family: var(--font-ui);
+  font-weight: 800;
+  text-decoration-color: rgba(110, 79, 130, 0.34);
+  text-underline-offset: 0.18em;
+}
+
+@media (max-width: 700px) {
+  :where(.admin-shell, .seller-shell) {
+    padding: 0.75rem;
+  }
+
+  :where(.admin-shell, .seller-shell) :is(.admin-header-actions, .admin-editor-actions, .admin-quick-actions) {
+    align-items: stretch;
+  }
+
+  :where(.admin-shell, .seller-shell) :is(.admin-header-actions, .admin-editor-actions, .admin-quick-actions) :is(.map-btn, .wa-btn) {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+
+  :where(.admin-shell, .seller-shell) :is(.admin-property-list, .seller-contact-rows) {
+    max-height: none;
+  }
+
+  :where(.admin-shell, .seller-shell) .admin-property-row small {
+    align-items: flex-start;
+  }
+
+  :where(.admin-shell, .seller-shell) :is(.admin-location-map-wrap, .admin-location-map) {
+    min-height: 260px;
+  }
+
+  :where(.admin-shell, .seller-shell) .admin-location-map {
+    height: 260px;
+  }
+}

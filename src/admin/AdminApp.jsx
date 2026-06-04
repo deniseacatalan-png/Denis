@@ -37,6 +37,7 @@ import {
   fetchSellerProfiles,
   setSellerActiveFromAdmin
 } from "../utils/supabase/sellers";
+import logoMark from "../../Design System/assets/logo-dc-mark.svg";
 
 const emptyPropertyForm = {
   databaseId: "",
@@ -48,7 +49,7 @@ const emptyPropertyForm = {
   category: "venta",
   latitude: "-40.1573",
   longitude: "-71.3524",
-  markerColor: "#a86f7a",
+  markerColor: CATEGORY_META.venta.mapColor,
   summary: "",
   descriptionHtml: "",
   rawDescription: "",
@@ -157,7 +158,7 @@ const mimeExtensions = {
   "image/webp": ".webp"
 };
 
-function colorValue(value, fallback = "#a86f7a") {
+function colorValue(value, fallback = CATEGORY_META.venta.mapColor) {
   return /^#[0-9a-f]{6}$/i.test(value || "") ? value : fallback;
 }
 
@@ -630,7 +631,7 @@ function propertyToForm(property) {
     category: property.category || "venta",
     latitude: String(property.latitude ?? property.coords?.[0] ?? ""),
     longitude: String(property.longitude ?? property.coords?.[1] ?? ""),
-    markerColor: property.markerColor || CATEGORY_META[property.category]?.mapColor || "#a86f7a",
+    markerColor: property.markerColor || CATEGORY_META[property.category]?.mapColor || CATEGORY_META.venta.mapColor,
     summary: property.summary || "",
     descriptionHtml: property.descriptionHtml || textToParagraphHtml(rawDescription),
     rawDescription,
@@ -665,7 +666,7 @@ function LoginPanel({ onLogin }) {
   return (
     <main className="admin-shell admin-shell--login">
       <section className="admin-login-panel">
-        <img src="/isodc.svg" alt="Logo Denise Catalán" />
+        <img src={logoMark} alt="Logo Denise Catalán" />
         <h1>Administrador</h1>
         <form onSubmit={handleSubmit} className="admin-form">
           <label>
@@ -1687,6 +1688,33 @@ function AdminApp() {
         <p className="seller-empty-state">{property.summary || "Sin resumen cargado."}</p>
       </section>
 
+      <section className="admin-description-widget">
+        <div className="admin-widget-header">
+          <h3>Ficha tecnica</h3>
+        </div>
+        <div
+          className="admin-preview-pane rich-text"
+          dangerouslySetInnerHTML={{
+            __html: property.descriptionHtml || "<p>Sin ficha tecnica cargada.</p>"
+          }}
+        />
+      </section>
+
+      <section className="admin-images-field">
+        <div className="admin-images-header">
+          <span>{property.images.length ? `${property.images.length} imagenes cargadas` : "Sin imagenes cargadas"}</span>
+        </div>
+        {property.images.length ? (
+          <div className="admin-image-grid">
+            {property.images.map((url, index) => (
+              <div className="admin-image-preview" key={`${url}-${index}`}>
+                <img src={url} alt={`Imagen ${index + 1} de ${property.title || "propiedad"}`} />
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </section>
+
       <NotesPanel
         entityId={property.databaseId || property.id}
         author={activityAuthor}
@@ -1780,7 +1808,7 @@ function AdminApp() {
           <div className="admin-color-picker">
             <input
               type="color"
-              value={colorValue(form.markerColor, CATEGORY_META[form.category]?.mapColor || "#a86f7a")}
+              value={colorValue(form.markerColor, CATEGORY_META[form.category]?.mapColor || CATEGORY_META.venta.mapColor)}
               onChange={(event) => updateField("markerColor", event.target.value)}
               aria-label="Color del punto en el mapa"
             />
@@ -1788,7 +1816,7 @@ function AdminApp() {
               type="text"
               value={form.markerColor}
               onChange={(event) => updateField("markerColor", event.target.value)}
-              placeholder={CATEGORY_META[form.category]?.mapColor || "#a86f7a"}
+              placeholder={CATEGORY_META[form.category]?.mapColor || CATEGORY_META.venta.mapColor}
             />
           </div>
         </label>

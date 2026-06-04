@@ -1,0 +1,32 @@
+@import "../../Design System/colors_and_type.css";
+
+:root {
+  --dc-brand: var(--violeta);
+  --dc-brand-deep: var(--violeta-profundo);
+  --dc-brand-soft: rgba(110, 79, 130, 0.12);
+  --dc-surface: var(--surface-warm);
+  --dc-surface-strong: var(--glass-strong);
+  --dc-border: var(--border);
+  --dc-border-gold: var(--border-gold);
+  --dc-shadow: var(--shadow);
+  --dc-shadow-soft: var(--shadow-soft);
+  --dc-shadow-lift: var(--shadow-lift);
+  --dc-button-gradient: var(--button-gradient);
+}
+
+::selection {
+  color: var(--blanco-calido);
+  background: rgba(110, 79, 130, 0.82);
+}
+
+:focus-visible {
+  outline: 3px solid rgba(216, 191, 143, 0.72);
+  outline-offset: 3px;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-ui);
+}

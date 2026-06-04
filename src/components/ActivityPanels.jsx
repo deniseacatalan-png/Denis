@@ -217,6 +217,14 @@ export function DocumentsPanel({ entityType, entityId, accessToken, author, fetc
     loadDocuments();
   }, [entityId, fetchDocuments]);
 
+  const toggleAddingDocument = () => {
+    setIsAdding((current) => {
+      const nextIsAdding = !current;
+      if (!nextIsAdding) setSelectedFile(null);
+      return nextIsAdding;
+    });
+  };
+
   const handleUpload = async () => {
     if (!selectedFile) return;
 
@@ -278,7 +286,7 @@ export function DocumentsPanel({ entityType, entityId, accessToken, author, fetc
           <p>Archivos internos</p>
           <h3 id={`documents-${entityId || "new"}`}>Documentos e imagenes</h3>
         </div>
-        <button type="button" className="map-btn" onClick={() => setIsAdding((current) => !current)} disabled={!canCreate}>
+        <button type="button" className="map-btn" onClick={toggleAddingDocument} disabled={!canCreate}>
           {isAdding ? "Cerrar" : "Agregar documento o imagen"}
         </button>
       </div>

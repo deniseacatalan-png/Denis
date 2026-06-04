@@ -11,6 +11,8 @@ import "leaflet/dist/leaflet.css";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
+import logoMark from "../Design System/assets/logo-dc-mark.svg";
+import { CATEGORY_META } from "./utils/properties";
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -53,34 +55,6 @@ const INITIAL_RENTAL_SEARCH = {
   rooms: "",
   preferences: "",
   mustHaves: ""
-};
-
-const CATEGORY_META = {
-  venta: {
-    label: "En venta",
-    color: "#a86f7a",
-    mapColor: "#a86f7a"
-  },
-  alquiler_turistico: {
-    label: "Alquiler turistico",
-    color: "#8a6a4f",
-    mapColor: "#8a6a4f"
-  },
-  alquiler_permanente: {
-    label: "Alquiler permanente",
-    color: "#7b8061",
-    mapColor: "#7b8061"
-  },
-  vendido: {
-    label: "Vendido",
-    color: "#2f4f3e",
-    mapColor: "#2f4f3e"
-  },
-  proceso: {
-    label: "En proceso / sin valor",
-    color: "#d8bf8f",
-    mapColor: "#d8bf8f"
-  }
 };
 
 function formatCoords(coords) {
@@ -296,7 +270,7 @@ function PublicApp() {
     <div className="page-shell">
       <header className="hero" id="inicio">
         <nav className="top-nav">
-          <img className="brand-logo" src="/isodc.svg" alt="Logo Denise Catalán" />
+          <img className="brand-logo" src={logoMark} alt="Logo Denise Catalán" />
           <div className="links">
             <button
               type="button"
@@ -345,9 +319,9 @@ function PublicApp() {
                         center={property.coords}
                         radius={property.id === selectedProperty.id ? 11 : 8}
                         pathOptions={{
-                          color: property.markerColor || CATEGORY_META[property.category]?.mapColor || "#a65774",
+                          color: property.markerColor || CATEGORY_META[property.category]?.mapColor || CATEGORY_META.venta.mapColor,
                           fillColor:
-                            property.markerColor || CATEGORY_META[property.category]?.mapColor || "#a65774",
+                            property.markerColor || CATEGORY_META[property.category]?.mapColor || CATEGORY_META.venta.mapColor,
                           fillOpacity: 0.9,
                           weight: property.id === selectedProperty.id ? 4 : 2
                         }}
@@ -504,7 +478,7 @@ function PublicApp() {
                                   style={
                                     property.images.length
                                       ? {
-                                          backgroundImage: `linear-gradient(180deg, rgba(47,79,62,0.18), rgba(35,35,31,0.64)), url(${resolvePropertyCoverImage(property)})`
+                                          backgroundImage: `linear-gradient(180deg, rgba(77,54,97,0.2), rgba(35,35,31,0.66)), url(${resolvePropertyCoverImage(property)})`
                                         }
                                       : undefined
                                   }

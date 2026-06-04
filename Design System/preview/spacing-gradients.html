@@ -1,0 +1,26 @@
+<!-- @dsCard group="Spacing" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 22px; background: var(--surface-solid); }
+  .row { display: flex; gap: 14px; }
+  .g { flex: 1; height: 110px; border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; position: relative; }
+  .page { background: var(--page-bg); }
+  .button { background: var(--button-gradient); }
+  .media { background: var(--media-gradient); }
+  .cap { position: absolute; left: 10px; bottom: 9px; font-family: var(--font-ui); font-size: 11px; font-weight: 700;
+         letter-spacing: 0.04em; padding: 3px 7px; border-radius: 6px; background: rgba(255,250,244,0.85); color: var(--fg-1); }
+  .media .cap, .button .cap { background: rgba(255,250,244,0.92); }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="g page"><span class="cap">Page wash</span></div>
+    <div class="g button"><span class="cap">Button · 135°</span></div>
+    <div class="g media"><span class="cap">Media overlay</span></div>
+  </div>
+</body>
+</html>

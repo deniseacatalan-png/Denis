@@ -1,0 +1,31 @@
+<!-- @dsCard group="Colors" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 22px; background: var(--surface-solid); display: flex; flex-direction: column; gap: 16px; }
+  .pills { display: flex; gap: 10px; flex-wrap: wrap; }
+  .pill { display: inline-flex; align-items: center; border-radius: var(--radius-pill); padding: 0.4rem 0.85rem;
+          font-family: var(--font-ui); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+          border: 1px solid rgba(77,54,97,0.12); }
+  .venta      { background: rgba(180,82,140,0.18); color: #93386b; }
+  .turistico  { background: rgba(142,106,150,0.22); color: #6a4f78; }
+  .permanente { background: rgba(110,79,130,0.20); color: #4d3661; }
+  .vendido    { background: rgba(77,54,97,0.92); color: #fffaf4; }
+  .proceso    { background: rgba(193,160,208,0.34); color: #6e4f82; }
+  .note { font-family: var(--font-display); font-style: italic; font-size: 13px; color: var(--fg-3); }
+</style>
+</head>
+<body>
+  <div class="pills">
+    <span class="pill venta">En venta</span>
+    <span class="pill turistico">Alquiler turístico</span>
+    <span class="pill permanente">Alquiler permanente</span>
+    <span class="pill vendido">Vendido</span>
+    <span class="pill proceso">En proceso</span>
+  </div>
+  <div class="note">Las categorías comparten la gama violeta — orquídea (venta), malva (turístico), violeta (permanente), ciruela profundo (vendido) y lila suave (en proceso). Los mismos tonos tiñen los pines del mapa.</div>
+</body>
+</html>

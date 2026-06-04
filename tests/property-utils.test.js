@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  CATEGORY_META,
   filterPropertiesBySearch,
+  normalizeDatabaseProperty,
   propertyMatchesSearch,
   slugify
 } from "../src/utils/properties.js";
@@ -46,5 +48,35 @@ describe("property helpers", () => {
     const properties = [{ id: "1" }, { id: "2" }];
 
     assert.equal(filterPropertiesBySearch(properties, "   "), properties);
+  });
+
+  it("uses the rose-violet design system colors for property categories", () => {
+    assert.deepEqual(
+      Object.fromEntries(
+        Object.entries(CATEGORY_META).map(([category, meta]) => [category, meta.mapColor])
+      ),
+      {
+        venta: "#b0528c",
+        alquiler_turistico: "#8e6a96",
+        alquiler_permanente: "#6e4f82",
+        vendido: "#4d3661",
+        proceso: "#c0a0cf"
+      }
+    );
+  });
+
+  it("normalizes legacy persisted marker colors to the current category color", () => {
+    const property = normalizeDatabaseProperty({
+      id: "prop-1",
+      title: "Casa",
+      slug: "casa",
+      category: "alquiler_turistico",
+      marker_color: "#8a6a4f",
+      latitude: -40.1,
+      longitude: -71.3,
+      images: []
+    });
+
+    assert.equal(property.markerColor, CATEGORY_META.alquiler_turistico.mapColor);
   });
 });

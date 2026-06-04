@@ -1,0 +1,28 @@
+<!-- @dsCard group="Spacing" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 24px; background: var(--surface-solid); }
+  .row { display: flex; gap: 16px; align-items: flex-end; }
+  .item { text-align: center; }
+  .box { background: var(--champagne-suave); border: 1px solid var(--border-gold); width: 92px; height: 64px; }
+  .r-sm { border-radius: 10px; } .r-md { border-radius: 14px; } .r-lg { border-radius: 18px; }
+  .r-xl { border-radius: 20px; } .r-2xl { border-radius: 26px; } .r-pill { border-radius: 999px; height: 44px; }
+  .n { font-family: var(--font-ui); font-size: 12px; font-weight: 700; color: var(--fg-1); margin-top: 8px; }
+  .v { font-family: var(--font-ui); font-size: 11px; color: var(--fg-2); }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="item"><div class="box r-sm"></div><div class="n">sm</div><div class="v">10px</div></div>
+    <div class="item"><div class="box r-md"></div><div class="n">md</div><div class="v">14px</div></div>
+    <div class="item"><div class="box r-lg"></div><div class="n">lg</div><div class="v">18px</div></div>
+    <div class="item"><div class="box r-xl"></div><div class="n">xl</div><div class="v">20px</div></div>
+    <div class="item"><div class="box r-2xl"></div><div class="n">2xl</div><div class="v">26px</div></div>
+    <div class="item"><div class="box r-pill"></div><div class="n">pill</div><div class="v">999px</div></div>
+  </div>
+</body>
+</html>

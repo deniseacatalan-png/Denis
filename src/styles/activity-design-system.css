@@ -1,0 +1,145 @@
+:where(.admin-shell, .seller-shell) .activity-panel {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.1rem;
+  padding: 1rem;
+  color: var(--fg-1);
+  background: rgba(255, 250, 244, 0.88);
+  border: 1px solid rgba(77, 54, 97, 0.12);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
+}
+
+:where(.admin-shell, .seller-shell) .activity-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+:where(.admin-shell, .seller-shell) .activity-panel-header p {
+  margin: 0 0 0.25rem;
+  color: var(--fg-3);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+:where(.admin-shell, .seller-shell) .activity-panel-header h3 {
+  margin: 0;
+  color: var(--brand);
+  font-family: var(--font-display);
+  font-size: clamp(1.18rem, 2vw, 1.45rem);
+  line-height: 1.08;
+}
+
+:where(.admin-shell, .seller-shell) .activity-form {
+  display: grid;
+  gap: 0.8rem;
+  padding: 0.9rem;
+  background: rgba(239, 225, 195, 0.34);
+  border: 1px solid rgba(77, 54, 97, 0.1);
+  border-radius: var(--radius-md);
+}
+
+:where(.admin-shell, .seller-shell) .activity-form label {
+  display: grid;
+  gap: 0.45rem;
+  color: var(--fg-2);
+  font-weight: 800;
+}
+
+:where(.admin-shell, .seller-shell) :is(.activity-list, .activity-document-list) {
+  display: grid;
+  gap: 0.75rem;
+}
+
+:where(.admin-shell, .seller-shell) :is(.activity-item, .activity-document-item) {
+  color: var(--fg-1);
+  background: rgba(255, 250, 244, 0.94);
+  border: 1px solid rgba(77, 54, 97, 0.11);
+  border-radius: var(--radius-md);
+}
+
+:where(.admin-shell, .seller-shell) .activity-item {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.85rem;
+}
+
+:where(.admin-shell, .seller-shell) .activity-item p {
+  margin: 0;
+  color: var(--fg-1);
+  font-family: var(--font-ui);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+:where(.admin-shell, .seller-shell) :is(.activity-item small, .activity-document-item small) {
+  color: var(--fg-2);
+}
+
+:where(.admin-shell, .seller-shell) .activity-document-item {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: center;
+  padding: 0.75rem;
+}
+
+:where(.admin-shell, .seller-shell) :is(.activity-document-item img, .activity-file-icon) {
+  width: 72px;
+  height: 58px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(77, 54, 97, 0.12);
+}
+
+:where(.admin-shell, .seller-shell) .activity-document-item img {
+  object-fit: cover;
+  background: rgba(239, 225, 195, 0.5);
+}
+
+:where(.admin-shell, .seller-shell) .activity-file-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand);
+  background: rgba(239, 225, 195, 0.58);
+  font-weight: 900;
+  font-size: 0.8rem;
+}
+
+:where(.admin-shell, .seller-shell) .activity-document-item div {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+:where(.admin-shell, .seller-shell) .activity-document-item a {
+  color: var(--brand);
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 700px) {
+  :where(.admin-shell, .seller-shell) .activity-panel-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  :where(.admin-shell, .seller-shell) .activity-panel-header .map-btn,
+  :where(.admin-shell, .seller-shell) .activity-form .wa-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  :where(.admin-shell, .seller-shell) .activity-document-item {
+    grid-template-columns: 58px minmax(0, 1fr);
+  }
+
+  :where(.admin-shell, .seller-shell) :is(.activity-document-item img, .activity-file-icon) {
+    width: 58px;
+    height: 52px;
+  }
+}

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Denise Catalán — Sitio · UI Kit</title>
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../colors_and_type.css">
+<link rel="stylesheet" href="kit.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="components.jsx"></script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const BRAND_OPTIONS = ["#6e4f82", "#a86f7a", "#8e6a96", "#7a3f66"];
+function shade(hex, p) {
+  const n = parseInt(hex.slice(1), 16); let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const t = p < 0 ? 0 : 255, a = Math.abs(p) / 100;
+  r = Math.round((t - r) * a) + r; g = Math.round((t - g) * a) + g; b = Math.round((t - b) * a) + b;
+  return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+function applyBrand(hex) {
+  const root = document.documentElement;
+  root.style.setProperty("--brand", hex);
+  root.style.setProperty("--brand-deep", shade(hex, -28));
+  root.style.setProperty("--button-gradient", `linear-gradient(135deg, ${shade(hex, 18)} 0%, ${hex} 100%)`);
+}
+
+const PROPERTIES = [
+  { id: "p1", category: "venta", title: "Casona de montaña", price: "USD 320.000", area: "320 m²",
+    coords: "-40.1573, -71.3526", location: "Lago Lácar · SMA", image: "../../assets/patagonia-lake.jpg",
+    summary: "Casa de montaña con vista al lago, carpintería de cedro y hogar a leña. Lista para habitar todo el año.",
+    description: "Casona de montaña de 320 m² cubiertos sobre un lote arbolado con vista directa al Lago Lácar. Tres dormitorios en suite, living con doble altura y hogar a leña, cocina integrada y galería con quincho. Calefacción central, ventanales con DVH y carpintería de cedro. Escritura al día." },
+  { id: "p2", category: "venta", title: "Lote Vega Maipú", price: "USD 145.000", area: "1.200 m²",
+    coords: "-40.1259, -71.2515", location: "Vega Maipú · SMA", image: "../../assets/property-vega-maipu-3.jpg",
+    summary: "Lote de 1.200 m² en zona consolidada de Vega Maipú, con todos los servicios y excelente orientación.",
+    description: "Terreno de 1.200 m² en Vega Maipú con frente a calle asfaltada, todos los servicios disponibles (agua, luz, gas) y orientación norte. Apto vivienda unifamiliar. Documentación completa para escriturar." },
+  { id: "p3", category: "alquiler_turistico", title: "Cabaña del bosque", price: "USD 180 / noche", area: "85 m²",
+    coords: "-40.1620, -71.3601", location: "Chapelco · SMA", image: "../../assets/property-calderon.jpeg",
+    summary: "Cabaña para cuatro personas entre lengas, a minutos del cerro Chapelco. Ideal para escapadas.",
+    description: "Cabaña de 85 m² para cuatro personas, totalmente equipada, entre bosque de lengas y a pocos minutos del cerro Chapelco. Estufa a leña, wifi, ropa de cama incluida. Disponible para estadías cortas todo el año." },
+  { id: "p4", category: "alquiler_permanente", title: "Departamento céntrico", price: "$ 480.000 / mes", area: "62 m²",
+    coords: "-40.1580, -71.3530", location: "Centro · SMA", image: "../../assets/property-vega-maipu-2.jpeg",
+    summary: "Dos ambientes luminosos en el corazón del centro, a metros de la peatonal. Contrato anual.",
+    description: "Departamento de dos ambientes (62 m²) en pleno centro de San Martín de los Andes, a metros de la calle San Martín. Amoblado, calefacción central, cochera opcional. Contrato anual, ideal para vivir todo el año." },
+  { id: "p5", category: "alquiler_permanente", title: "Terreno Alihuén Alto", price: "Consultar", area: "800 m²",
+    coords: "-40.1490, -71.3320", location: "Alihuén Alto · SMA", image: "../../assets/property-alihuen.jpg",
+    summary: "Lote en barrio residencial entre arboleda nativa, con cota de servicios y vistas abiertas.",
+    description: "Lote de 800 m² en el barrio Alihuén Alto, rodeado de arboleda nativa. Topografía suave, vistas abiertas al cordón montañoso y cercanía a servicios. Excelente oportunidad para proyecto de vivienda." },
+];
+
+const GROUPS = [
+  { category: "venta", eyebrow: "Propiedades en venta", title: "En venta", empty: "No hay propiedades en venta por el momento." },
+  { category: "alquiler_turistico", eyebrow: "Estadías y escapadas", title: "Alquiler turístico", empty: "No hay alquileres turísticos por el momento." },
+  { category: "alquiler_permanente", eyebrow: "Hogares para vivir la Patagonia", title: "Alquiler permanente", empty: "No hay alquileres permanentes por el momento." },
+];
+
+function App() {
+  const [t, setTweak] = useTweaks({ brand: "#6e4f82" });
+  useEffect(() => { applyBrand(t.brand); }, [t.brand]);
+  const [selectedId, setSelectedId] = useState("p1");
+  const [detail, setDetail] = useState(null);
+  const [serviceOpen, setServiceOpen] = useState(false);
+  const selected = PROPERTIES.find((p) => p.id === selectedId) || null;
+  const select = (p) => setSelectedId(p.id);
+
+  return (
+    <div className="page-shell">
+      <header className="hero">
+        <TopNav onServices={() => setServiceOpen(true)} />
+        <div className="hero-layout">
+          <Hero />
+          <section className="map-section">
+            <div className="section-title">
+              <p className="eyebrow" style={{ color: "#ffeec9" }}>Geolocalización</p>
+              <h2 style={{ color: "#fff" }}>Plano de ubicaciones</h2>
+            </div>
+            <div className="map-layout">
+              <MapPanel properties={PROPERTIES} selected={selected} onSelect={select} />
+              <DetailsPanel property={selected} onOpenDetail={setDetail} />
+            </div>
+          </section>
+        </div>
+      </header>
+
+      <main className="site-main">
+        <div className="content-wrap content-wrap--head">
+          <SectionTitle eyebrow="Una selección dentro de nuestra propuesta integral" title="Propiedades disponibles" />
+        </div>
+        <section className="property-sliders-full">
+          {GROUPS.map((g) => (
+            <PropertySlider key={g.category} group={g} properties={PROPERTIES} selected={selected} onSelect={select} onOpenDetail={setDetail} />
+          ))}
+        </section>
+        <div className="content-wrap">
+          <RentalSearch />
+        </div>
+      </main>
+
+      <PropertyDetailModal property={detail} onClose={() => setDetail(null)} />
+      <ServiceModal open={serviceOpen} onClose={() => setServiceOpen(false)} />
+
+      <TweaksPanel>
+        <TweakSection label="Marca" />
+        <TweakColor label="Color primario" value={t.brand} options={BRAND_OPTIONS} onChange={(v) => setTweak("brand", v)} />
+      </TweaksPanel>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!-- @dsCard group="Components" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 24px; background: var(--surface-solid); }
+  .stack { display: flex; flex-direction: column; gap: 18px; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  label { display: flex; flex-direction: column; gap: 0.4rem; }
+  label > span, .group-label { font-family: var(--font-ui); font-size: 0.9rem; font-weight: 700; color: var(--brand); }
+  input { width: 100%; border: 1px solid var(--border); background: var(--blanco-calido);
+          color: #1e1a1f; border-radius: var(--radius-sm); padding: 0.7rem 0.8rem; font-family: var(--font-ui); font-size: 0.95rem; }
+  input::placeholder { color: #a59f96; }
+  .pill-input { border-radius: var(--radius-pill); }
+
+  .svc { display: flex; flex-direction: column; gap: 0.55rem; }
+  .svc-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .svc-card { position: relative; display: flex; flex-direction: column; gap: 4px; cursor: pointer;
+              padding: 0.85rem 0.95rem; border-radius: var(--radius-md); background: rgba(255,250,244,0.7);
+              border: 1px solid var(--border); transition: border-color .18s ease, background .18s ease, box-shadow .18s ease; }
+  .svc-card .t { font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; color: var(--brand); }
+  .svc-card .d { font-family: var(--font-ui); font-size: 0.8rem; color: var(--fg-2); }
+  .svc-card.is-on { border-color: rgba(168,111,122,0.7); background: rgba(217,168,173,0.18); box-shadow: 0 8px 18px rgba(168,111,122,0.16); }
+  .svc-card .tick { position: absolute; top: 10px; right: 10px; width: 20px; height: 20px; border-radius: 999px;
+                    border: 1px solid var(--border); display: grid; place-items: center; }
+  .svc-card.is-on .tick { background: var(--rosa-profundo); border-color: var(--rosa-profundo); }
+  .svc-card.is-on .tick::after { content: ""; width: 7px; height: 7px; border-radius: 999px; background: #fff; }
+</style>
+</head>
+<body>
+  <div class="stack">
+    <div class="pair">
+      <label><span>Zona</span><input type="text" placeholder="Centro, Vega, Chapelco…"></label>
+      <label><span>Presupuesto</span><input class="pill-input" type="text" placeholder="Monto estimado / moneda"></label>
+    </div>
+
+    <div class="svc">
+      <span class="group-label">Quiero solicitar el servicio de</span>
+      <div class="svc-cards">
+        <div class="svc-card is-on"><span class="tick"></span><span class="t">Vender</span><span class="d">Tasar y publicar</span></div>
+        <div class="svc-card"><span class="tick"></span><span class="t">Alquilar</span><span class="d">Turístico o permanente</span></div>
+        <div class="svc-card"><span class="tick"></span><span class="t">Invertir</span><span class="d">Oportunidades</span></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

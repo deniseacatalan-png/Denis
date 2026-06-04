@@ -1,0 +1,199 @@
+/* =========================================================================
+   Denise Catalán Bienes Raíces — Color & Type Foundations
+   Boutique real-estate brand · San Martín de los Andes, Patagonia Argentina
+   Source of truth: github.com/deniseacatalan-png/Denis  (src/styles.css)
+   Brand direction: a warm boutique palette with a ROSE→VIOLET primary
+   (Violeta #6E4F82), champagne gold + rose accents. Forest green is retained
+   only as the "vendido" category color. The primary is tweakable in the kits.
+   ========================================================================= */
+
+/* ---- Fonts -------------------------------------------------------------
+   The product loads these from Google Fonts (no local font files exist in
+   the repo). Display = Cormorant Garamond, UI/body = Manrope.            */
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+
+:root {
+  /* ---------------------------------------------------------------------
+     BRAND PALETTE — named exactly as in the source (Spanish)
+     --------------------------------------------------------------------- */
+  --rosa-nude:       #d9a8ad;  /* powder rose, light       */
+  --rosa-empolvado:  #c9949c;  /* dusty rose               */
+  --rosa-magenta:    #c97aa8;  /* bright rose              */
+  --rosa-profundo:   #a86f7a;  /* deep rose — "venta" accent */
+  --rosa-texto:      #71444e;  /* rose, text-safe          */
+
+  /* Rose→violet primary range (current brand) */
+  --malva:           #8e6a96;  /* mauve — rose↔violet bridge */
+  --violeta:         #6e4f82;  /* violet — PRIMARY         */
+  --violeta-profundo:#4d3661;  /* violet, deep            */
+  --ciruela:         #5b3a55;  /* plum                     */
+
+  --verde-bosque:    #2f4f3e;  /* forest green — legacy / "vendido" */
+  --verde-bosque-d:  #243c30;  /* forest green, deep       */
+  --verde-oliva:     #7b8061;  /* olive — "alquiler permanente" */
+
+  --marron-tierra:   #8a6a4f;  /* earth brown — "alquiler turístico" */
+
+  --champagne:       #d8bf8f;  /* champagne gold — accents/borders */
+  --champagne-suave: #efe1c3;  /* soft champagne — chips, map-btn  */
+
+  --blanco-roto:     #fbf7f0;  /* off-white                */
+  --blanco-calido:   #fffaf4;  /* warm white — surfaces/text-on-dark */
+  --gris-suave:      #d9d5cf;  /* soft grey                */
+  --gris-texto:      #625f59;  /* body grey                */
+  --tinta:           #23231f;  /* ink — primary text       */
+
+  /* ---------------------------------------------------------------------
+     SEMANTIC TOKENS  (the "Soft responsive polish" layer)
+     --------------------------------------------------------------------- */
+  --fg-1: var(--tinta);          /* primary text             */
+  --fg-2: #6d655d;               /* secondary / muted text   */
+  --fg-3: var(--marron-tierra);  /* eyebrows, meta, captions */
+  --fg-on-dark: var(--blanco-calido);
+
+  --brand:        var(--violeta);        /* primary brand color   */
+  --brand-deep:   var(--violeta-profundo);
+  --accent-gold:  var(--champagne);      /* primary accent        */
+  --accent-rose:  var(--rosa-profundo);
+
+  /* Category accents (property status) — unified within the violet range */
+  --cat-venta:               #b0528c;  /* For sale  — orchid / magenta-rose */
+  --cat-alquiler-turistico:  #8e6a96;  /* Holiday rental — mauve           */
+  --cat-alquiler-permanente: #6e4f82;  /* Permanent rental — violet        */
+  --cat-vendido:             #4d3661;  /* Sold — deep plum                 */
+  --cat-proceso:             #c0a0cf;  /* In process / no price — soft lilac */
+
+  /* Surfaces */
+  --surface-warm:   rgba(255, 250, 244, 0.88);  /* primary card surface */
+  --surface-muted:  rgba(251, 247, 240, 0.78);
+  --surface-solid:  #fffaf4;
+  --glass:          rgba(255, 250, 244, 0.72);
+  --glass-strong:   rgba(255, 250, 244, 0.90);
+
+  /* Page background — layered warm radial + linear wash */
+  --page-bg:
+    radial-gradient(circle at 10% 4%, rgba(217, 168, 173, 0.24), transparent 34%),
+    radial-gradient(circle at 88% 8%, rgba(216, 191, 143, 0.22), transparent 32%),
+    radial-gradient(circle at 72% 92%, rgba(110, 79, 130, 0.18), transparent 36%),
+    linear-gradient(160deg, var(--blanco-calido) 0%, #f4e7ee 48%, #e7ddec 100%);
+
+  /* Borders */
+  --border:        rgba(110, 79, 130, 0.15);   /* hairline, violet-tinted   */
+  --border-gold:   rgba(216, 191, 143, 0.44);
+  --border-rose:   rgba(168, 111, 122, 0.20);
+
+  /* Radii — generous, soft */
+  --radius-sm: 10px;   /* inputs, small chips         */
+  --radius-md: 14px;   /* inner cards, stat tiles     */
+  --radius-lg: 18px;   /* cards, panels (current)     */
+  --radius-xl: 20px;   /* media frames, slide cards   */
+  --radius-2xl: 26px;  /* large feature panels (legacy)*/
+  --radius-pill: 999px;/* pills, buttons, chips       */
+
+  /* Shadows / elevation */
+  --shadow:        0 18px 36px rgba(77, 54, 97, 0.14);  /* card        */
+  --shadow-soft:   0 10px 22px rgba(77, 54, 97, 0.20);  /* button      */
+  --shadow-media:  0 16px 32px rgba(77, 54, 97, 0.22);  /* media frame */
+  --shadow-lift:   0 18px 40px rgba(77, 54, 97, 0.24);  /* hover lift  */
+
+  /* Signature gradients */
+  --button-gradient: linear-gradient(135deg, #9a6aa0 0%, var(--violeta) 100%);
+  --media-gradient:
+    radial-gradient(circle at top right, rgba(216, 191, 143, 0.26), transparent 36%),
+    linear-gradient(145deg, rgba(77, 54, 97, 0.90) 0%, rgba(142, 106, 150, 0.86) 52%, rgba(168, 111, 122, 0.82) 100%);
+
+  /* ---------------------------------------------------------------------
+     TYPE SYSTEM
+     --------------------------------------------------------------------- */
+  --font-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-ui:      "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --fs-overline: 0.82rem;   /* uppercase eyebrows / status pills */
+  --fs-eyebrow:  0.92rem;   /* italic section eyebrows           */
+  --fs-body:     1.08rem;   /* base body                         */
+  --fs-lead:     1.25rem;   /* lead paragraphs                   */
+}
+
+/* =========================================================================
+   BASE ELEMENT STYLES  (apply when this stylesheet drives a page)
+   ========================================================================= */
+body {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-body);
+  color: var(--fg-1);
+  background: var(--page-bg);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---- Display headings (Cormorant Garamond, forest green) ---- */
+h1, h2, h3, .display {
+  font-family: var(--font-display);
+  color: var(--brand);
+  font-weight: 600;
+  line-height: 1.02;
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(2.8rem, 6vw, 5.3rem);
+  font-weight: 600;
+  line-height: 0.95;
+}
+h2 {
+  font-size: clamp(1.75rem, 3vw, 2.55rem);
+}
+h3 {
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  font-weight: 600;
+}
+
+/* Hero tagline / lead — italic Cormorant */
+.tagline {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: clamp(1.25rem, 2.4vw, 1.75rem);
+  line-height: 1.25;
+  color: var(--fg-2);
+}
+
+/* ---- Eyebrow: italic, uppercase, tracked — used above section titles ---- */
+.eyebrow {
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 600;
+  font-size: var(--fs-eyebrow);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-3);
+}
+
+/* ---- Body copy — Cormorant Garamond reads as the default body ---- */
+p, .body {
+  font-family: var(--font-display);
+  font-size: var(--fs-body);
+  line-height: 1.55;
+  color: var(--fg-2);
+  text-wrap: pretty;
+}
+
+/* ---- UI / data text — Manrope (forms, tables, admin, metrics) ---- */
+.ui, button, input, select, textarea, table, .metric, .data {
+  font-family: var(--font-ui);
+}
+
+/* Uppercase micro-label (stat captions, eyebrows in dark UI) */
+.micro-label {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+strong { font-weight: 700; }

@@ -1,0 +1,34 @@
+<!-- @dsCard group="Components" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 0; background: var(--surface-solid); }
+  .card { position: relative; height: 300px; border-radius: var(--radius-xl); overflow: hidden; margin: 18px;
+          color: #fff; border: 1px solid rgba(255,250,244,0.34); box-shadow: var(--shadow-media);
+          background-image: linear-gradient(180deg, rgba(35,35,31,0.10), rgba(35,35,31,0.30) 38%, rgba(35,35,31,0.78)),
+                            url('../assets/patagonia-lake.jpg');
+          background-size: cover; background-position: center;
+          display: flex; flex-direction: column; justify-content: space-between; padding: 18px 20px; }
+  .pill { align-self: flex-start; border-radius: var(--radius-pill); padding: 0.32rem 0.72rem; font-family: var(--font-ui);
+          font-size: 0.78rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+          background: rgba(180,82,140,0.55); color: #fff; border: 1px solid rgba(255,250,244,0.3); }
+  .kicker { color: #ffeec9; font-family: var(--font-ui); font-weight: 800; font-size: 0.95rem; }
+  .title { font-family: var(--font-display); font-size: 2.6rem; font-weight: 700; line-height: 0.98; margin: 0.3rem 0; text-shadow: 0 8px 22px rgba(35,35,31,0.4); }
+  .footer { display: flex; justify-content: space-between; font-family: var(--font-ui); font-weight: 800; color: #fff7df; font-size: 0.9rem; }
+  .footer .link { text-decoration: underline; text-underline-offset: 0.22em; }
+</style>
+</head>
+<body>
+  <article class="card">
+    <span class="pill">En venta</span>
+    <div>
+      <div class="kicker">USD 320.000</div>
+      <div class="title">Casona de montaña</div>
+      <div class="footer"><span>Lago Lácar · SMA</span><span class="link">Ver descripción completa</span></div>
+    </div>
+  </article>
+</body>
+</html>

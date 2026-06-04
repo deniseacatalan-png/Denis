@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DocumentsPanel, NotesPanel } from "../components/ActivityPanels";
 import {
   activityAuthorFromProfile,
@@ -20,6 +20,7 @@ import {
   signInSeller,
   signOutSeller
 } from "../utils/supabase/sellers";
+import logoMark from "../../Design System/assets/logo-dc-mark.svg";
 
 const operationLabels = {
   comprar: "Comprar",
@@ -103,7 +104,7 @@ function LoginPanel({ onLogin }) {
   return (
     <main className="admin-shell admin-shell--login seller-shell">
       <section className="admin-login-panel">
-        <img src="/isodc.svg" alt="Logo Denise Catalán" />
+        <img src={logoMark} alt="Logo Denise Catalán" />
         <h1>Vendedor</h1>
         <form onSubmit={handleSubmit} className="admin-form">
           <label>
@@ -149,6 +150,7 @@ function SellerApp() {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const selectedClientIdRef = useRef(selectedClientId);
 
   const selectedClient = useMemo(
     () => clients.find((client) => client.id === selectedClientId) || null,
@@ -158,6 +160,10 @@ function SellerApp() {
     if (!session?.user?.id) return null;
     return activityAuthorFromProfile(session.user.id, internalProfile);
   }, [internalProfile, session?.user?.id]);
+
+  useEffect(() => {
+    selectedClientIdRef.current = selectedClientId;
+  }, [selectedClientId]);
 
   useEffect(() => {
     let active = true;
@@ -228,10 +234,17 @@ function SellerApp() {
 
     try {
       const data = await fetchClients(filters);
+      const currentSelectedClientId = selectedClientIdRef.current;
+      const nextSelectedClientId = data.some((client) => client.id === currentSelectedClientId)
+        ? currentSelectedClientId
+        : data[0]?.id || "";
+
       setClients(data);
-      setSelectedClientId((currentId) =>
-        data.some((client) => client.id === currentId) ? currentId : data[0]?.id || ""
-      );
+      setSelectedClientId(nextSelectedClientId);
+
+      if (!nextSelectedClientId) {
+        setForm(emptyClientForm);
+      }
     } catch (loadError) {
       setError(loadError.message);
     } finally {

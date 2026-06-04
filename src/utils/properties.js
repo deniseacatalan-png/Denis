@@ -1,30 +1,50 @@
 export const CATEGORY_META = {
   venta: {
     label: "En venta",
-    color: "#a86f7a",
-    mapColor: "#a86f7a"
+    color: "#b0528c",
+    mapColor: "#b0528c"
   },
   alquiler_turistico: {
     label: "Alquiler turistico",
-    color: "#8a6a4f",
-    mapColor: "#8a6a4f"
+    color: "#8e6a96",
+    mapColor: "#8e6a96"
   },
   alquiler_permanente: {
     label: "Alquiler permanente",
-    color: "#7b8061",
-    mapColor: "#7b8061"
+    color: "#6e4f82",
+    mapColor: "#6e4f82"
   },
   vendido: {
     label: "Vendido",
-    color: "#2f4f3e",
-    mapColor: "#2f4f3e"
+    color: "#4d3661",
+    mapColor: "#4d3661"
   },
   proceso: {
     label: "En proceso / sin valor",
-    color: "#d8bf8f",
-    mapColor: "#d8bf8f"
+    color: "#c0a0cf",
+    mapColor: "#c0a0cf"
   }
 };
+
+const legacyCategoryMarkerColors = {
+  "#a86f7a": "venta",
+  "#8a6a4f": "alquiler_turistico",
+  "#7b8061": "alquiler_permanente",
+  "#2f4f3e": "vendido",
+  "#d8bf8f": "proceso"
+};
+
+function categoryMarkerColor(category) {
+  return CATEGORY_META[category]?.mapColor || CATEGORY_META.venta.mapColor;
+}
+
+function normalizeMarkerColor(value, category) {
+  const markerColor = String(value || "").trim();
+  if (!markerColor) return categoryMarkerColor(category);
+
+  const legacyCategory = legacyCategoryMarkerColors[markerColor.toLowerCase()];
+  return legacyCategory === category ? categoryMarkerColor(category) : markerColor;
+}
 
 export function slugify(value, maxLength = Number.POSITIVE_INFINITY) {
   const normalized = String(value || "")
@@ -161,7 +181,7 @@ export function normalizeDatabaseProperty(row) {
     price: row.price || "Consultar",
     area: row.area || "Superficie a confirmar",
     category: row.category,
-    markerColor: row.marker_color || CATEGORY_META[row.category]?.mapColor || "#a65774",
+    markerColor: normalizeMarkerColor(row.marker_color, row.category),
     coords: [Number(row.latitude), Number(row.longitude)],
     latitude: Number(row.latitude),
     longitude: Number(row.longitude),
@@ -188,7 +208,7 @@ export function propertyToDatabasePayload(values) {
     category: values.category,
     latitude: Number.isFinite(lat) ? lat : null,
     longitude: Number.isFinite(lng) ? lng : null,
-    marker_color: values.markerColor.trim() || CATEGORY_META[values.category]?.mapColor || "#a65774",
+    marker_color: normalizeMarkerColor(values.markerColor, values.category),
     summary: values.summary.trim(),
     description_html: values.descriptionHtml.trim(),
     raw_description: values.rawDescription.trim(),

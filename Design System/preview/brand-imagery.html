@@ -1,0 +1,27 @@
+<!-- @dsCard group="Brand" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 0; background: var(--surface-solid); }
+  .frame { position: relative; height: 260px; margin: 18px; border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-media); }
+  .frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .frame::after { content: ""; position: absolute; inset: 0;
+                  background: linear-gradient(132deg, rgba(77,54,97,0.48) 0%, rgba(168,111,122,0.30) 54%, transparent 100%); }
+  .cap { position: absolute; left: 20px; bottom: 18px; z-index: 1; color: #fff; }
+  .cap .e { font-family: var(--font-display); font-style: italic; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.85rem; color: #ffeec9; }
+  .cap .t { font-family: var(--font-display); font-size: 1.9rem; font-weight: 600; text-shadow: 0 8px 24px rgba(35,35,31,0.4); }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <img src="../assets/patagonia-lake.jpg" alt="Patagonian lake and mountains">
+    <div class="cap">
+      <div class="e">Patagonia Argentina</div>
+      <div class="t">Donde querés estar</div>
+    </div>
+  </div>
+</body>
+</html>
