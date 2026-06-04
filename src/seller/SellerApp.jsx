@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  CONTACT_OPERATIONS,
-  CONTACT_STATUSES,
+  CLIENT_OPERATIONS,
+  CLIENT_STATUSES,
+  fetchClients,
+  saveClient
+} from "../utils/supabase/clients";
+import {
   fetchInternalProfile,
-  fetchSellerContacts,
   getCurrentSession,
   onAuthStateChange,
-  saveSellerContact,
   signInSeller,
   signOutSeller
 } from "../utils/supabase/sellers";
@@ -24,7 +26,7 @@ const statusLabels = {
   pausado: "Pausado"
 };
 
-const emptyContactForm = {
+const emptyClientForm = {
   id: "",
   fullName: "",
   phone: "",
@@ -37,22 +39,22 @@ const emptyContactForm = {
   notes: ""
 };
 
-function contactToForm(contact) {
+function clientToForm(client) {
   return {
-    id: contact.id || "",
-    fullName: contact.fullName || "",
-    phone: contact.phone || "",
-    email: contact.email || "",
-    operation: CONTACT_OPERATIONS.includes(contact.operation) ? contact.operation : "alquilar",
-    zone: contact.zone || "",
-    budget: contact.budget || "",
-    rooms: contact.rooms || "",
-    status: CONTACT_STATUSES.includes(contact.status) ? contact.status : "nuevo",
-    notes: contact.notes || ""
+    id: client.id || "",
+    fullName: client.fullName || "",
+    phone: client.phone || "",
+    email: client.email || "",
+    operation: CLIENT_OPERATIONS.includes(client.operation) ? client.operation : "alquilar",
+    zone: client.zone || "",
+    budget: client.budget || "",
+    rooms: client.rooms || "",
+    status: CLIENT_STATUSES.includes(client.status) ? client.status : "nuevo",
+    notes: client.notes || ""
   };
 }
 
-function formatContactDate(value) {
+function formatClientDate(value) {
   if (!value) return "Sin fecha";
   return new Intl.DateTimeFormat("es-AR", {
     day: "2-digit",
@@ -124,18 +126,18 @@ function LoginPanel({ onLogin }) {
 function SellerApp() {
   const [session, setSession] = useState(undefined);
   const [internalProfile, setInternalProfile] = useState(null);
-  const [contacts, setContacts] = useState([]);
-  const [selectedContactId, setSelectedContactId] = useState("");
-  const [form, setForm] = useState(emptyContactForm);
+  const [clients, setClients] = useState([]);
+  const [selectedClientId, setSelectedClientId] = useState("");
+  const [form, setForm] = useState(emptyClientForm);
   const [filters, setFilters] = useState({ operation: "", status: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const selectedContact = useMemo(
-    () => contacts.find((contact) => contact.id === selectedContactId) || null,
-    [contacts, selectedContactId]
+  const selectedClient = useMemo(
+    () => clients.find((client) => client.id === selectedClientId) || null,
+    [clients, selectedClientId]
   );
 
   useEffect(() => {
@@ -156,9 +158,9 @@ function SellerApp() {
   }, []);
 
   useEffect(() => {
-    if (!selectedContact) return;
-    setForm(contactToForm(selectedContact));
-  }, [selectedContact]);
+    if (!selectedClient) return;
+    setForm(clientToForm(selectedClient));
+  }, [selectedClient]);
 
   useEffect(() => {
     let active = true;
@@ -166,7 +168,7 @@ function SellerApp() {
     async function loadProfile() {
       if (!session?.user?.id) {
         setInternalProfile(null);
-        setContacts([]);
+        setClients([]);
         return;
       }
 
@@ -179,7 +181,7 @@ function SellerApp() {
 
         if (!profile) {
           setInternalProfile(null);
-          setContacts([]);
+          setClients([]);
           setError("Tu usuario no esta activo para acceder al portal interno.");
           return;
         }
@@ -199,17 +201,17 @@ function SellerApp() {
     };
   }, [session]);
 
-  const loadContacts = async () => {
+  const loadClients = async () => {
     if (!internalProfile) return;
 
     setIsLoading(true);
     setError("");
 
     try {
-      const data = await fetchSellerContacts(filters);
-      setContacts(data);
-      setSelectedContactId((currentId) =>
-        data.some((contact) => contact.id === currentId) ? currentId : data[0]?.id || ""
+      const data = await fetchClients(filters);
+      setClients(data);
+      setSelectedClientId((currentId) =>
+        data.some((client) => client.id === currentId) ? currentId : data[0]?.id || ""
       );
     } catch (loadError) {
       setError(loadError.message);
@@ -219,7 +221,7 @@ function SellerApp() {
   };
 
   useEffect(() => {
-    loadContacts();
+    loadClients();
   }, [internalProfile, filters.operation, filters.status]);
 
   const updateForm = (field, value) => {
@@ -236,9 +238,9 @@ function SellerApp() {
     }));
   };
 
-  const startNewContact = () => {
-    setSelectedContactId("");
-    setForm(emptyContactForm);
+  const startNewClient = () => {
+    setSelectedClientId("");
+    setForm(emptyClientForm);
     setMessage("");
     setError("");
   };
@@ -256,11 +258,11 @@ function SellerApp() {
     setError("");
 
     try {
-      const savedContact = await saveSellerContact(form, session.user.id);
-      setMessage("Contacto guardado.");
-      await loadContacts();
-      setSelectedContactId(savedContact.id);
-      setForm(contactToForm(savedContact));
+      const savedClient = await saveClient(form, session.user.id);
+      setMessage("Cliente guardado.");
+      await loadClients();
+      setSelectedClientId(savedClient.id);
+      setForm(clientToForm(savedClient));
     } catch (saveError) {
       setError(saveError.message);
     } finally {
@@ -290,7 +292,7 @@ function SellerApp() {
           <h1>Portal de vendedores</h1>
         </div>
         <div className="admin-header-actions">
-          <button type="button" className="map-btn" onClick={loadContacts} disabled={!internalProfile || isLoading}>
+          <button type="button" className="map-btn" onClick={loadClients} disabled={!internalProfile || isLoading}>
             Actualizar
           </button>
           <button type="button" className="map-btn" onClick={signOutSeller}>
@@ -305,8 +307,8 @@ function SellerApp() {
       <section className="seller-layout">
         <aside className="seller-contact-list">
           <div className="admin-sidebar-header">
-            <h2>Contactos</h2>
-            <button type="button" className="wa-btn" onClick={startNewContact}>
+            <h2>Clientes</h2>
+            <button type="button" className="wa-btn" onClick={startNewClient}>
               Nuevo
             </button>
           </div>
@@ -316,7 +318,7 @@ function SellerApp() {
               Operación
               <select value={filters.operation} onChange={(event) => updateFilter("operation", event.target.value)}>
                 <option value="">Todas</option>
-                {CONTACT_OPERATIONS.map((operation) => (
+                {CLIENT_OPERATIONS.map((operation) => (
                   <option value={operation} key={operation}>
                     {operationLabels[operation]}
                   </option>
@@ -327,7 +329,7 @@ function SellerApp() {
               Estado
               <select value={filters.status} onChange={(event) => updateFilter("status", event.target.value)}>
                 <option value="">Todos</option>
-                {CONTACT_STATUSES.map((status) => (
+                {CLIENT_STATUSES.map((status) => (
                   <option value={status} key={status}>
                     {statusLabels[status]}
                   </option>
@@ -336,27 +338,27 @@ function SellerApp() {
             </label>
           </div>
 
-          {isLoading && !contacts.length ? <p className="admin-sidebar-note">Cargando contactos...</p> : null}
+          {isLoading && !clients.length ? <p className="admin-sidebar-note">Cargando clientes...</p> : null}
           <div className="seller-contact-rows">
-            {contacts.map((contact) => (
+            {clients.map((client) => (
               <button
                 type="button"
-                key={contact.id}
-                className={`seller-contact-row ${contact.id === selectedContactId ? "active" : ""}`}
-                onClick={() => setSelectedContactId(contact.id)}
+                key={client.id}
+                className={`seller-contact-row ${client.id === selectedClientId ? "active" : ""}`}
+                onClick={() => setSelectedClientId(client.id)}
               >
-                <span>{contact.fullName}</span>
+                <span>{client.fullName}</span>
                 <small>
-                  {operationLabels[contact.operation] || contact.operation}
-                  <span className={`seller-status-pill seller-status-pill--${contact.status}`}>
-                    {statusLabels[contact.status] || contact.status}
+                  {operationLabels[client.operation] || client.operation}
+                  <span className={`seller-status-pill seller-status-pill--${client.status}`}>
+                    {statusLabels[client.status] || client.status}
                   </span>
                 </small>
-                <small>{contact.zone || "Sin zona"} · {formatContactDate(contact.updatedAt || contact.createdAt)}</small>
+                <small>{client.zone || "Sin zona"} · {formatClientDate(client.updatedAt || client.createdAt)}</small>
               </button>
             ))}
-            {!isLoading && !contacts.length ? (
-              <p className="seller-empty-state">No hay contactos para estos filtros.</p>
+            {!isLoading && !clients.length ? (
+              <p className="seller-empty-state">No hay clientes para estos filtros.</p>
             ) : null}
           </div>
         </aside>
@@ -364,7 +366,7 @@ function SellerApp() {
         <form className="seller-contact-editor" onSubmit={handleSave}>
           <div className="admin-editor-title">
             <div>
-              <p>{form.id ? "Editar contacto" : "Nuevo contacto"}</p>
+              <p>{form.id ? "Editar cliente" : "Nuevo cliente"}</p>
               <h2>{form.fullName || "Sin nombre"}</h2>
             </div>
             {internalProfile ? (
@@ -394,7 +396,7 @@ function SellerApp() {
             <label>
               Operación
               <select value={form.operation} onChange={(event) => updateForm("operation", event.target.value)}>
-                {CONTACT_OPERATIONS.map((operation) => (
+                {CLIENT_OPERATIONS.map((operation) => (
                   <option value={operation} key={operation}>
                     {operationLabels[operation]}
                   </option>
@@ -416,7 +418,7 @@ function SellerApp() {
             <label>
               Estado
               <select value={form.status} onChange={(event) => updateForm("status", event.target.value)}>
-                {CONTACT_STATUSES.map((status) => (
+                {CLIENT_STATUSES.map((status) => (
                   <option value={status} key={status}>
                     {statusLabels[status]}
                   </option>
@@ -431,9 +433,9 @@ function SellerApp() {
 
           <div className="admin-editor-actions">
             <button type="submit" className="wa-btn" disabled={!internalProfile || isSaving}>
-              {isSaving ? "Guardando..." : "Guardar contacto"}
+              {isSaving ? "Guardando..." : "Guardar cliente"}
             </button>
-            <button type="button" className="map-btn" onClick={startNewContact}>
+            <button type="button" className="map-btn" onClick={startNewClient}>
               Limpiar
             </button>
           </div>
