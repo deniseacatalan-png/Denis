@@ -165,10 +165,17 @@ function parseAdminRoute(pathname = window.location.pathname) {
   const section = parts[1] || "";
   const id = parts[2] || "";
   const action = parts[3] || "";
+  const extra = parts[4] || "";
 
   if (!section) return { section: "dashboard", mode: "dashboard", id: "" };
   if (section === "propiedades") {
-    if (id === "nueva") return { section: "properties", mode: "new", id: "" };
+    if (extra) return { section: "not-found", mode: "not-found", id: "" };
+    if (id === "nueva") {
+      return action
+        ? { section: "not-found", mode: "not-found", id: "" }
+        : { section: "properties", mode: "new", id: "" };
+    }
+    if (action && action !== "editar") return { section: "not-found", mode: "not-found", id: "" };
     return { section: "properties", mode: action === "editar" ? "edit" : id ? "view" : "list", id };
   }
   if (section === "clientes") {
@@ -884,19 +891,24 @@ function AdminApp() {
     const routeKey = `${route.mode}:${route.id}`;
 
     if (route.mode === "new") {
-      setSelectedId("");
-      setForm((current) => {
-        if (syncedPropertyRouteRef.current === routeKey) {
-          return current.databaseId || current.displayOrder === properties.length
-            ? current
-            : { ...current, displayOrder: properties.length };
-        }
+      const nextNewForm = {
+        ...emptyPropertyForm,
+        displayOrder: properties.length
+      };
 
+      setSelectedId("");
+
+      if (syncedPropertyRouteRef.current !== routeKey) {
         syncedPropertyRouteRef.current = routeKey;
-        return {
-          ...emptyPropertyForm,
-          displayOrder: properties.length
-        };
+        setForm(nextNewForm);
+        return;
+      }
+
+      setForm((current) => {
+        if (current.databaseId) return nextNewForm;
+        return current.displayOrder === properties.length
+          ? current
+          : { ...current, displayOrder: properties.length };
       });
       return;
     }
@@ -1022,9 +1034,14 @@ function AdminApp() {
 
     try {
       await deleteAdminProperty(form.databaseId);
-      setMessage("Propiedad eliminada.");
-      startNewProperty();
+      setSelectedId("");
+      setForm({
+        ...emptyPropertyForm,
+        displayOrder: Math.max(properties.length - 1, 0)
+      });
       await loadProperties();
+      setMessage("Propiedad eliminada.");
+      navigateAdmin("/admin/propiedades");
     } catch (deleteError) {
       setError(deleteError.message);
     } finally {
@@ -1674,7 +1691,6 @@ function AdminApp() {
     if (!route.id) return renderNotFound("Propiedad no encontrada", "/admin/propiedades");
 
     if (!routedProperty) {
-      if (error) return renderPropertyLoading("No se pudo cargar la propiedad");
       if (!hasLoadedProperties || isLoading) return renderPropertyLoading();
       return renderNotFound("Propiedad no encontrada", "/admin/propiedades");
     }
