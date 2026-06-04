@@ -10,7 +10,7 @@ import {
 
 describe("client supabase helpers", () => {
   it("exposes the supported client operation and status values", () => {
-    assert.deepEqual(CLIENT_OPERATIONS, ["comprar", "alquilar"]);
+    assert.deepEqual(CLIENT_OPERATIONS, ["comprar", "alquilar", "temporada"]);
     assert.deepEqual(CLIENT_STATUSES, ["nuevo", "contactado", "visitando", "cerrado", "pausado"]);
   });
 
@@ -82,6 +82,18 @@ describe("client supabase helpers", () => {
       notes: "Prefiere alquiler permanente",
       updated_by: "seller-1"
     });
+  });
+
+  it("preserves temporada as a supported client operation", () => {
+    const payload = clientToDatabasePayload(
+      {
+        fullName: "Cliente temporada",
+        operation: "temporada"
+      },
+      "seller-1"
+    );
+
+    assert.equal(payload.operation, "temporada");
   });
 
   it("requires a client name before saving", () => {

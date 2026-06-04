@@ -23,7 +23,8 @@ import {
 
 const operationLabels = {
   comprar: "Comprar",
-  alquilar: "Alquilar"
+  alquilar: "Alquilar",
+  temporada: "Temporada"
 };
 
 const statusLabels = {

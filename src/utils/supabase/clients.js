@@ -1,6 +1,6 @@
 import { createClient } from "./client.js";
 
-export const CLIENT_OPERATIONS = ["comprar", "alquilar"];
+export const CLIENT_OPERATIONS = ["comprar", "alquilar", "temporada"];
 export const CLIENT_STATUSES = ["nuevo", "contactado", "visitando", "cerrado", "pausado"];
 
 const CLIENT_SELECT = `
