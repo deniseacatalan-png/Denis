@@ -813,7 +813,10 @@ function PublicApp() {
 }
 
 function App() {
-  const isAdminRoute = window.location.pathname === "/admin" || window.location.hash === "#admin";
+  const isAdminRoute =
+    window.location.pathname === "/admin" ||
+    window.location.pathname.startsWith("/admin/") ||
+    window.location.hash === "#admin";
   const isSellerRoute = window.location.pathname === "/vendedor" || window.location.hash === "#vendedor";
 
   if (isAdminRoute) {
