@@ -44,4 +44,12 @@ describe("design system CSS layers", () => {
     assert.match(crmLayer, /:where\(\.admin-shell,\s*\.seller-shell\)/);
     assert.match(activityLayer, /:where\(\.admin-shell,\s*\.seller-shell\)\s+\.activity-panel/);
   });
+
+  it("keeps public property sliders full-bleed instead of boxed panels", () => {
+    const publicLayer = readFileSync("src/styles/public-design-system.css", "utf8");
+
+    assert.match(publicLayer, /\.page-shell\s+\.properties[\s\S]*width:\s*100vw/);
+    assert.match(publicLayer, /\.page-shell\s+\.property-slider-stack[\s\S]*width:\s*100vw/);
+    assert.match(publicLayer, /\.page-shell\s+\.property-slider-section[\s\S]*box-shadow:\s*none/);
+  });
 });
