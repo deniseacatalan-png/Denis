@@ -2462,6 +2462,19 @@ function AdminApp() {
         </div>
       </header>
 
+      <nav className="admin-navbar" aria-label="Administracion">
+        {adminNavItems.map((item) => (
+          <button
+            type="button"
+            key={item.path}
+            className={route.section === item.match ? "active" : ""}
+            onClick={() => navigateAdmin(item.path)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
+
       {renderAdminContent()}
     </main>
   );

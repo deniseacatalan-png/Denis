@@ -1402,9 +1402,12 @@ body {
 }
 
 .admin-header,
+.admin-navbar,
 .admin-layout,
 .admin-sidebar,
 .admin-editor,
+.admin-panel,
+.admin-metric-card,
 .admin-sellers-panel,
 .seller-layout,
 .seller-contact-list,
@@ -1417,6 +1420,12 @@ body {
     0 14px 34px rgba(19, 12, 18, 0.24);
 }
 
+.admin-navbar,
+.admin-panel,
+.admin-metric-card {
+  border-radius: 8px;
+}
+
 .admin-header {
   display: flex;
   align-items: center;
@@ -1424,6 +1433,46 @@ body {
   gap: 1rem;
   padding: 1rem;
   margin-bottom: 1rem;
+}
+
+.admin-navbar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.55rem;
+}
+
+.admin-navbar button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0.62rem 0.9rem;
+  color: var(--text-soft);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-navbar button:hover,
+.admin-navbar button:focus-visible {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  outline: none;
+}
+
+.admin-navbar button:focus-visible {
+  box-shadow: 0 0 0 3px rgba(198, 167, 105, 0.24);
+}
+
+.admin-navbar button.active {
+  color: #1e1a1f;
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .admin-header p,
@@ -1462,6 +1511,138 @@ body {
   margin-bottom: 0.8rem;
 }
 
+.admin-crm-dashboard,
+.admin-panel {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.admin-dashboard-alerts {
+  display: grid;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.admin-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.admin-metric-card,
+.admin-panel {
+  padding: 1rem;
+}
+
+.admin-metric-card {
+  min-width: 0;
+}
+
+.admin-metric-card span,
+.admin-detail-grid span {
+  display: block;
+  color: #ffeec9;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.admin-metric-card strong {
+  display: block;
+  margin-top: 0.35rem;
+  color: #fff;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  line-height: 1;
+}
+
+.admin-crm-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 1rem;
+}
+
+.admin-section-header,
+.admin-quick-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.admin-section-header {
+  justify-content: space-between;
+}
+
+.admin-section-header h2,
+.admin-panel h2 {
+  margin: 0;
+  color: #fff;
+}
+
+.admin-quick-actions .wa-btn {
+  flex: 1 1 160px;
+}
+
+.admin-table-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.admin-table-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  padding: 0.85rem;
+  color: #1e1a1f;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.admin-table-row > div:first-child {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.admin-table-row > div:first-child strong,
+.admin-table-row > div:first-child span,
+.admin-table-row > div:first-child small {
+  overflow-wrap: anywhere;
+}
+
+.admin-table-row > div:first-child span,
+.admin-table-row > div:first-child small {
+  color: #5b4c55;
+}
+
+.admin-table-row .admin-header-actions {
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.admin-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-detail-grid > div {
+  min-width: 0;
+  border-radius: 8px;
+  padding: 0.85rem;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.admin-detail-grid strong,
+.admin-detail-copy {
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+
 .admin-property-list {
   display: flex;
   flex-direction: column;
@@ -1474,7 +1655,7 @@ body {
 .admin-sellers-panel {
   display: grid;
   gap: 1rem;
-  margin-top: 1rem;
+  margin-top: 0;
   padding: 1rem;
 }
 
@@ -2165,6 +2346,20 @@ body {
     grid-template-columns: 1fr;
   }
 
+  .admin-crm-grid,
+  .admin-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-table-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .admin-table-row .admin-header-actions {
+    justify-content: flex-start;
+  }
+
   .admin-property-list {
     max-height: 320px;
   }
@@ -2192,6 +2387,22 @@ body {
 
   .admin-seller-row {
     grid-template-columns: 1fr;
+  }
+
+  .admin-navbar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-navbar button {
+    width: 100%;
+    white-space: normal;
+  }
+
+  .admin-table-row .admin-header-actions .map-btn,
+  .admin-table-row .admin-header-actions .wa-btn {
+    flex: 1 1 120px;
+    text-align: center;
   }
 }
 
