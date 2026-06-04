@@ -1,8 +1,6 @@
 import { createClient } from "./client.js";
 
 export const SELLER_EMAIL_DOMAIN = "vendedor.denise-catalan.local";
-export const CONTACT_OPERATIONS = ["comprar", "alquilar"];
-export const CONTACT_STATUSES = ["nuevo", "contactado", "visitando", "cerrado", "pausado"];
 
 const SELLER_PROFILE_SELECT = `
   id,
@@ -15,29 +13,8 @@ const SELLER_PROFILE_SELECT = `
   updated_at
 `;
 
-const SELLER_CONTACT_SELECT = `
-  id,
-  created_by,
-  updated_by,
-  full_name,
-  phone,
-  email,
-  operation,
-  zone,
-  budget,
-  rooms,
-  status,
-  notes,
-  created_at,
-  updated_at
-`;
-
 function normalizeUsername(value) {
   return String(value || "").trim().toLowerCase();
-}
-
-function textValue(value) {
-  return String(value || "").trim();
 }
 
 export function usernameToSellerEmail(username) {
@@ -55,49 +32,6 @@ export function normalizeSellerProfile(row) {
     createdBy: row.created_by || "",
     createdAt: row.created_at || "",
     updatedAt: row.updated_at || ""
-  };
-}
-
-export function normalizeSellerContact(row) {
-  return {
-    id: row.id,
-    createdBy: row.created_by || "",
-    updatedBy: row.updated_by || "",
-    fullName: row.full_name || "",
-    phone: row.phone || "",
-    email: row.email || "",
-    operation: row.operation || "alquilar",
-    zone: row.zone || "",
-    budget: row.budget || "",
-    rooms: row.rooms || "",
-    status: row.status || "nuevo",
-    notes: row.notes || "",
-    createdAt: row.created_at || "",
-    updatedAt: row.updated_at || ""
-  };
-}
-
-export function sellerContactToDatabasePayload(values, userId) {
-  const fullName = textValue(values.fullName);
-
-  if (!fullName) {
-    throw new Error("El nombre del contacto es obligatorio.");
-  }
-
-  const operation = CONTACT_OPERATIONS.includes(values.operation) ? values.operation : "alquilar";
-  const status = CONTACT_STATUSES.includes(values.status) ? values.status : "nuevo";
-
-  return {
-    full_name: fullName,
-    phone: textValue(values.phone),
-    email: textValue(values.email).toLowerCase(),
-    operation,
-    zone: textValue(values.zone),
-    budget: textValue(values.budget),
-    rooms: textValue(values.rooms),
-    status,
-    notes: textValue(values.notes),
-    updated_by: userId
   };
 }
 
@@ -169,56 +103,6 @@ export async function fetchSellerProfiles() {
 
   if (error) throw error;
   return (data || []).map(normalizeSellerProfile);
-}
-
-export async function fetchSellerContacts(filters = {}) {
-  const supabase = createClient();
-  let query = supabase
-    .from("seller_contacts")
-    .select(SELLER_CONTACT_SELECT)
-    .order("updated_at", { ascending: false })
-    .order("created_at", { ascending: false });
-
-  if (CONTACT_OPERATIONS.includes(filters.operation)) {
-    query = query.eq("operation", filters.operation);
-  }
-
-  if (CONTACT_STATUSES.includes(filters.status)) {
-    query = query.eq("status", filters.status);
-  }
-
-  const { data, error } = await query;
-  if (error) throw error;
-  return (data || []).map(normalizeSellerContact);
-}
-
-export async function saveSellerContact(values, userId) {
-  const supabase = createClient();
-  const payload = sellerContactToDatabasePayload(values, userId);
-
-  if (values.id) {
-    const { data, error } = await supabase
-      .from("seller_contacts")
-      .update(payload)
-      .eq("id", values.id)
-      .select(SELLER_CONTACT_SELECT)
-      .single();
-
-    if (error) throw error;
-    return normalizeSellerContact(data);
-  }
-
-  const { data, error } = await supabase
-    .from("seller_contacts")
-    .insert({
-      ...payload,
-      created_by: userId
-    })
-    .select(SELLER_CONTACT_SELECT)
-    .single();
-
-  if (error) throw error;
-  return normalizeSellerContact(data);
 }
 
 export async function createSellerFromAdmin({ accessToken, seller }) {
