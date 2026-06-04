@@ -22,6 +22,7 @@ drop policy if exists "Internal users can update clients" on public.clients;
 alter table public.clients enable row level security;
 
 revoke all on public.clients from anon;
+revoke all on public.clients from authenticated;
 grant select, insert, update on public.clients to authenticated;
 
 create policy "Internal users can read clients"
