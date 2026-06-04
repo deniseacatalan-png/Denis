@@ -99,6 +99,19 @@ function clientToForm(client) {
   };
 }
 
+function sellerToForm(seller) {
+  return {
+    username: seller.username || "",
+    fullName: seller.fullName || "",
+    password: "",
+    isActive: Boolean(seller.isActive)
+  };
+}
+
+function countClientsForSeller(clients, sellerId) {
+  return clients.filter((client) => client.createdBy === sellerId).length;
+}
+
 function formatAdminDate(value) {
   if (!value) return "Sin fecha";
   return new Intl.DateTimeFormat("es-AR", {
@@ -213,7 +226,13 @@ function parseAdminRoute(pathname = window.location.pathname) {
     return { section: "clients", mode: action === "editar" ? "edit" : id ? "view" : "list", id };
   }
   if (section === "vendedores") {
-    if (id === "nuevo") return { section: "sellers", mode: "new", id: "" };
+    if (extra) return { section: "not-found", mode: "not-found", id: "" };
+    if (id === "nuevo") {
+      return action
+        ? { section: "not-found", mode: "not-found", id: "" }
+        : { section: "sellers", mode: "new", id: "" };
+    }
+    if (action && action !== "editar") return { section: "not-found", mode: "not-found", id: "" };
     return { section: "sellers", mode: action === "editar" ? "edit" : id ? "view" : "list", id };
   }
 
@@ -776,9 +795,11 @@ function AdminApp() {
   const [sellerError, setSellerError] = useState("");
   const [hasLoadedProperties, setHasLoadedProperties] = useState(false);
   const [hasLoadedAllClients, setHasLoadedAllClients] = useState(false);
+  const [hasLoadedSellers, setHasLoadedSellers] = useState(false);
   const [route, setRoute] = useState(() => parseAdminRoute());
   const syncedPropertyRouteRef = useRef("");
   const syncedClientRouteRef = useRef("");
+  const syncedSellerRouteRef = useRef("");
 
   const selectedProperty = useMemo(
     () => properties.find((property) => property.id === selectedId) || null,
@@ -789,6 +810,11 @@ function AdminApp() {
 
     return properties.find((property) => property.id === route.id || property.databaseId === route.id) || null;
   }, [properties, route.id, route.section]);
+  const routedSeller = useMemo(() => {
+    if (route.section !== "sellers" || !route.id) return null;
+
+    return sellers.find((seller) => seller.id === route.id) || null;
+  }, [route.id, route.section, sellers]);
 
   useEffect(() => {
     const handlePopState = () => setRoute(parseAdminRoute());
@@ -844,14 +870,23 @@ function AdminApp() {
   };
 
   const loadSellers = async () => {
-    if (!session) return;
+    if (!session) {
+      setSellers([]);
+      setHasLoadedSellers(false);
+      return { ok: true };
+    }
+    setHasLoadedSellers(false);
     setSellerError("");
 
     try {
       const data = await fetchSellerProfiles();
       setSellers(data);
+      return { ok: true };
     } catch (loadError) {
       setSellerError(loadError.message);
+      return { ok: false, message: loadError.message };
+    } finally {
+      setHasLoadedSellers(true);
     }
   };
 
@@ -1029,6 +1064,39 @@ function AdminApp() {
       syncedClientRouteRef.current = routeKey;
     }
   }, [route.section, route.mode, route.id, allClients]);
+
+  useEffect(() => {
+    if (route.section !== "sellers") {
+      syncedSellerRouteRef.current = "";
+      return;
+    }
+
+    const routeKey = `${route.mode}:${route.id}`;
+
+    if (route.mode === "new") {
+      if (syncedSellerRouteRef.current !== routeKey) {
+        syncedSellerRouteRef.current = routeKey;
+        setSellerForm({ ...emptySellerForm });
+        setSellerMessage("");
+        setSellerError("");
+      }
+      return;
+    }
+
+    if (route.mode === "edit") {
+      if (routedSeller && syncedSellerRouteRef.current !== routeKey) {
+        syncedSellerRouteRef.current = routeKey;
+        setSellerForm(sellerToForm(routedSeller));
+        setSellerMessage("");
+        setSellerError("");
+      }
+      return;
+    }
+
+    if (route.mode === "list" || route.mode === "view") {
+      syncedSellerRouteRef.current = routeKey;
+    }
+  }, [route.section, route.mode, route.id, routedSeller]);
 
   const handleCreateProperty = () => {
     setClientMessage("");
@@ -1275,18 +1343,35 @@ function AdminApp() {
       return;
     }
 
+    if (route.section === "sellers" && route.mode === "new" && !sellerForm.password.trim()) {
+      setSellerError("La contraseña es obligatoria para crear un vendedor.");
+      return;
+    }
+
     setIsSavingSeller(true);
     setSellerMessage("");
     setSellerError("");
 
     try {
-      await createSellerFromAdmin({
+      const savedSeller = await createSellerFromAdmin({
         accessToken: session.access_token,
         seller: sellerForm
       });
+      setSellers((currentSellers) => {
+        const existingIndex = currentSellers.findIndex((seller) => seller.id === savedSeller.id);
+        if (existingIndex < 0) return [savedSeller, ...currentSellers];
+
+        const nextSellers = [...currentSellers];
+        nextSellers[existingIndex] = savedSeller;
+        return nextSellers;
+      });
       setSellerMessage("Vendedor guardado.");
-      setSellerForm(emptySellerForm);
-      await loadSellers();
+      setSellerForm({ ...emptySellerForm });
+      const refreshResult = await loadSellers();
+      if (refreshResult && !refreshResult.ok) {
+        setSellerError(`Vendedor guardado, pero no pude actualizar la lista: ${refreshResult.message}`);
+      }
+      navigateAdmin(`/admin/vendedores/${savedSeller.id}`);
     } catch (saveError) {
       setSellerError(saveError.message);
     } finally {
@@ -1305,13 +1390,19 @@ function AdminApp() {
     setSellerError("");
 
     try {
-      await setSellerActiveFromAdmin({
+      const savedSeller = await setSellerActiveFromAdmin({
         accessToken: session.access_token,
         sellerId: seller.id,
         isActive
       });
+      setSellers((currentSellers) =>
+        currentSellers.map((currentSeller) => (currentSeller.id === savedSeller.id ? savedSeller : currentSeller))
+      );
       setSellerMessage(isActive ? "Vendedor activado." : "Vendedor desactivado.");
-      await loadSellers();
+      const refreshResult = await loadSellers();
+      if (refreshResult && !refreshResult.ok) {
+        setSellerError(`Vendedor actualizado, pero no pude actualizar la lista: ${refreshResult.message}`);
+      }
     } catch (saveError) {
       setSellerError(saveError.message);
     } finally {
@@ -1967,123 +2058,51 @@ function AdminApp() {
     </form>
   );
 
-  const renderLegacyPropertySidebar = () => (
-    <aside className="admin-sidebar">
-      <div className="admin-sidebar-header">
-        <h2>Propiedades</h2>
-        <button type="button" className="wa-btn" onClick={startNewProperty}>
-          Nueva
-        </button>
-      </div>
-      {isSavingOrder ? <p className="admin-sidebar-note">Guardando orden...</p> : null}
-      {isLoading && !properties.length ? <p>Cargando...</p> : null}
-      <div className="admin-property-list">
-        {properties.map((property) => (
-          <button
-            type="button"
-            key={property.id}
-            draggable
-            className={[
-              "admin-property-row",
-              property.id === selectedId ? "active" : "",
-              property.id === draggingPropertyId ? "is-dragging" : "",
-              property.id === dropTargetPropertyId ? "is-drop-target" : ""
-            ]
-              .filter(Boolean)
-              .join(" ")}
-            onClick={() => setSelectedId(property.id)}
-            onDragStart={(event) => handlePropertyDragStart(event, property.id)}
-            onDragOver={(event) => handlePropertyDragOver(event, property.id)}
-            onDrop={(event) => handlePropertyDrop(event, property.id)}
-            onDragLeave={() => {
-              setDropTargetPropertyId((currentId) => (currentId === property.id ? "" : currentId));
-            }}
-            onDragEnd={handlePropertyDragEnd}
-            aria-label={`Ordenar ${property.title}`}
-          >
-            <span className="admin-property-drag-handle" aria-hidden="true">::</span>
-            <span>{property.title}</span>
-            <small>
-              {CATEGORY_META[property.category]?.label || property.category}
-              <span className={`admin-publish-chip ${property.isPublished ? "is-published" : "is-hidden"}`}>
-                {property.isPublished ? "Publicada" : "Oculta"}
-              </span>
-            </small>
-          </button>
-        ))}
-      </div>
-    </aside>
-  );
-
-  const renderSellersPanel = () => (
+  const renderSellersList = () => (
     <section className="admin-sellers-panel" aria-labelledby="admin-sellers-title">
       <div className="admin-sellers-header">
         <div>
           <p>Acceso interno</p>
           <h2 id="admin-sellers-title">Vendedores</h2>
         </div>
-        <button type="button" className="map-btn" onClick={loadSellers} disabled={isSavingSeller}>
-          Actualizar
+        <button type="button" className="wa-btn" onClick={handleCreateSeller}>
+          Nuevo
         </button>
       </div>
 
       {sellerMessage ? <p className="admin-success">{sellerMessage}</p> : null}
       {sellerError ? <p className="admin-error">{sellerError}</p> : null}
+      {isSavingSeller ? <p className="admin-sidebar-note">Guardando vendedor...</p> : null}
 
-      <div className="admin-sellers-layout">
-        <form className="admin-seller-form" onSubmit={handleSellerSave}>
-          <div className="admin-grid">
-            <label>
-              Usuario
-              <input
-                value={sellerForm.username}
-                onChange={(event) => updateSellerField("username", event.target.value)}
-                autoComplete="off"
-                required
-              />
-            </label>
-            <label>
-              Nombre
-              <input
-                value={sellerForm.fullName}
-                onChange={(event) => updateSellerField("fullName", event.target.value)}
-                autoComplete="off"
-              />
-            </label>
-            <label>
-              Contraseña
-              <input
-                type="password"
-                value={sellerForm.password}
-                onChange={(event) => updateSellerField("password", event.target.value)}
-                minLength={8}
-                required
-              />
-            </label>
-            <label className="admin-toggle admin-seller-toggle">
-              <input
-                type="checkbox"
-                checked={sellerForm.isActive}
-                onChange={(event) => updateSellerField("isActive", event.target.checked)}
-              />
-              Activo
-            </label>
-          </div>
-          <div className="admin-editor-actions">
-            <button type="submit" className="wa-btn" disabled={isSavingSeller}>
-              {isSavingSeller ? "Guardando..." : "Guardar vendedor"}
-            </button>
-          </div>
-        </form>
-
-        <div className="admin-seller-list">
-          {sellers.map((seller) => (
-            <article className="admin-seller-row" key={seller.id}>
-              <div>
-                <strong>{seller.fullName || seller.username}</strong>
-                <span>{seller.username}</span>
-                <small>{seller.email}</small>
-              </div>
+      <div className="admin-table-list">
+        {sellers.map((seller) => (
+          <div className="admin-table-row" key={seller.id}>
+            <div>
+              <strong>{seller.fullName || seller.username || "Sin nombre"}</strong>
+              <span>{seller.username || "Sin usuario"}</span>
+              <small>{seller.email || "Sin email"}</small>
+            </div>
+            <span className={`admin-publish-chip ${seller.isActive ? "is-published" : "is-hidden"}`}>
+              {seller.isActive ? "Activo" : "Inactivo"}
+            </span>
+            <div className="admin-header-actions">
+              <button
+                type="button"
+                className="map-btn"
+                onClick={() => navigateAdmin(`/admin/vendedores/${seller.id}`)}
+              >
+                Ver
+              </button>
+              <button
+                type="button"
+                className="map-btn"
+                onClick={() => {
+                  setSellerForm(sellerToForm(seller));
+                  navigateAdmin(`/admin/vendedores/${seller.id}/editar`);
+                }}
+              >
+                Editar
+              </button>
               <button
                 type="button"
                 className={`map-btn ${seller.isActive ? "admin-danger" : ""}`}
@@ -2092,23 +2111,201 @@ function AdminApp() {
               >
                 {seller.isActive ? "Desactivar" : "Activar"}
               </button>
-            </article>
-          ))}
-          {!sellers.length ? <p className="seller-empty-state">No hay vendedores cargados.</p> : null}
-        </div>
+            </div>
+          </div>
+        ))}
+        {!hasLoadedSellers && !sellerError ? <p className="seller-empty-state">Cargando...</p> : null}
+        {!sellers.length && hasLoadedSellers && !sellerError ? (
+          <p className="seller-empty-state">No hay vendedores cargados.</p>
+        ) : null}
       </div>
     </section>
   );
 
-  const renderInterimAdminSection = () => (
-    <>
-      <section className="admin-layout">
-        {renderLegacyPropertySidebar()}
-        {renderPropertyEditor({ showBackButton: false })}
+  const renderSellerView = (seller) => {
+    const sellerClientCount = countClientsForSeller(allClients, seller.id);
+
+    return (
+      <section className="admin-editor" aria-labelledby="admin-seller-view-title">
+        <div className="admin-editor-title">
+          <div>
+            <p>{seller.isActive ? "Activo" : "Inactivo"}</p>
+            <h2 id="admin-seller-view-title">{seller.fullName || seller.username || "Sin nombre"}</h2>
+          </div>
+          <div className="admin-header-actions">
+            <button type="button" className="map-btn" onClick={() => navigateAdmin("/admin/vendedores")}>
+              Volver
+            </button>
+            <button
+              type="button"
+              className="wa-btn"
+              onClick={() => {
+                setSellerForm(sellerToForm(seller));
+                navigateAdmin(`/admin/vendedores/${seller.id}/editar`);
+              }}
+            >
+              Editar
+            </button>
+            <button
+              type="button"
+              className={`map-btn ${seller.isActive ? "admin-danger" : ""}`}
+              onClick={() => handleSellerActiveChange(seller, !seller.isActive)}
+              disabled={isSavingSeller}
+            >
+              {seller.isActive ? "Desactivar" : "Activar"}
+            </button>
+          </div>
+        </div>
+
+        {sellerMessage ? <p className="admin-success">{sellerMessage}</p> : null}
+        {sellerError ? <p className="admin-error">{sellerError}</p> : null}
+
+        <div className="admin-grid">
+          <label>
+            Usuario
+            <input readOnly value={seller.username || "Sin usuario"} />
+          </label>
+          <label>
+            Nombre
+            <input readOnly value={seller.fullName || "Sin nombre"} />
+          </label>
+          <label>
+            Email
+            <input readOnly value={seller.email || "Sin email"} />
+          </label>
+          <label>
+            Estado
+            <input readOnly value={seller.isActive ? "Activo" : "Inactivo"} />
+          </label>
+          <label>
+            Clientes creados
+            <input readOnly value={String(sellerClientCount)} />
+          </label>
+          <label>
+            Creado
+            <input readOnly value={formatAdminDate(seller.createdAt)} />
+          </label>
+          <label>
+            Actualizado
+            <input readOnly value={formatAdminDate(seller.updatedAt)} />
+          </label>
+        </div>
       </section>
-      {renderSellersPanel()}
-    </>
+    );
+  };
+
+  const renderSellerEditor = ({ isEdit = false } = {}) => (
+    <form className="admin-editor" onSubmit={handleSellerSave}>
+      <div className="admin-editor-title">
+        <div>
+          <p>{isEdit ? "Editar vendedor" : "Nuevo vendedor"}</p>
+          <h2>{sellerForm.fullName || sellerForm.username || "Sin nombre"}</h2>
+        </div>
+        <div className="admin-header-actions">
+          <button type="button" className="map-btn" onClick={() => navigateAdmin("/admin/vendedores")}>
+            Volver
+          </button>
+        </div>
+      </div>
+
+      {sellerMessage ? <p className="admin-success">{sellerMessage}</p> : null}
+      {sellerError ? <p className="admin-error">{sellerError}</p> : null}
+
+      <div className="admin-grid">
+        <label>
+          Usuario
+          <input
+            value={sellerForm.username}
+            onChange={(event) => updateSellerField("username", event.target.value)}
+            autoComplete="off"
+            required
+          />
+        </label>
+        <label>
+          Nombre
+          <input
+            value={sellerForm.fullName}
+            onChange={(event) => updateSellerField("fullName", event.target.value)}
+            autoComplete="off"
+          />
+        </label>
+        <label>
+          Contraseña
+          <input
+            type="password"
+            value={sellerForm.password}
+            onChange={(event) => updateSellerField("password", event.target.value)}
+            autoComplete="new-password"
+            minLength={8}
+            placeholder={isEdit ? "Opcional al editar" : ""}
+            required={!isEdit}
+          />
+        </label>
+        <label className="admin-toggle admin-seller-toggle">
+          <input
+            type="checkbox"
+            checked={sellerForm.isActive}
+            onChange={(event) => updateSellerField("isActive", event.target.checked)}
+          />
+          Activo
+        </label>
+      </div>
+
+      <div className="admin-editor-actions">
+        <button type="submit" className="wa-btn" disabled={isSavingSeller}>
+          {isSavingSeller ? "Guardando..." : "Guardar vendedor"}
+        </button>
+        <button type="button" className="map-btn" onClick={() => navigateAdmin("/admin/vendedores")}>
+          Volver
+        </button>
+      </div>
+    </form>
   );
+
+  const renderSellerNotFound = () => (
+    <section className="admin-panel">
+      <h2>Vendedor no encontrado</h2>
+      <p className="seller-empty-state">No encontramos ese vendedor.</p>
+      <button type="button" className="wa-btn" onClick={() => navigateAdmin("/admin/vendedores")}>
+        Volver a vendedores
+      </button>
+    </section>
+  );
+
+  const renderSellerLoading = (title = "Cargando vendedor...") => (
+    <section className="admin-panel">
+      <h2>{sellerError && title === "Cargando vendedor..." ? "No pude cargar el vendedor" : title}</h2>
+      {sellerError ? <p className="admin-error">{sellerError}</p> : <p className="seller-empty-state">Cargando...</p>}
+    </section>
+  );
+
+  const renderSellersSection = () => {
+    if (route.mode === "list") return renderSellersList();
+
+    if (route.mode === "new") {
+      if (syncedSellerRouteRef.current !== "new:") return renderSellerLoading("Preparando editor...");
+      return renderSellerEditor();
+    }
+
+    if (!route.id) return renderSellerNotFound();
+
+    if (!routedSeller) {
+      if (!hasLoadedSellers) return renderSellerLoading();
+      if (sellerError) return renderSellerLoading();
+      return renderSellerNotFound();
+    }
+
+    if (route.mode === "view") return renderSellerView(routedSeller);
+
+    if (route.mode === "edit") {
+      if (syncedSellerRouteRef.current !== `${route.mode}:${route.id}`) {
+        return renderSellerLoading("Preparando editor...");
+      }
+      return renderSellerEditor({ isEdit: true });
+    }
+
+    return renderSellerNotFound();
+  };
 
   const renderPropertiesSection = () => {
     if (route.mode === "list") return renderPropertiesList();
@@ -2203,7 +2400,7 @@ function AdminApp() {
 
     if (route.section === "clients") return renderClientsSection();
 
-    if (route.section === "sellers") return renderInterimAdminSection();
+    if (route.section === "sellers") return renderSellersSection();
 
     return <AdminNotFound navigateAdmin={navigateAdmin} />;
   };
