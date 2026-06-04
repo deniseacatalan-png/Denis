@@ -203,7 +203,13 @@ function parseAdminRoute(pathname = window.location.pathname) {
     return { section: "properties", mode: action === "editar" ? "edit" : id ? "view" : "list", id };
   }
   if (section === "clientes") {
-    if (id === "nuevo") return { section: "clients", mode: "new", id: "" };
+    if (extra) return { section: "not-found", mode: "not-found", id: "" };
+    if (id === "nuevo") {
+      return action
+        ? { section: "not-found", mode: "not-found", id: "" }
+        : { section: "clients", mode: "new", id: "" };
+    }
+    if (action && action !== "editar") return { section: "not-found", mode: "not-found", id: "" };
     return { section: "clients", mode: action === "editar" ? "edit" : id ? "view" : "list", id };
   }
   if (section === "vendedores") {
@@ -747,6 +753,7 @@ function AdminApp() {
   const [session, setSession] = useState(undefined);
   const [properties, setProperties] = useState([]);
   const [clients, setClients] = useState([]);
+  const [allClients, setAllClients] = useState([]);
   const [sellers, setSellers] = useState([]);
   const [selectedId, setSelectedId] = useState("");
   const [form, setForm] = useState(emptyPropertyForm);
@@ -768,6 +775,7 @@ function AdminApp() {
   const [sellerMessage, setSellerMessage] = useState("");
   const [sellerError, setSellerError] = useState("");
   const [hasLoadedProperties, setHasLoadedProperties] = useState(false);
+  const [hasLoadedAllClients, setHasLoadedAllClients] = useState(false);
   const [route, setRoute] = useState(() => parseAdminRoute());
   const syncedPropertyRouteRef = useRef("");
   const syncedClientRouteRef = useRef("");
@@ -848,7 +856,10 @@ function AdminApp() {
   };
 
   const loadClients = async () => {
-    if (!session) return;
+    if (!session) {
+      setClients([]);
+      return;
+    }
     setClientError("");
 
     try {
@@ -859,9 +870,29 @@ function AdminApp() {
     }
   };
 
+  const loadAllClients = async () => {
+    if (!session) {
+      setAllClients([]);
+      setHasLoadedAllClients(false);
+      return;
+    }
+    setHasLoadedAllClients(false);
+    setClientError("");
+
+    try {
+      const data = await fetchClients();
+      setAllClients(data);
+    } catch (loadError) {
+      setClientError(loadError.message);
+    } finally {
+      setHasLoadedAllClients(true);
+    }
+  };
+
   useEffect(() => {
     loadProperties();
     loadSellers();
+    loadAllClients();
   }, [session]);
 
   useEffect(() => {
@@ -980,7 +1011,7 @@ function AdminApp() {
     }
 
     if (route.mode === "edit") {
-      const client = clients.find((item) => item.id === route.id);
+      const client = allClients.find((item) => item.id === route.id);
       if (client && syncedClientRouteRef.current !== routeKey) {
         syncedClientRouteRef.current = routeKey;
         setClientForm(clientToForm(client));
@@ -993,7 +1024,7 @@ function AdminApp() {
     if (route.mode === "list" || route.mode === "view") {
       syncedClientRouteRef.current = routeKey;
     }
-  }, [route.section, route.mode, route.id, clients]);
+  }, [route.section, route.mode, route.id, allClients]);
 
   const handleCreateProperty = () => {
     setClientMessage("");
@@ -1103,8 +1134,16 @@ function AdminApp() {
 
     try {
       const savedClient = await saveClient(clientForm, session.user.id);
+      setAllClients((currentClients) => {
+        const existingIndex = currentClients.findIndex((client) => client.id === savedClient.id);
+        if (existingIndex < 0) return [savedClient, ...currentClients];
+
+        const nextClients = [...currentClients];
+        nextClients[existingIndex] = savedClient;
+        return nextClients;
+      });
       setClientMessage("Cliente guardado.");
-      await loadClients();
+      await Promise.all([loadAllClients(), loadClients()]);
       navigateAdmin(`/admin/clientes/${savedClient.id}`);
     } catch (saveError) {
       setClientError(saveError.message);
@@ -2082,6 +2121,13 @@ function AdminApp() {
     </section>
   );
 
+  const renderClientLoading = () => (
+    <section className="admin-panel">
+      <h2>Cargando cliente...</h2>
+      {clientError ? <p className="admin-error">{clientError}</p> : <p className="seller-empty-state">Cargando...</p>}
+    </section>
+  );
+
   const renderClientsSection = () => {
     if (route.mode === "list") return renderClientsList();
 
@@ -2089,8 +2135,11 @@ function AdminApp() {
 
     if (!route.id) return renderClientNotFound();
 
-    const routedClient = clients.find((client) => client.id === route.id);
-    if (!routedClient) return renderClientNotFound();
+    const routedClient = allClients.find((client) => client.id === route.id);
+    if (!routedClient) {
+      if (!hasLoadedAllClients) return renderClientLoading();
+      return renderClientNotFound();
+    }
 
     if (route.mode === "view") return renderClientView(routedClient);
 
@@ -2108,7 +2157,7 @@ function AdminApp() {
           <AdminDashboardAlerts messages={[error, sellerError, clientError]} />
           <AdminDashboard
             properties={properties}
-            clients={clients}
+            clients={allClients}
             sellers={sellers}
             onCreateProperty={handleCreateProperty}
             onCreateClient={handleCreateClient}
