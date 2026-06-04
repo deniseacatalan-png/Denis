@@ -5,6 +5,10 @@
       "destination": "/"
     },
     {
+      "source": "/admin/:path*",
+      "destination": "/"
+    },
+    {
       "source": "/vendedor",
       "destination": "/"
     }
