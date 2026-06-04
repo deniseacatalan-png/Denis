@@ -735,12 +735,19 @@ function AdminApp() {
   const [clientError, setClientError] = useState("");
   const [sellerMessage, setSellerMessage] = useState("");
   const [sellerError, setSellerError] = useState("");
+  const [hasLoadedProperties, setHasLoadedProperties] = useState(false);
   const [route, setRoute] = useState(() => parseAdminRoute());
+  const syncedPropertyRouteRef = useRef("");
 
   const selectedProperty = useMemo(
     () => properties.find((property) => property.id === selectedId) || null,
     [properties, selectedId]
   );
+  const routedProperty = useMemo(() => {
+    if (route.section !== "properties" || !route.id) return null;
+
+    return properties.find((property) => property.id === route.id || property.databaseId === route.id) || null;
+  }, [properties, route.id, route.section]);
 
   useEffect(() => {
     const handlePopState = () => setRoute(parseAdminRoute());
@@ -771,9 +778,9 @@ function AdminApp() {
   }, []);
 
   useEffect(() => {
-    if (!selectedProperty) return;
+    if (route.section === "properties" || !selectedProperty) return;
     setForm(propertyToForm(selectedProperty));
-  }, [selectedProperty]);
+  }, [route.section, selectedProperty]);
 
   const loadProperties = async () => {
     if (!session) return;
@@ -783,10 +790,14 @@ function AdminApp() {
     try {
       const data = await fetchAdminProperties();
       setProperties(data);
-      setSelectedId((currentId) => currentId || data[0]?.id || "");
+      setSelectedId((currentId) => {
+        if (route.section === "properties") return currentId;
+        return currentId || data[0]?.id || "";
+      });
     } catch (loadError) {
       setError(loadError.message);
     } finally {
+      setHasLoadedProperties(true);
       setIsLoading(false);
     }
   };
@@ -863,6 +874,47 @@ function AdminApp() {
     setMessage("");
     setError("");
   };
+
+  useEffect(() => {
+    if (route.section !== "properties") {
+      syncedPropertyRouteRef.current = "";
+      return;
+    }
+
+    const routeKey = `${route.mode}:${route.id}`;
+
+    if (route.mode === "new") {
+      setSelectedId("");
+      setForm((current) => {
+        if (syncedPropertyRouteRef.current === routeKey) {
+          return current.databaseId || current.displayOrder === properties.length
+            ? current
+            : { ...current, displayOrder: properties.length };
+        }
+
+        syncedPropertyRouteRef.current = routeKey;
+        return {
+          ...emptyPropertyForm,
+          displayOrder: properties.length
+        };
+      });
+      return;
+    }
+
+    if (route.mode === "edit" && routedProperty) {
+      setSelectedId(routedProperty.id);
+
+      if (syncedPropertyRouteRef.current !== routeKey) {
+        setForm(propertyToForm(routedProperty));
+        syncedPropertyRouteRef.current = routeKey;
+      }
+      return;
+    }
+
+    if (route.mode === "list" || route.mode === "view") {
+      syncedPropertyRouteRef.current = routeKey;
+    }
+  }, [properties.length, route.id, route.mode, route.section, routedProperty]);
 
   const handleCreateProperty = () => {
     setClientMessage("");
@@ -951,6 +1003,7 @@ function AdminApp() {
       setMessage("Propiedad guardada.");
       await loadProperties();
       setSelectedId(propertyId);
+      navigateAdmin(`/admin/propiedades/${propertyId}`);
     } catch (saveError) {
       setError(saveError.message);
     } finally {
@@ -1101,6 +1154,568 @@ function AdminApp() {
     }
   };
 
+  const getPropertyCategoryLabel = (property) =>
+    CATEGORY_META[property.category]?.label || property.category || "Sin categoria";
+
+  const selectPropertyForView = (property) => {
+    setSelectedId(property.id);
+    navigateAdmin(`/admin/propiedades/${property.id}`);
+  };
+
+  const selectPropertyForEdit = (property) => {
+    setSelectedId(property.id);
+    setForm(propertyToForm(property));
+    navigateAdmin(`/admin/propiedades/${property.id}/editar`);
+  };
+
+  const renderNotFound = (title, backPath) => (
+    <section className="admin-panel">
+      <h2>{title}</h2>
+      <p className="seller-empty-state">No encontramos esa propiedad en el inventario.</p>
+      <button type="button" className="wa-btn" onClick={() => navigateAdmin(backPath)}>
+        Volver a propiedades
+      </button>
+    </section>
+  );
+
+  const renderPropertyLoading = (title = "Cargando propiedad...") => (
+    <section className="admin-panel">
+      <h2>{title}</h2>
+      {error ? <p className="admin-error">{error}</p> : <p className="seller-empty-state">Cargando...</p>}
+    </section>
+  );
+
+  const renderPropertiesList = () => (
+    <section className="admin-sellers-panel" aria-labelledby="admin-properties-title">
+      <div className="admin-sellers-header">
+        <div>
+          <p>Inventario</p>
+          <h2 id="admin-properties-title">Propiedades</h2>
+        </div>
+        <button type="button" className="wa-btn" onClick={handleCreateProperty}>
+          Nueva
+        </button>
+      </div>
+
+      {message ? <p className="admin-success">{message}</p> : null}
+      {error ? <p className="admin-error">{error}</p> : null}
+      {isSavingOrder ? <p className="admin-sidebar-note">Guardando orden...</p> : null}
+      {isLoading && !hasLoadedProperties ? <p>Cargando...</p> : null}
+
+      <div className="admin-property-list">
+        {properties.map((property) => (
+          <article
+            key={property.id}
+            draggable
+            className={[
+              "admin-property-row",
+              property.id === selectedId ? "active" : "",
+              property.id === draggingPropertyId ? "is-dragging" : "",
+              property.id === dropTargetPropertyId ? "is-drop-target" : ""
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            onDragStart={(event) => handlePropertyDragStart(event, property.id)}
+            onDragOver={(event) => handlePropertyDragOver(event, property.id)}
+            onDrop={(event) => handlePropertyDrop(event, property.id)}
+            onDragLeave={() => {
+              setDropTargetPropertyId((currentId) => (currentId === property.id ? "" : currentId));
+            }}
+            onDragEnd={handlePropertyDragEnd}
+            aria-label={`Ordenar ${property.title || "propiedad"}`}
+          >
+            <span className="admin-property-drag-handle" aria-hidden="true">::</span>
+            <span>{property.title || "Sin titulo"}</span>
+            <small>
+              <span>{getPropertyCategoryLabel(property)}</span>
+              <span>{property.location || "Sin ubicacion"}</span>
+              <span className={`admin-publish-chip ${property.isPublished ? "is-published" : "is-hidden"}`}>
+                {property.isPublished ? "Publicada" : "Oculta"}
+              </span>
+              <button
+                type="button"
+                className="map-btn"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  selectPropertyForView(property);
+                }}
+              >
+                Ver
+              </button>
+              <button
+                type="button"
+                className="map-btn"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  selectPropertyForEdit(property);
+                }}
+              >
+                Editar
+              </button>
+            </small>
+          </article>
+        ))}
+        {!properties.length && hasLoadedProperties ? (
+          <p className="seller-empty-state">No hay propiedades cargadas.</p>
+        ) : null}
+      </div>
+    </section>
+  );
+
+  const renderPropertyView = (property) => (
+    <section className="admin-editor" aria-labelledby="admin-property-view-title">
+      <div className="admin-editor-title">
+        <div>
+          <p>{getPropertyCategoryLabel(property)}</p>
+          <h2 id="admin-property-view-title">{property.title || "Sin titulo"}</h2>
+        </div>
+        <div className="admin-header-actions">
+          <button type="button" className="map-btn" onClick={() => navigateAdmin("/admin/propiedades")}>
+            Volver
+          </button>
+          <button type="button" className="wa-btn" onClick={() => selectPropertyForEdit(property)}>
+            Editar
+          </button>
+        </div>
+      </div>
+
+      {message ? <p className="admin-success">{message}</p> : null}
+      {error ? <p className="admin-error">{error}</p> : null}
+
+      <div className="admin-grid">
+        <label>
+          Valor
+          <input readOnly value={property.price || "Consultar"} />
+        </label>
+        <label>
+          Superficie
+          <input readOnly value={property.area || "Superficie a confirmar"} />
+        </label>
+        <label>
+          Ubicacion
+          <input readOnly value={property.location || "Sin ubicacion cargada."} />
+        </label>
+        <label>
+          Estado
+          <input readOnly value={property.isPublished ? "Publicada" : "Oculta"} />
+        </label>
+      </div>
+
+      <section className="admin-description-widget">
+        <div className="admin-widget-header">
+          <h3>Resumen</h3>
+        </div>
+        <p className="seller-empty-state">{property.summary || "Sin resumen cargado."}</p>
+      </section>
+    </section>
+  );
+
+  const renderPropertyEditor = ({ showBackButton = true } = {}) => (
+    <form className="admin-editor" onSubmit={handleSave}>
+      <div className="admin-editor-title">
+        <div>
+          <p>{form.databaseId ? "Editar propiedad" : "Nueva propiedad"}</p>
+          <h2>{form.title || "Sin titulo"}</h2>
+        </div>
+        <div className="admin-header-actions">
+          {showBackButton ? (
+            <button type="button" className="map-btn" onClick={() => navigateAdmin("/admin/propiedades")}>
+              Volver
+            </button>
+          ) : null}
+          <label className="admin-toggle">
+            <input
+              type="checkbox"
+              checked={form.isPublished}
+              onChange={(event) => updateField("isPublished", event.target.checked)}
+            />
+            Publicada
+          </label>
+        </div>
+      </div>
+
+      {message ? <p className="admin-success">{message}</p> : null}
+      {error ? <p className="admin-error">{error}</p> : null}
+
+      <div className="admin-grid">
+        <label>
+          Titulo
+          <input
+            value={form.title}
+            onChange={(event) => updateTitle(event.target.value)}
+            required
+          />
+        </label>
+        <label>
+          Categoria
+          <select value={form.category} onChange={(event) => updateField("category", event.target.value)}>
+            {Object.entries(CATEGORY_META).map(([value, meta]) => (
+              <option value={value} key={value}>
+                {meta.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Valor
+          <input value={form.price} onChange={(event) => updateField("price", event.target.value)} />
+        </label>
+        <label>
+          Superficie
+          <input value={form.area} onChange={(event) => updateField("area", event.target.value)} />
+        </label>
+        <label className="admin-field-wide">
+          Ubicación
+          <input value={form.location} onChange={(event) => updateField("location", event.target.value)} />
+        </label>
+        <LocationPicker
+          latitude={form.latitude}
+          longitude={form.longitude}
+          location={form.location}
+          markerColor={form.markerColor}
+          onCoordinatesChange={(nextLatitude, nextLongitude) => {
+            setForm((current) => ({
+              ...current,
+              latitude: nextLatitude,
+              longitude: nextLongitude
+            }));
+          }}
+        />
+        <label className="admin-color-field">
+          Color del punto en el mapa
+          <div className="admin-color-picker">
+            <input
+              type="color"
+              value={colorValue(form.markerColor, CATEGORY_META[form.category]?.mapColor || "#a65774")}
+              onChange={(event) => updateField("markerColor", event.target.value)}
+              aria-label="Color del punto en el mapa"
+            />
+            <input
+              type="text"
+              value={form.markerColor}
+              onChange={(event) => updateField("markerColor", event.target.value)}
+              placeholder={CATEGORY_META[form.category]?.mapColor || "#a65774"}
+            />
+          </div>
+        </label>
+      </div>
+
+      <label>
+        Resumen
+        <textarea
+          rows="4"
+          value={form.summary}
+          onChange={(event) => updateField("summary", event.target.value)}
+        />
+      </label>
+      <section className="admin-description-widget">
+        <div className="admin-widget-header">
+          <h3>Ficha tecnica</h3>
+          <div className="admin-segmented-control" aria-label="Vista de ficha tecnica">
+            <button
+              type="button"
+              className={descriptionView === "editor" ? "active" : ""}
+              onClick={() => setDescriptionView("editor")}
+            >
+              Editor
+            </button>
+            <button
+              type="button"
+              className={descriptionView === "plain" ? "active" : ""}
+              onClick={() => setDescriptionView("plain")}
+            >
+              Texto
+            </button>
+            <button
+              type="button"
+              className={descriptionView === "html" ? "active" : ""}
+              onClick={() => setDescriptionView("html")}
+            >
+              HTML
+            </button>
+            <button
+              type="button"
+              className={descriptionView === "preview" ? "active" : ""}
+              onClick={() => setDescriptionView("preview")}
+            >
+              Vista
+            </button>
+          </div>
+        </div>
+
+        {descriptionView === "editor" ? (
+          <RichHtmlEditor html={form.descriptionHtml} onChange={updateDescription} />
+        ) : null}
+
+        {descriptionView === "plain" ? (
+          <label>
+            Texto plano
+            <textarea
+              rows="10"
+              value={form.rawDescription}
+              onChange={(event) => updateField("rawDescription", event.target.value)}
+            />
+          </label>
+        ) : null}
+
+        {descriptionView === "html" ? (
+          <label>
+            HTML crudo
+            <textarea
+              rows="10"
+              value={form.descriptionHtml}
+              onChange={(event) => updateDescription(event.target.value)}
+            />
+          </label>
+        ) : null}
+
+        {descriptionView === "preview" ? (
+          <div
+            className="admin-preview-pane rich-text"
+            dangerouslySetInnerHTML={{
+              __html: form.descriptionHtml || "<p>Sin ficha tecnica cargada.</p>"
+            }}
+          />
+        ) : null}
+      </section>
+      <div className="admin-images-field">
+        <div className="admin-images-header">
+          <label className="admin-upload-control">
+            Subir imagenes
+            <input
+              type="file"
+              accept={imageAccept}
+              multiple
+              onChange={handleImageUpload}
+              disabled={isUploadingImages}
+            />
+          </label>
+          <span>{isUploadingImages ? "Subiendo..." : `${form.images.length} imagenes`}</span>
+        </div>
+        {form.images.length ? (
+          <div className="admin-image-grid">
+            {form.images.map((url, index) => (
+              <div className="admin-image-preview" key={`${url}-${index}`}>
+                <img src={url} alt={`Imagen ${index + 1} de ${form.title || "propiedad"}`} />
+                <button type="button" onClick={() => removeImage(index)}>
+                  Quitar
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="admin-editor-actions">
+        <button type="submit" className="wa-btn" disabled={isLoading}>
+          {isLoading ? "Guardando..." : "Guardar propiedad"}
+        </button>
+        {form.databaseId ? (
+          <button type="button" className="map-btn admin-danger" onClick={handleDelete} disabled={isLoading}>
+            Eliminar
+          </button>
+        ) : null}
+      </div>
+    </form>
+  );
+
+  const renderLegacyPropertySidebar = () => (
+    <aside className="admin-sidebar">
+      <div className="admin-sidebar-header">
+        <h2>Propiedades</h2>
+        <button type="button" className="wa-btn" onClick={startNewProperty}>
+          Nueva
+        </button>
+      </div>
+      {isSavingOrder ? <p className="admin-sidebar-note">Guardando orden...</p> : null}
+      {isLoading && !properties.length ? <p>Cargando...</p> : null}
+      <div className="admin-property-list">
+        {properties.map((property) => (
+          <button
+            type="button"
+            key={property.id}
+            draggable
+            className={[
+              "admin-property-row",
+              property.id === selectedId ? "active" : "",
+              property.id === draggingPropertyId ? "is-dragging" : "",
+              property.id === dropTargetPropertyId ? "is-drop-target" : ""
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            onClick={() => setSelectedId(property.id)}
+            onDragStart={(event) => handlePropertyDragStart(event, property.id)}
+            onDragOver={(event) => handlePropertyDragOver(event, property.id)}
+            onDrop={(event) => handlePropertyDrop(event, property.id)}
+            onDragLeave={() => {
+              setDropTargetPropertyId((currentId) => (currentId === property.id ? "" : currentId));
+            }}
+            onDragEnd={handlePropertyDragEnd}
+            aria-label={`Ordenar ${property.title}`}
+          >
+            <span className="admin-property-drag-handle" aria-hidden="true">::</span>
+            <span>{property.title}</span>
+            <small>
+              {CATEGORY_META[property.category]?.label || property.category}
+              <span className={`admin-publish-chip ${property.isPublished ? "is-published" : "is-hidden"}`}>
+                {property.isPublished ? "Publicada" : "Oculta"}
+              </span>
+            </small>
+          </button>
+        ))}
+      </div>
+    </aside>
+  );
+
+  const renderSellersPanel = () => (
+    <section className="admin-sellers-panel" aria-labelledby="admin-sellers-title">
+      <div className="admin-sellers-header">
+        <div>
+          <p>Acceso interno</p>
+          <h2 id="admin-sellers-title">Vendedores</h2>
+        </div>
+        <button type="button" className="map-btn" onClick={loadSellers} disabled={isSavingSeller}>
+          Actualizar
+        </button>
+      </div>
+
+      {sellerMessage ? <p className="admin-success">{sellerMessage}</p> : null}
+      {sellerError ? <p className="admin-error">{sellerError}</p> : null}
+
+      <div className="admin-sellers-layout">
+        <form className="admin-seller-form" onSubmit={handleSellerSave}>
+          <div className="admin-grid">
+            <label>
+              Usuario
+              <input
+                value={sellerForm.username}
+                onChange={(event) => updateSellerField("username", event.target.value)}
+                autoComplete="off"
+                required
+              />
+            </label>
+            <label>
+              Nombre
+              <input
+                value={sellerForm.fullName}
+                onChange={(event) => updateSellerField("fullName", event.target.value)}
+                autoComplete="off"
+              />
+            </label>
+            <label>
+              Contraseña
+              <input
+                type="password"
+                value={sellerForm.password}
+                onChange={(event) => updateSellerField("password", event.target.value)}
+                minLength={8}
+                required
+              />
+            </label>
+            <label className="admin-toggle admin-seller-toggle">
+              <input
+                type="checkbox"
+                checked={sellerForm.isActive}
+                onChange={(event) => updateSellerField("isActive", event.target.checked)}
+              />
+              Activo
+            </label>
+          </div>
+          <div className="admin-editor-actions">
+            <button type="submit" className="wa-btn" disabled={isSavingSeller}>
+              {isSavingSeller ? "Guardando..." : "Guardar vendedor"}
+            </button>
+          </div>
+        </form>
+
+        <div className="admin-seller-list">
+          {sellers.map((seller) => (
+            <article className="admin-seller-row" key={seller.id}>
+              <div>
+                <strong>{seller.fullName || seller.username}</strong>
+                <span>{seller.username}</span>
+                <small>{seller.email}</small>
+              </div>
+              <button
+                type="button"
+                className={`map-btn ${seller.isActive ? "admin-danger" : ""}`}
+                onClick={() => handleSellerActiveChange(seller, !seller.isActive)}
+                disabled={isSavingSeller}
+              >
+                {seller.isActive ? "Desactivar" : "Activar"}
+              </button>
+            </article>
+          ))}
+          {!sellers.length ? <p className="seller-empty-state">No hay vendedores cargados.</p> : null}
+        </div>
+      </div>
+    </section>
+  );
+
+  const renderInterimAdminSection = () => (
+    <>
+      {route.section === "clients" && clientMessage ? <p className="admin-success">{clientMessage}</p> : null}
+      <section className="admin-layout">
+        {renderLegacyPropertySidebar()}
+        {renderPropertyEditor({ showBackButton: false })}
+      </section>
+      {renderSellersPanel()}
+    </>
+  );
+
+  const renderPropertiesSection = () => {
+    if (route.mode === "list") return renderPropertiesList();
+
+    if (route.mode === "new") {
+      if (form.databaseId) return renderPropertyLoading("Preparando editor...");
+      return renderPropertyEditor();
+    }
+
+    if (!route.id) return renderNotFound("Propiedad no encontrada", "/admin/propiedades");
+
+    if (!routedProperty) {
+      if (error) return renderPropertyLoading("No se pudo cargar la propiedad");
+      if (!hasLoadedProperties || isLoading) return renderPropertyLoading();
+      return renderNotFound("Propiedad no encontrada", "/admin/propiedades");
+    }
+
+    if (route.mode === "view") return renderPropertyView(routedProperty);
+
+    if (route.mode === "edit") {
+      const routedDatabaseId = routedProperty.databaseId || routedProperty.id;
+      if (form.databaseId !== routedDatabaseId) return renderPropertyLoading("Preparando editor...");
+      return renderPropertyEditor();
+    }
+
+    return renderNotFound("Ruta de propiedades no encontrada", "/admin/propiedades");
+  };
+
+  const renderAdminContent = () => {
+    if (route.section === "not-found") return <AdminNotFound navigateAdmin={navigateAdmin} />;
+
+    if (route.section === "dashboard") {
+      return (
+        <>
+          <AdminDashboardAlerts messages={[error, sellerError, clientError]} />
+          <AdminDashboard
+            properties={properties}
+            clients={clients}
+            sellers={sellers}
+            onCreateProperty={handleCreateProperty}
+            onCreateClient={handleCreateClient}
+            onCreateSeller={handleCreateSeller}
+          />
+        </>
+      );
+    }
+
+    if (route.section === "properties") return renderPropertiesSection();
+
+    if (route.section === "clients" || route.section === "sellers") return renderInterimAdminSection();
+
+    return <AdminNotFound navigateAdmin={navigateAdmin} />;
+  };
+
   if (session === undefined) {
     return (
       <main className="admin-shell admin-shell--login">
@@ -1135,355 +1750,7 @@ function AdminApp() {
         </div>
       </header>
 
-      {route.section === "not-found" ? (
-        <AdminNotFound navigateAdmin={navigateAdmin} />
-      ) : route.section === "dashboard" ? (
-        <>
-          <AdminDashboardAlerts messages={[error, sellerError, clientError]} />
-          <AdminDashboard
-            properties={properties}
-            clients={clients}
-            sellers={sellers}
-            onCreateProperty={handleCreateProperty}
-            onCreateClient={handleCreateClient}
-            onCreateSeller={handleCreateSeller}
-          />
-        </>
-      ) : (
-        <>
-          {route.section === "clients" && clientMessage ? <p className="admin-success">{clientMessage}</p> : null}
-          <section className="admin-layout">
-            <aside className="admin-sidebar">
-              <div className="admin-sidebar-header">
-                <h2>Propiedades</h2>
-                <button type="button" className="wa-btn" onClick={startNewProperty}>
-                  Nueva
-                </button>
-              </div>
-              {isSavingOrder ? <p className="admin-sidebar-note">Guardando orden...</p> : null}
-              {isLoading && !properties.length ? <p>Cargando...</p> : null}
-              <div className="admin-property-list">
-                {properties.map((property) => (
-                  <button
-                    type="button"
-                    key={property.id}
-                    draggable
-                    className={[
-                      "admin-property-row",
-                      property.id === selectedId ? "active" : "",
-                      property.id === draggingPropertyId ? "is-dragging" : "",
-                      property.id === dropTargetPropertyId ? "is-drop-target" : ""
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    onClick={() => setSelectedId(property.id)}
-                    onDragStart={(event) => handlePropertyDragStart(event, property.id)}
-                    onDragOver={(event) => handlePropertyDragOver(event, property.id)}
-                    onDrop={(event) => handlePropertyDrop(event, property.id)}
-                    onDragLeave={() => {
-                      setDropTargetPropertyId((currentId) => (currentId === property.id ? "" : currentId));
-                    }}
-                    onDragEnd={handlePropertyDragEnd}
-                    aria-label={`Ordenar ${property.title}`}
-                  >
-                    <span className="admin-property-drag-handle" aria-hidden="true">::</span>
-                    <span>{property.title}</span>
-                    <small>
-                      {CATEGORY_META[property.category]?.label || property.category}
-                      <span className={`admin-publish-chip ${property.isPublished ? "is-published" : "is-hidden"}`}>
-                        {property.isPublished ? "Publicada" : "Oculta"}
-                      </span>
-                    </small>
-                  </button>
-                ))}
-              </div>
-            </aside>
-
-            <form className="admin-editor" onSubmit={handleSave}>
-              <div className="admin-editor-title">
-                <div>
-                  <p>{form.databaseId ? "Editar propiedad" : "Nueva propiedad"}</p>
-                  <h2>{form.title || "Sin titulo"}</h2>
-                </div>
-                <label className="admin-toggle">
-                  <input
-                    type="checkbox"
-                    checked={form.isPublished}
-                    onChange={(event) => updateField("isPublished", event.target.checked)}
-                  />
-                  Publicada
-                </label>
-              </div>
-
-              {message ? <p className="admin-success">{message}</p> : null}
-              {error ? <p className="admin-error">{error}</p> : null}
-
-              <div className="admin-grid">
-                <label>
-                  Titulo
-                  <input
-                    value={form.title}
-                    onChange={(event) => updateTitle(event.target.value)}
-                    required
-                  />
-                </label>
-                <label>
-                  Categoria
-                  <select value={form.category} onChange={(event) => updateField("category", event.target.value)}>
-                    {Object.entries(CATEGORY_META).map(([value, meta]) => (
-                      <option value={value} key={value}>
-                        {meta.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Valor
-                  <input value={form.price} onChange={(event) => updateField("price", event.target.value)} />
-                </label>
-                <label>
-                  Superficie
-                  <input value={form.area} onChange={(event) => updateField("area", event.target.value)} />
-                </label>
-                <label className="admin-field-wide">
-                  Ubicación
-                  <input value={form.location} onChange={(event) => updateField("location", event.target.value)} />
-                </label>
-                <LocationPicker
-                  latitude={form.latitude}
-                  longitude={form.longitude}
-                  location={form.location}
-                  markerColor={form.markerColor}
-                  onCoordinatesChange={(nextLatitude, nextLongitude) => {
-                    setForm((current) => ({
-                      ...current,
-                      latitude: nextLatitude,
-                      longitude: nextLongitude
-                    }));
-                  }}
-                />
-                <label className="admin-color-field">
-                  Color del punto en el mapa
-                  <div className="admin-color-picker">
-                    <input
-                      type="color"
-                      value={colorValue(form.markerColor, CATEGORY_META[form.category]?.mapColor || "#a65774")}
-                      onChange={(event) => updateField("markerColor", event.target.value)}
-                      aria-label="Color del punto en el mapa"
-                    />
-                    <input
-                      type="text"
-                      value={form.markerColor}
-                      onChange={(event) => updateField("markerColor", event.target.value)}
-                      placeholder={CATEGORY_META[form.category]?.mapColor || "#a65774"}
-                    />
-                  </div>
-                </label>
-              </div>
-
-              <label>
-                Resumen
-                <textarea
-                  rows="4"
-                  value={form.summary}
-                  onChange={(event) => updateField("summary", event.target.value)}
-                />
-              </label>
-              <section className="admin-description-widget">
-                <div className="admin-widget-header">
-                  <h3>Ficha tecnica</h3>
-                  <div className="admin-segmented-control" aria-label="Vista de ficha tecnica">
-                    <button
-                      type="button"
-                      className={descriptionView === "editor" ? "active" : ""}
-                      onClick={() => setDescriptionView("editor")}
-                    >
-                      Editor
-                    </button>
-                    <button
-                      type="button"
-                      className={descriptionView === "plain" ? "active" : ""}
-                      onClick={() => setDescriptionView("plain")}
-                    >
-                      Texto
-                    </button>
-                    <button
-                      type="button"
-                      className={descriptionView === "html" ? "active" : ""}
-                      onClick={() => setDescriptionView("html")}
-                    >
-                      HTML
-                    </button>
-                    <button
-                      type="button"
-                      className={descriptionView === "preview" ? "active" : ""}
-                      onClick={() => setDescriptionView("preview")}
-                    >
-                      Vista
-                    </button>
-                  </div>
-                </div>
-
-                {descriptionView === "editor" ? (
-                  <RichHtmlEditor html={form.descriptionHtml} onChange={updateDescription} />
-                ) : null}
-
-                {descriptionView === "plain" ? (
-                  <label>
-                    Texto plano
-                    <textarea
-                      rows="10"
-                      value={form.rawDescription}
-                      onChange={(event) => updateField("rawDescription", event.target.value)}
-                    />
-                  </label>
-                ) : null}
-
-                {descriptionView === "html" ? (
-                  <label>
-                    HTML crudo
-                    <textarea
-                      rows="10"
-                      value={form.descriptionHtml}
-                      onChange={(event) => updateDescription(event.target.value)}
-                    />
-                  </label>
-                ) : null}
-
-                {descriptionView === "preview" ? (
-                  <div
-                    className="admin-preview-pane rich-text"
-                    dangerouslySetInnerHTML={{
-                      __html: form.descriptionHtml || "<p>Sin ficha tecnica cargada.</p>"
-                    }}
-                  />
-                ) : null}
-              </section>
-              <div className="admin-images-field">
-                <div className="admin-images-header">
-                  <label className="admin-upload-control">
-                    Subir imagenes
-                    <input
-                      type="file"
-                      accept={imageAccept}
-                      multiple
-                      onChange={handleImageUpload}
-                      disabled={isUploadingImages}
-                    />
-                  </label>
-                  <span>{isUploadingImages ? "Subiendo..." : `${form.images.length} imagenes`}</span>
-                </div>
-                {form.images.length ? (
-                  <div className="admin-image-grid">
-                    {form.images.map((url, index) => (
-                      <div className="admin-image-preview" key={`${url}-${index}`}>
-                        <img src={url} alt={`Imagen ${index + 1} de ${form.title || "propiedad"}`} />
-                        <button type="button" onClick={() => removeImage(index)}>
-                          Quitar
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="admin-editor-actions">
-                <button type="submit" className="wa-btn" disabled={isLoading}>
-                  {isLoading ? "Guardando..." : "Guardar propiedad"}
-                </button>
-                {form.databaseId ? (
-                  <button type="button" className="map-btn admin-danger" onClick={handleDelete} disabled={isLoading}>
-                    Eliminar
-                  </button>
-                ) : null}
-              </div>
-            </form>
-          </section>
-
-          <section className="admin-sellers-panel" aria-labelledby="admin-sellers-title">
-            <div className="admin-sellers-header">
-              <div>
-                <p>Acceso interno</p>
-                <h2 id="admin-sellers-title">Vendedores</h2>
-              </div>
-              <button type="button" className="map-btn" onClick={loadSellers} disabled={isSavingSeller}>
-                Actualizar
-              </button>
-            </div>
-
-            {sellerMessage ? <p className="admin-success">{sellerMessage}</p> : null}
-            {sellerError ? <p className="admin-error">{sellerError}</p> : null}
-
-            <div className="admin-sellers-layout">
-              <form className="admin-seller-form" onSubmit={handleSellerSave}>
-                <div className="admin-grid">
-                  <label>
-                    Usuario
-                    <input
-                      value={sellerForm.username}
-                      onChange={(event) => updateSellerField("username", event.target.value)}
-                      autoComplete="off"
-                      required
-                    />
-                  </label>
-                  <label>
-                    Nombre
-                    <input
-                      value={sellerForm.fullName}
-                      onChange={(event) => updateSellerField("fullName", event.target.value)}
-                      autoComplete="off"
-                    />
-                  </label>
-                  <label>
-                    Contraseña
-                    <input
-                      type="password"
-                      value={sellerForm.password}
-                      onChange={(event) => updateSellerField("password", event.target.value)}
-                      minLength={8}
-                      required
-                    />
-                  </label>
-                  <label className="admin-toggle admin-seller-toggle">
-                    <input
-                      type="checkbox"
-                      checked={sellerForm.isActive}
-                      onChange={(event) => updateSellerField("isActive", event.target.checked)}
-                    />
-                    Activo
-                  </label>
-                </div>
-                <div className="admin-editor-actions">
-                  <button type="submit" className="wa-btn" disabled={isSavingSeller}>
-                    {isSavingSeller ? "Guardando..." : "Guardar vendedor"}
-                  </button>
-                </div>
-              </form>
-
-              <div className="admin-seller-list">
-                {sellers.map((seller) => (
-                  <article className="admin-seller-row" key={seller.id}>
-                    <div>
-                      <strong>{seller.fullName || seller.username}</strong>
-                      <span>{seller.username}</span>
-                      <small>{seller.email}</small>
-                    </div>
-                    <button
-                      type="button"
-                      className={`map-btn ${seller.isActive ? "admin-danger" : ""}`}
-                      onClick={() => handleSellerActiveChange(seller, !seller.isActive)}
-                      disabled={isSavingSeller}
-                    >
-                      {seller.isActive ? "Desactivar" : "Activar"}
-                    </button>
-                  </article>
-                ))}
-                {!sellers.length ? <p className="seller-empty-state">No hay vendedores cargados.</p> : null}
-              </div>
-            </div>
-          </section>
-        </>
-      )}
+      {renderAdminContent()}
     </main>
   );
 }
