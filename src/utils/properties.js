@@ -37,6 +37,115 @@ export function slugify(value, maxLength = Number.POSITIVE_INFINITY) {
   return Number.isFinite(maxLength) ? normalized.slice(0, maxLength) : normalized;
 }
 
+function normalizeSearchText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function collectSearchValues(value, values = [], seen = new Set()) {
+  if (value === null || value === undefined) return values;
+
+  if (typeof value === "string" || typeof value === "number" || typeof value === "bigint") {
+    values.push(String(value));
+    return values;
+  }
+
+  if (typeof value === "boolean") {
+    values.push(value ? "true si" : "false no");
+    return values;
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectSearchValues(item, values, seen));
+    return values;
+  }
+
+  if (typeof value === "object") {
+    if (seen.has(value)) return values;
+    seen.add(value);
+    Object.values(value).forEach((item) => collectSearchValues(item, values, seen));
+  }
+
+  return values;
+}
+
+function levenshteinDistance(firstValue, secondValue) {
+  if (firstValue === secondValue) return 0;
+  if (!firstValue.length) return secondValue.length;
+  if (!secondValue.length) return firstValue.length;
+
+  const previous = Array.from({ length: secondValue.length + 1 }, (_, index) => index);
+  const current = new Array(secondValue.length + 1);
+
+  for (let firstIndex = 0; firstIndex < firstValue.length; firstIndex += 1) {
+    current[0] = firstIndex + 1;
+
+    for (let secondIndex = 0; secondIndex < secondValue.length; secondIndex += 1) {
+      const substitutionCost = firstValue[firstIndex] === secondValue[secondIndex] ? 0 : 1;
+
+      current[secondIndex + 1] = Math.min(
+        current[secondIndex] + 1,
+        previous[secondIndex + 1] + 1,
+        previous[secondIndex] + substitutionCost
+      );
+    }
+
+    previous.splice(0, previous.length, ...current);
+  }
+
+  return previous[secondValue.length];
+}
+
+function maxDistanceForToken(token) {
+  if (token.length <= 2) return 0;
+  if (token.length <= 4) return 1;
+  if (token.length <= 8) return 2;
+  return 3;
+}
+
+function buildPropertySearchText(property) {
+  const categoryLabel = CATEGORY_META[property?.category]?.label || "";
+  const publishedLabel = property?.isPublished ? "publicada visible activa" : "oculta no publicada inactiva";
+  return normalizeSearchText([
+    ...collectSearchValues(property),
+    categoryLabel,
+    publishedLabel
+  ].join(" "));
+}
+
+function wordMatchesToken(word, token) {
+  if (word.includes(token) || token.includes(word)) return true;
+
+  if (Math.abs(word.length - token.length) > maxDistanceForToken(token)) return false;
+
+  return levenshteinDistance(word, token) <= maxDistanceForToken(token);
+}
+
+export function propertyMatchesSearch(property, query) {
+  const tokens = normalizeSearchText(query).split(" ").filter(Boolean);
+  if (!tokens.length) return true;
+
+  const searchText = buildPropertySearchText(property);
+  if (!searchText) return false;
+
+  const words = searchText.split(" ").filter(Boolean);
+
+  return tokens.every((token) => searchText.includes(token) || words.some((word) => wordMatchesToken(word, token)));
+}
+
+export function filterPropertiesBySearch(properties, query) {
+  const tokens = normalizeSearchText(query).split(" ").filter(Boolean);
+  if (!tokens.length) return properties;
+
+  return properties.filter((property) => propertyMatchesSearch(property, query));
+}
+
 export function normalizeDatabaseProperty(row) {
   const images = [...(row.property_images || [])]
     .sort((first, second) => (first.sort_order || 0) - (second.sort_order || 0))

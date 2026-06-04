@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import { DocumentsPanel, NotesPanel } from "../components/ActivityPanels";
-import { CATEGORY_META, slugify } from "../utils/properties";
+import { CATEGORY_META, filterPropertiesBySearch, slugify } from "../utils/properties";
 import {
   activityAuthorFromProfile,
   createClientDocument,
@@ -803,6 +803,7 @@ function AdminApp() {
   const [sellerForm, setSellerForm] = useState(emptySellerForm);
   const [clientForm, setClientForm] = useState(emptyClientForm);
   const [clientFilters, setClientFilters] = useState({ operation: "", status: "", createdBy: "" });
+  const [propertySearchQuery, setPropertySearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [isSavingOrder, setIsSavingOrder] = useState(false);
@@ -834,6 +835,10 @@ function AdminApp() {
 
     return properties.find((property) => property.id === route.id || property.databaseId === route.id) || null;
   }, [properties, route.id, route.section]);
+  const filteredProperties = useMemo(
+    () => filterPropertiesBySearch(properties, propertySearchQuery),
+    [properties, propertySearchQuery]
+  );
   const routedSeller = useMemo(() => {
     if (route.section !== "sellers" || !route.id) return null;
 
@@ -1526,82 +1531,114 @@ function AdminApp() {
     </section>
   );
 
-  const renderPropertiesList = () => (
-    <section className="admin-sellers-panel" aria-labelledby="admin-properties-title">
-      <div className="admin-sellers-header">
-        <div>
-          <p>Inventario</p>
-          <h2 id="admin-properties-title">Propiedades</h2>
+  const renderPropertiesList = () => {
+    const hasPropertySearch = propertySearchQuery.trim().length > 0;
+
+    return (
+      <section className="admin-sellers-panel" aria-labelledby="admin-properties-title">
+        <div className="admin-sellers-header">
+          <div>
+            <p>Inventario</p>
+            <h2 id="admin-properties-title">Propiedades</h2>
+          </div>
+          <button type="button" className="wa-btn" onClick={handleCreateProperty}>
+            Nueva
+          </button>
         </div>
-        <button type="button" className="wa-btn" onClick={handleCreateProperty}>
-          Nueva
-        </button>
-      </div>
 
-      {message ? <p className="admin-success">{message}</p> : null}
-      {error ? <p className="admin-error">{error}</p> : null}
-      {isSavingOrder ? <p className="admin-sidebar-note">Guardando orden...</p> : null}
-      {isLoading && !hasLoadedProperties ? <p>Cargando...</p> : null}
+        <div className="admin-property-search">
+          <label>
+            <span>Buscar propiedades</span>
+            <input
+              type="search"
+              value={propertySearchQuery}
+              onChange={(event) => setPropertySearchQuery(event.target.value)}
+              placeholder="Titulo, ubicacion, precio, estado, descripcion..."
+              autoComplete="off"
+            />
+          </label>
+          <div className="admin-property-search-meta">
+            <span>
+              {hasPropertySearch
+                ? `${filteredProperties.length} de ${properties.length} resultados`
+                : `${properties.length} propiedades cargadas`}
+            </span>
+            {hasPropertySearch ? (
+              <button type="button" className="map-btn" onClick={() => setPropertySearchQuery("")}>
+                Limpiar
+              </button>
+            ) : null}
+          </div>
+        </div>
 
-      <div className="admin-property-list">
-        {properties.map((property) => (
-          <article
-            key={property.id}
-            draggable
-            className={[
-              "admin-property-row",
-              property.id === selectedId ? "active" : "",
-              property.id === draggingPropertyId ? "is-dragging" : "",
-              property.id === dropTargetPropertyId ? "is-drop-target" : ""
-            ]
-              .filter(Boolean)
-              .join(" ")}
-            onDragStart={(event) => handlePropertyDragStart(event, property.id)}
-            onDragOver={(event) => handlePropertyDragOver(event, property.id)}
-            onDrop={(event) => handlePropertyDrop(event, property.id)}
-            onDragLeave={() => {
-              setDropTargetPropertyId((currentId) => (currentId === property.id ? "" : currentId));
-            }}
-            onDragEnd={handlePropertyDragEnd}
-            aria-label={`Ordenar ${property.title || "propiedad"}`}
-          >
-            <span className="admin-property-drag-handle" aria-hidden="true">::</span>
-            <span>{property.title || "Sin titulo"}</span>
-            <small>
-              <span>{getPropertyCategoryLabel(property)}</span>
-              <span>{property.location || "Sin ubicacion"}</span>
-              <span className={`admin-publish-chip ${property.isPublished ? "is-published" : "is-hidden"}`}>
-                {property.isPublished ? "Publicada" : "Oculta"}
-              </span>
-              <button
-                type="button"
-                className="map-btn"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  selectPropertyForView(property);
-                }}
-              >
-                Ver
-              </button>
-              <button
-                type="button"
-                className="map-btn"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  selectPropertyForEdit(property);
-                }}
-              >
-                Editar
-              </button>
-            </small>
-          </article>
-        ))}
-        {!properties.length && hasLoadedProperties ? (
-          <p className="seller-empty-state">No hay propiedades cargadas.</p>
-        ) : null}
-      </div>
-    </section>
-  );
+        {message ? <p className="admin-success">{message}</p> : null}
+        {error ? <p className="admin-error">{error}</p> : null}
+        {isSavingOrder ? <p className="admin-sidebar-note">Guardando orden...</p> : null}
+        {isLoading && !hasLoadedProperties ? <p>Cargando...</p> : null}
+
+        <div className="admin-property-list">
+          {filteredProperties.map((property) => (
+            <article
+              key={property.id}
+              draggable
+              className={[
+                "admin-property-row",
+                property.id === selectedId ? "active" : "",
+                property.id === draggingPropertyId ? "is-dragging" : "",
+                property.id === dropTargetPropertyId ? "is-drop-target" : ""
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              onDragStart={(event) => handlePropertyDragStart(event, property.id)}
+              onDragOver={(event) => handlePropertyDragOver(event, property.id)}
+              onDrop={(event) => handlePropertyDrop(event, property.id)}
+              onDragLeave={() => {
+                setDropTargetPropertyId((currentId) => (currentId === property.id ? "" : currentId));
+              }}
+              onDragEnd={handlePropertyDragEnd}
+              aria-label={`Ordenar ${property.title || "propiedad"}`}
+            >
+              <span className="admin-property-drag-handle" aria-hidden="true">::</span>
+              <span>{property.title || "Sin titulo"}</span>
+              <small>
+                <span>{getPropertyCategoryLabel(property)}</span>
+                <span>{property.location || "Sin ubicacion"}</span>
+                <span className={`admin-publish-chip ${property.isPublished ? "is-published" : "is-hidden"}`}>
+                  {property.isPublished ? "Publicada" : "Oculta"}
+                </span>
+                <button
+                  type="button"
+                  className="map-btn"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    selectPropertyForView(property);
+                  }}
+                >
+                  Ver
+                </button>
+                <button
+                  type="button"
+                  className="map-btn"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    selectPropertyForEdit(property);
+                  }}
+                >
+                  Editar
+                </button>
+              </small>
+            </article>
+          ))}
+          {!properties.length && hasLoadedProperties ? (
+            <p className="seller-empty-state">No hay propiedades cargadas.</p>
+          ) : null}
+          {properties.length && !filteredProperties.length && hasLoadedProperties ? (
+            <p className="seller-empty-state">No encontramos propiedades para esa busqueda.</p>
+          ) : null}
+        </div>
+      </section>
+    );
+  };
 
   const renderPropertyView = (property) => (
     <section className="admin-editor" aria-labelledby="admin-property-view-title">

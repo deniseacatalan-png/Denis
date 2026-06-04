@@ -1653,6 +1653,48 @@ body {
   padding-right: 0.25rem;
 }
 
+.admin-property-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.admin-property-search label {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  color: var(--text-soft);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.admin-property-search input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 10px;
+  padding: 0.72rem 0.8rem;
+  color: #1e1a1f;
+  background: rgba(255, 255, 255, 0.88);
+  font: inherit;
+}
+
+.admin-property-search-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  min-width: max-content;
+  min-height: 46px;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
 .admin-sellers-panel {
   display: grid;
   gap: 1rem;
@@ -2384,6 +2426,15 @@ body {
   .admin-location-search {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .admin-property-search {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-property-search-meta {
+    justify-content: space-between;
+    min-width: 0;
   }
 
   .admin-seller-row {
@@ -3211,7 +3262,8 @@ body {
 .seller-contact-editor input,
 .seller-contact-editor select,
 .seller-contact-editor textarea,
-.seller-filters select {
+.seller-filters select,
+.admin-property-search input {
   color: var(--tinta);
   background: rgba(255, 250, 244, 0.92);
   border-color: rgba(47, 79, 62, 0.16);
