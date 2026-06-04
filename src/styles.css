@@ -1329,14 +1329,19 @@ body {
 }
 
 .admin-form,
-.admin-editor {
+.admin-editor,
+.admin-seller-form,
+.seller-contact-editor {
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
 }
 
 .admin-form label,
-.admin-editor label {
+.admin-editor label,
+.admin-seller-form label,
+.seller-contact-editor label,
+.seller-filters label {
   display: flex;
   flex-direction: column;
   gap: 0.38rem;
@@ -1348,7 +1353,12 @@ body {
 .admin-form input,
 .admin-editor input,
 .admin-editor select,
-.admin-editor textarea {
+.admin-editor textarea,
+.admin-seller-form input,
+.seller-contact-editor input,
+.seller-contact-editor select,
+.seller-contact-editor textarea,
+.seller-filters select {
   width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.28);
   background: rgba(255, 255, 255, 0.88);
@@ -1358,7 +1368,8 @@ body {
   font: inherit;
 }
 
-.admin-editor textarea {
+.admin-editor textarea,
+.seller-contact-editor textarea {
   resize: vertical;
   min-height: 92px;
   font-family: "Manrope", sans-serif;
@@ -1393,7 +1404,11 @@ body {
 .admin-header,
 .admin-layout,
 .admin-sidebar,
-.admin-editor {
+.admin-editor,
+.admin-sellers-panel,
+.seller-layout,
+.seller-contact-list,
+.seller-contact-editor {
   border: 1px solid var(--glass-border);
   background: linear-gradient(145deg, rgba(255,255,255,0.18), rgba(255,255,255,0.07));
   backdrop-filter: blur(16px);
@@ -1454,6 +1469,205 @@ body {
   max-height: calc(100vh - 230px);
   overflow: auto;
   padding-right: 0.25rem;
+}
+
+.admin-sellers-panel {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+}
+
+.admin-sellers-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.admin-sellers-header p {
+  margin: 0 0 0.25rem;
+  color: #ffeec9;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.admin-sellers-header h2,
+.seller-contact-list h2,
+.seller-contact-editor h2 {
+  margin: 0;
+  color: #fff;
+}
+
+.admin-sellers-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(320px, 1.1fr);
+  gap: 1rem;
+}
+
+.admin-seller-form,
+.admin-seller-list {
+  min-width: 0;
+}
+
+.admin-seller-toggle {
+  align-self: end;
+  min-height: 46px;
+}
+
+.admin-seller-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.admin-seller-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+  padding: 0.85rem;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.admin-seller-row div {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.admin-seller-row strong,
+.admin-seller-row span,
+.admin-seller-row small {
+  overflow-wrap: anywhere;
+}
+
+.admin-seller-row span,
+.admin-seller-row small {
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+
+.seller-global-message {
+  margin-bottom: 1rem;
+}
+
+.seller-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 370px) minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.seller-contact-list,
+.seller-contact-editor {
+  min-width: 0;
+  padding: 1rem;
+}
+
+.seller-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 0.8rem;
+}
+
+.seller-contact-rows {
+  display: grid;
+  gap: 0.55rem;
+  max-height: calc(100vh - 330px);
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
+.seller-contact-row {
+  width: 100%;
+  display: grid;
+  gap: 0.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+  padding: 0.78rem;
+  text-align: left;
+  color: #1e1a1f;
+  background: rgba(255, 255, 255, 0.88);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.seller-contact-row.active,
+.seller-contact-row:hover {
+  border-color: rgba(198, 167, 105, 0.78);
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.seller-contact-row span,
+.seller-contact-row small {
+  overflow-wrap: anywhere;
+}
+
+.seller-contact-row > span {
+  font-weight: 900;
+}
+
+.seller-contact-row small {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  color: #5b4c55;
+}
+
+.seller-status-pill,
+.seller-profile-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  width: max-content;
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+  font-size: 0.74rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.seller-status-pill {
+  color: #233321;
+  background: rgba(198, 167, 105, 0.34);
+}
+
+.seller-status-pill--contactado,
+.seller-status-pill--visitando {
+  color: #23533c;
+  background: rgba(47, 128, 76, 0.16);
+}
+
+.seller-status-pill--cerrado {
+  color: #fff;
+  background: rgba(47, 79, 62, 0.72);
+}
+
+.seller-status-pill--pausado {
+  color: #7c2936;
+  background: rgba(148, 36, 55, 0.14);
+}
+
+.seller-profile-chip {
+  align-self: start;
+  color: #1e1a1f;
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.seller-empty-state {
+  margin: 0;
+  border: 1px dashed rgba(255, 255, 255, 0.26);
+  border-radius: 12px;
+  padding: 0.9rem;
+  color: var(--text-soft);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .admin-property-row {
@@ -1946,13 +2160,23 @@ body {
     grid-template-columns: 1fr;
   }
 
+  .admin-sellers-layout,
+  .seller-layout {
+    grid-template-columns: 1fr;
+  }
+
   .admin-property-list {
     max-height: 320px;
+  }
+
+  .seller-contact-rows {
+    max-height: 360px;
   }
 }
 
 @media (max-width: 640px) {
-  .admin-grid {
+  .admin-grid,
+  .seller-filters {
     grid-template-columns: 1fr;
   }
 
@@ -1964,6 +2188,10 @@ body {
   .admin-location-search {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .admin-seller-row {
+    grid-template-columns: 1fr;
   }
 }
 

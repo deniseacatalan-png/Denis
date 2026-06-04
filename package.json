@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "test": "node --test",
     "preview": "vite preview",
     "db:seed:generate": "node scripts/generate-seed-from-kml.mjs",
     "db:seed": "node scripts/seed-supabase.mjs",

@@ -18,6 +18,14 @@ You can also paste `seed.sql` into the Supabase SQL editor after running the mig
 
 The admin panel is available at `/admin`. The login form accepts the username you created above and the password from the command.
 
+## Portal interno de vendedores
+
+El portal de vendedores esta disponible en `/vendedor`. Los vendedores se crean desde `/admin`, en el panel "Vendedores".
+
+Para que el alta de vendedores funcione en Vercel, agrega `SUPABASE_SERVICE_ROLE_KEY` como variable privada del proyecto. Esa key se usa solo en la ruta server-side `/api/admin/sellers`; no debe exponerse en variables publicas del frontend.
+
+Los contactos cargados por vendedores quedan en `seller_contacts`, son compartidos entre usuarios internos activos y no se muestran en la pagina principal.
+
 ## Imagenes en Vercel Blob
 
 Para subir imagenes desde el administrador o migrar las imagenes locales, crea un Blob store publico en Vercel y agrega `BLOB_READ_WRITE_TOKEN` al entorno del proyecto.

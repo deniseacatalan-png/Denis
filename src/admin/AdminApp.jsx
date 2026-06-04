@@ -13,6 +13,11 @@ import {
   signOutAdmin,
   updateAdminPropertyOrder
 } from "../utils/supabase/properties";
+import {
+  createSellerFromAdmin,
+  fetchSellerProfiles,
+  setSellerActiveFromAdmin
+} from "../utils/supabase/sellers";
 
 const emptyPropertyForm = {
   databaseId: "",
@@ -31,6 +36,13 @@ const emptyPropertyForm = {
   isPublished: true,
   displayOrder: 0,
   images: []
+};
+
+const emptySellerForm = {
+  username: "",
+  fullName: "",
+  password: "",
+  isActive: true
 };
 
 const imageContentTypes = ["image/avif", "image/jpeg", "image/png", "image/webp"];
@@ -549,16 +561,21 @@ function LoginPanel({ onLogin }) {
 function AdminApp() {
   const [session, setSession] = useState(undefined);
   const [properties, setProperties] = useState([]);
+  const [sellers, setSellers] = useState([]);
   const [selectedId, setSelectedId] = useState("");
   const [form, setForm] = useState(emptyPropertyForm);
+  const [sellerForm, setSellerForm] = useState(emptySellerForm);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [isSavingOrder, setIsSavingOrder] = useState(false);
+  const [isSavingSeller, setIsSavingSeller] = useState(false);
   const [draggingPropertyId, setDraggingPropertyId] = useState("");
   const [dropTargetPropertyId, setDropTargetPropertyId] = useState("");
   const [descriptionView, setDescriptionView] = useState("editor");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [sellerMessage, setSellerMessage] = useState("");
+  const [sellerError, setSellerError] = useState("");
 
   const selectedProperty = useMemo(
     () => properties.find((property) => property.id === selectedId) || null,
@@ -603,12 +620,32 @@ function AdminApp() {
     }
   };
 
+  const loadSellers = async () => {
+    if (!session) return;
+    setSellerError("");
+
+    try {
+      const data = await fetchSellerProfiles();
+      setSellers(data);
+    } catch (loadError) {
+      setSellerError(loadError.message);
+    }
+  };
+
   useEffect(() => {
     loadProperties();
+    loadSellers();
   }, [session]);
 
   const updateField = (field, value) => {
     setForm((current) => ({
+      ...current,
+      [field]: value
+    }));
+  };
+
+  const updateSellerField = (field, value) => {
+    setSellerForm((current) => ({
       ...current,
       [field]: value
     }));
@@ -803,6 +840,58 @@ function AdminApp() {
     }));
   };
 
+  const handleSellerSave = async (event) => {
+    event.preventDefault();
+
+    if (!session?.access_token) {
+      setSellerError("Tu sesion expiro. Volve a ingresar para administrar vendedores.");
+      return;
+    }
+
+    setIsSavingSeller(true);
+    setSellerMessage("");
+    setSellerError("");
+
+    try {
+      await createSellerFromAdmin({
+        accessToken: session.access_token,
+        seller: sellerForm
+      });
+      setSellerMessage("Vendedor guardado.");
+      setSellerForm(emptySellerForm);
+      await loadSellers();
+    } catch (saveError) {
+      setSellerError(saveError.message);
+    } finally {
+      setIsSavingSeller(false);
+    }
+  };
+
+  const handleSellerActiveChange = async (seller, isActive) => {
+    if (!session?.access_token) {
+      setSellerError("Tu sesion expiro. Volve a ingresar para administrar vendedores.");
+      return;
+    }
+
+    setIsSavingSeller(true);
+    setSellerMessage("");
+    setSellerError("");
+
+    try {
+      await setSellerActiveFromAdmin({
+        accessToken: session.access_token,
+        sellerId: seller.id,
+        isActive
+      });
+      setSellerMessage(isActive ? "Vendedor activado." : "Vendedor desactivado.");
+      await loadSellers();
+    } catch (saveError) {
+      setSellerError(saveError.message);
+    } finally {
+      setIsSavingSeller(false);
+    }
+  };
+
   if (session === undefined) {
     return (
       <main className="admin-shell admin-shell--login">
@@ -825,6 +914,9 @@ function AdminApp() {
           <h1>Administrador de propiedades</h1>
         </div>
         <div className="admin-header-actions">
+          <a href="/vendedor" className="map-btn">
+            Portal vendedor
+          </a>
           <a href="/" className="map-btn">
             Ver web
           </a>
@@ -1080,6 +1172,89 @@ function AdminApp() {
             ) : null}
           </div>
         </form>
+      </section>
+
+      <section className="admin-sellers-panel" aria-labelledby="admin-sellers-title">
+        <div className="admin-sellers-header">
+          <div>
+            <p>Acceso interno</p>
+            <h2 id="admin-sellers-title">Vendedores</h2>
+          </div>
+          <button type="button" className="map-btn" onClick={loadSellers} disabled={isSavingSeller}>
+            Actualizar
+          </button>
+        </div>
+
+        {sellerMessage ? <p className="admin-success">{sellerMessage}</p> : null}
+        {sellerError ? <p className="admin-error">{sellerError}</p> : null}
+
+        <div className="admin-sellers-layout">
+          <form className="admin-seller-form" onSubmit={handleSellerSave}>
+            <div className="admin-grid">
+              <label>
+                Usuario
+                <input
+                  value={sellerForm.username}
+                  onChange={(event) => updateSellerField("username", event.target.value)}
+                  autoComplete="off"
+                  required
+                />
+              </label>
+              <label>
+                Nombre
+                <input
+                  value={sellerForm.fullName}
+                  onChange={(event) => updateSellerField("fullName", event.target.value)}
+                  autoComplete="off"
+                />
+              </label>
+              <label>
+                Contraseña
+                <input
+                  type="password"
+                  value={sellerForm.password}
+                  onChange={(event) => updateSellerField("password", event.target.value)}
+                  minLength={8}
+                  required
+                />
+              </label>
+              <label className="admin-toggle admin-seller-toggle">
+                <input
+                  type="checkbox"
+                  checked={sellerForm.isActive}
+                  onChange={(event) => updateSellerField("isActive", event.target.checked)}
+                />
+                Activo
+              </label>
+            </div>
+            <div className="admin-editor-actions">
+              <button type="submit" className="wa-btn" disabled={isSavingSeller}>
+                {isSavingSeller ? "Guardando..." : "Guardar vendedor"}
+              </button>
+            </div>
+          </form>
+
+          <div className="admin-seller-list">
+            {sellers.map((seller) => (
+              <article className="admin-seller-row" key={seller.id}>
+                <div>
+                  <strong>{seller.fullName || seller.username}</strong>
+                  <span>{seller.username}</span>
+                  <small>{seller.email}</small>
+                </div>
+                <button
+                  type="button"
+                  className={`map-btn ${seller.isActive ? "admin-danger" : ""}`}
+                  onClick={() => handleSellerActiveChange(seller, !seller.isActive)}
+                  disabled={isSavingSeller}
+                >
+                  {seller.isActive ? "Desactivar" : "Activar"}
+                </button>
+              </article>
+            ))}
+            {!sellers.length ? <p className="seller-empty-state">No hay vendedores cargados.</p> : null}
+          </div>
+        </div>
       </section>
     </main>
   );

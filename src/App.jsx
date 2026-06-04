@@ -19,6 +19,7 @@ L.Icon.Default.mergeOptions({
 });
 
 const AdminApp = lazy(() => import("./admin/AdminApp"));
+const SellerApp = lazy(() => import("./seller/SellerApp"));
 
 const officeWhatsApp = "5492944688613";
 
@@ -813,17 +814,35 @@ function PublicApp() {
 
 function App() {
   const isAdminRoute = window.location.pathname === "/admin" || window.location.hash === "#admin";
-  return isAdminRoute ? (
+  const isSellerRoute = window.location.pathname === "/vendedor" || window.location.hash === "#vendedor";
+
+  if (isAdminRoute) {
+    return (
+      <Suspense
+        fallback={
+          <main className="admin-shell admin-shell--login">
+            <section className="admin-login-panel">
+              <p>Cargando administrador...</p>
+            </section>
+          </main>
+        }
+      >
+        <AdminApp />
+      </Suspense>
+    );
+  }
+
+  return isSellerRoute ? (
     <Suspense
       fallback={
         <main className="admin-shell admin-shell--login">
           <section className="admin-login-panel">
-            <p>Cargando administrador...</p>
+            <p>Cargando vendedor...</p>
           </section>
         </main>
       }
     >
-      <AdminApp />
+      <SellerApp />
     </Suspense>
   ) : (
     <PublicApp />
