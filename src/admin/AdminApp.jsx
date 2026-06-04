@@ -2468,6 +2468,7 @@ function AdminApp() {
             type="button"
             key={item.path}
             className={route.section === item.match ? "active" : ""}
+            aria-current={route.section === item.match ? "page" : undefined}
             onClick={() => navigateAdmin(item.path)}
           >
             {item.label}
