@@ -180,7 +180,7 @@ function parseAdminRoute(pathname = window.location.pathname) {
     return { section: "sellers", mode: action === "editar" ? "edit" : id ? "view" : "list", id };
   }
 
-  return { section: "dashboard", mode: "not-found", id: "" };
+  return { section: "not-found", mode: "not-found", id: "" };
 }
 
 function RichHtmlEditor({ html, onChange }) {
@@ -620,7 +620,7 @@ function LoginPanel({ onLogin }) {
   );
 }
 
-function AdminDashboard({ properties, clients, sellers, navigateAdmin }) {
+function AdminDashboard({ properties, clients, sellers, onCreateProperty, onCreateClient, onCreateSeller }) {
   const publishedCount = properties.filter((property) => property.isPublished).length;
   const activeSellerCount = sellers.filter((seller) => seller.isActive).length;
   const recentClients = clients.slice(0, 4);
@@ -668,18 +668,46 @@ function AdminDashboard({ properties, clients, sellers, navigateAdmin }) {
         <section className="admin-panel">
           <h2>Accesos rapidos</h2>
           <div className="admin-quick-actions">
-            <button type="button" className="wa-btn" onClick={() => navigateAdmin("/admin/propiedades/nueva")}>
+            <button type="button" className="wa-btn" onClick={onCreateProperty}>
               Nueva propiedad
             </button>
-            <button type="button" className="wa-btn" onClick={() => navigateAdmin("/admin/clientes/nuevo")}>
+            <button type="button" className="wa-btn" onClick={onCreateClient}>
               Nuevo cliente
             </button>
-            <button type="button" className="wa-btn" onClick={() => navigateAdmin("/admin/vendedores/nuevo")}>
+            <button type="button" className="wa-btn" onClick={onCreateSeller}>
               Nuevo vendedor
             </button>
           </div>
         </section>
       </div>
+    </section>
+  );
+}
+
+function AdminDashboardAlerts({ messages }) {
+  const visibleMessages = messages.filter(Boolean);
+
+  if (!visibleMessages.length) return null;
+
+  return (
+    <section className="admin-dashboard-alerts" aria-live="polite">
+      {visibleMessages.map((alertMessage, index) => (
+        <p className="admin-error" key={`${alertMessage}-${index}`}>
+          {alertMessage}
+        </p>
+      ))}
+    </section>
+  );
+}
+
+function AdminNotFound({ navigateAdmin }) {
+  return (
+    <section className="admin-panel">
+      <h2>Ruta no encontrada</h2>
+      <p className="seller-empty-state">No encontramos esa ruta del administrador.</p>
+      <button type="button" className="wa-btn" onClick={() => navigateAdmin("/admin")}>
+        Volver al resumen
+      </button>
     </section>
   );
 }
@@ -834,6 +862,28 @@ function AdminApp() {
     });
     setMessage("");
     setError("");
+  };
+
+  const handleCreateProperty = () => {
+    setClientMessage("");
+    startNewProperty();
+    navigateAdmin("/admin/propiedades/nueva");
+  };
+
+  const handleCreateClient = () => {
+    setClientError("");
+    setClientMessage(
+      "La seccion de clientes todavia esta en conversion. El alta dedicada se abrira en la proxima tarea."
+    );
+    navigateAdmin("/admin/clientes/nuevo");
+  };
+
+  const handleCreateSeller = () => {
+    setClientMessage("");
+    setSellerMessage("");
+    setSellerError("");
+    setSellerForm(emptySellerForm);
+    navigateAdmin("/admin/vendedores/nuevo");
   };
 
   const handlePropertyDragStart = (event, propertyId) => {
@@ -1085,18 +1135,23 @@ function AdminApp() {
         </div>
       </header>
 
-      {route.section === "dashboard" ? (
+      {route.section === "not-found" ? (
+        <AdminNotFound navigateAdmin={navigateAdmin} />
+      ) : route.section === "dashboard" ? (
         <>
-          {clientError ? <p className="admin-error">{clientError}</p> : null}
+          <AdminDashboardAlerts messages={[error, sellerError, clientError]} />
           <AdminDashboard
             properties={properties}
             clients={clients}
             sellers={sellers}
-            navigateAdmin={navigateAdmin}
+            onCreateProperty={handleCreateProperty}
+            onCreateClient={handleCreateClient}
+            onCreateSeller={handleCreateSeller}
           />
         </>
       ) : (
         <>
+          {route.section === "clients" && clientMessage ? <p className="admin-success">{clientMessage}</p> : null}
           <section className="admin-layout">
             <aside className="admin-sidebar">
               <div className="admin-sidebar-header">
