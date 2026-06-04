@@ -1,5 +1,8 @@
 alter table if exists public.seller_contacts rename to clients;
 
+alter table if exists public.clients rename constraint seller_contacts_pkey to clients_pkey;
+alter table if exists public.clients rename constraint seller_contacts_created_by_fkey to clients_created_by_fkey;
+alter table if exists public.clients rename constraint seller_contacts_updated_by_fkey to clients_updated_by_fkey;
 alter table if exists public.clients rename constraint seller_contacts_operation_check to clients_operation_check;
 alter table if exists public.clients rename constraint seller_contacts_status_check to clients_status_check;
 
