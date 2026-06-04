@@ -858,15 +858,17 @@ function AdminApp() {
   const loadClients = async () => {
     if (!session) {
       setClients([]);
-      return;
+      return { ok: true };
     }
     setClientError("");
 
     try {
       const data = await fetchClients(clientFilters);
       setClients(data);
+      return { ok: true };
     } catch (loadError) {
       setClientError(loadError.message);
+      return { ok: false, message: loadError.message };
     }
   };
 
@@ -874,7 +876,7 @@ function AdminApp() {
     if (!session) {
       setAllClients([]);
       setHasLoadedAllClients(false);
-      return;
+      return { ok: true };
     }
     setHasLoadedAllClients(false);
     setClientError("");
@@ -882,8 +884,10 @@ function AdminApp() {
     try {
       const data = await fetchClients();
       setAllClients(data);
+      return { ok: true };
     } catch (loadError) {
       setClientError(loadError.message);
+      return { ok: false, message: loadError.message };
     } finally {
       setHasLoadedAllClients(true);
     }
@@ -1128,6 +1132,16 @@ function AdminApp() {
       return;
     }
 
+    if (route.section === "clients" && route.mode === "edit" && clientForm.id !== route.id) {
+      setClientError("El editor todavia se esta preparando. Espera unos segundos e intenta nuevamente.");
+      return;
+    }
+
+    if (route.section === "clients" && route.mode === "new" && clientForm.id) {
+      setClientError("El editor todavia se esta preparando. Espera unos segundos e intenta nuevamente.");
+      return;
+    }
+
     setIsSavingClient(true);
     setClientMessage("");
     setClientError("");
@@ -1143,8 +1157,13 @@ function AdminApp() {
         return nextClients;
       });
       setClientMessage("Cliente guardado.");
-      await Promise.all([loadAllClients(), loadClients()]);
       navigateAdmin(`/admin/clientes/${savedClient.id}`);
+      const refreshResults = await Promise.all([loadAllClients(), loadClients()]);
+      const refreshError = refreshResults.find((result) => result && !result.ok);
+
+      if (refreshError) {
+        setClientError(`Cliente guardado, pero no pude actualizar la lista: ${refreshError.message}`);
+      }
     } catch (saveError) {
       setClientError(saveError.message);
     } finally {
@@ -1303,9 +1322,15 @@ function AdminApp() {
   const getPropertyCategoryLabel = (property) =>
     CATEGORY_META[property.category]?.label || property.category || "Sin categoria";
 
-  const getSellerName = (userId) => {
+  const getInternalUserLabel = (userId) => {
+    if (!userId) return "Sin asignar";
+
     const seller = sellers.find((item) => item.id === userId);
-    return seller ? seller.fullName || seller.username : userId || "Sin asignar";
+    if (seller) return seller.fullName || seller.username;
+
+    if (userId === session?.user?.id) return "Administrador";
+
+    return "Usuario interno";
   };
 
   const selectPropertyForView = (property) => {
@@ -1754,7 +1779,7 @@ function AdminApp() {
               <small>
                 {client.zone || "Sin zona"} - {formatAdminDate(client.updatedAt || client.createdAt)}
               </small>
-              <small>Vendedor: {getSellerName(client.createdBy)}</small>
+              <small>Creado por: {getInternalUserLabel(client.createdBy)}</small>
             </div>
             <span className={`seller-status-pill seller-status-pill--${client.status}`}>
               {statusLabels[client.status] || client.status}
@@ -1840,12 +1865,12 @@ function AdminApp() {
           <input readOnly value={formatAdminDate(client.updatedAt)} />
         </label>
         <label>
-          Creador
-          <input readOnly value={getSellerName(client.createdBy)} />
+          Creado por
+          <input readOnly value={getInternalUserLabel(client.createdBy)} />
         </label>
         <label>
-          Ultima actualizacion
-          <input readOnly value={getSellerName(client.updatedBy)} />
+          Actualizado por
+          <input readOnly value={getInternalUserLabel(client.updatedBy)} />
         </label>
         <label className="admin-field-wide">
           Notas
@@ -2121,9 +2146,9 @@ function AdminApp() {
     </section>
   );
 
-  const renderClientLoading = () => (
+  const renderClientLoading = (title = "Cargando cliente...") => (
     <section className="admin-panel">
-      <h2>Cargando cliente...</h2>
+      <h2>{clientError && title === "Cargando cliente..." ? "No pude cargar el cliente" : title}</h2>
       {clientError ? <p className="admin-error">{clientError}</p> : <p className="seller-empty-state">Cargando...</p>}
     </section>
   );
@@ -2131,19 +2156,26 @@ function AdminApp() {
   const renderClientsSection = () => {
     if (route.mode === "list") return renderClientsList();
 
-    if (route.mode === "new") return renderClientEditor();
+    if (route.mode === "new") {
+      if (clientForm.id) return renderClientLoading("Preparando editor...");
+      return renderClientEditor();
+    }
 
     if (!route.id) return renderClientNotFound();
 
     const routedClient = allClients.find((client) => client.id === route.id);
     if (!routedClient) {
       if (!hasLoadedAllClients) return renderClientLoading();
+      if (clientError) return renderClientLoading();
       return renderClientNotFound();
     }
 
     if (route.mode === "view") return renderClientView(routedClient);
 
-    if (route.mode === "edit") return renderClientEditor();
+    if (route.mode === "edit") {
+      if (clientForm.id !== route.id) return renderClientLoading("Preparando editor...");
+      return renderClientEditor();
+    }
 
     return renderClientNotFound();
   };
