@@ -14,6 +14,12 @@ import {
   updateAdminPropertyOrder
 } from "../utils/supabase/properties";
 import {
+  CLIENT_OPERATIONS,
+  CLIENT_STATUSES,
+  fetchClients,
+  saveClient
+} from "../utils/supabase/clients";
+import {
   createSellerFromAdmin,
   fetchSellerProfiles,
   setSellerActiveFromAdmin
@@ -43,6 +49,39 @@ const emptySellerForm = {
   fullName: "",
   password: "",
   isActive: true
+};
+
+const adminNavItems = [
+  { label: "Resumen", path: "/admin", match: "dashboard" },
+  { label: "Propiedades", path: "/admin/propiedades", match: "properties" },
+  { label: "Clientes", path: "/admin/clientes", match: "clients" },
+  { label: "Vendedores", path: "/admin/vendedores", match: "sellers" }
+];
+
+const operationLabels = {
+  comprar: "Comprar",
+  alquilar: "Alquilar"
+};
+
+const statusLabels = {
+  nuevo: "Nuevo",
+  contactado: "Contactado",
+  visitando: "Visitando",
+  cerrado: "Cerrado",
+  pausado: "Pausado"
+};
+
+const emptyClientForm = {
+  id: "",
+  fullName: "",
+  phone: "",
+  email: "",
+  operation: "alquilar",
+  zone: "",
+  budget: "",
+  rooms: "",
+  status: "nuevo",
+  notes: ""
 };
 
 const imageContentTypes = ["image/avif", "image/jpeg", "image/png", "image/webp"];
@@ -119,6 +158,29 @@ function htmlToPlainText(html) {
     .replace(/<[^>]+>/g, " ")
     .replace(/\s{2,}/g, " ")
     .trim();
+}
+
+function parseAdminRoute(pathname = window.location.pathname) {
+  const parts = pathname.replace(/\/+$/, "").split("/").filter(Boolean);
+  const section = parts[1] || "";
+  const id = parts[2] || "";
+  const action = parts[3] || "";
+
+  if (!section) return { section: "dashboard", mode: "dashboard", id: "" };
+  if (section === "propiedades") {
+    if (id === "nueva") return { section: "properties", mode: "new", id: "" };
+    return { section: "properties", mode: action === "editar" ? "edit" : id ? "view" : "list", id };
+  }
+  if (section === "clientes") {
+    if (id === "nuevo") return { section: "clients", mode: "new", id: "" };
+    return { section: "clients", mode: action === "editar" ? "edit" : id ? "view" : "list", id };
+  }
+  if (section === "vendedores") {
+    if (id === "nuevo") return { section: "sellers", mode: "new", id: "" };
+    return { section: "sellers", mode: action === "editar" ? "edit" : id ? "view" : "list", id };
+  }
+
+  return { section: "dashboard", mode: "not-found", id: "" };
 }
 
 function RichHtmlEditor({ html, onChange }) {
@@ -576,11 +638,23 @@ function AdminApp() {
   const [error, setError] = useState("");
   const [sellerMessage, setSellerMessage] = useState("");
   const [sellerError, setSellerError] = useState("");
+  const [route, setRoute] = useState(() => parseAdminRoute());
 
   const selectedProperty = useMemo(
     () => properties.find((property) => property.id === selectedId) || null,
     [properties, selectedId]
   );
+
+  useEffect(() => {
+    const handlePopState = () => setRoute(parseAdminRoute());
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  const navigateAdmin = (path) => {
+    window.history.pushState({}, "", path);
+    setRoute(parseAdminRoute(path));
+  };
 
   useEffect(() => {
     let active = true;
