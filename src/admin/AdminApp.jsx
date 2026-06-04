@@ -84,6 +84,30 @@ const emptyClientForm = {
   notes: ""
 };
 
+function clientToForm(client) {
+  return {
+    id: client.id || "",
+    fullName: client.fullName || "",
+    phone: client.phone || "",
+    email: client.email || "",
+    operation: CLIENT_OPERATIONS.includes(client.operation) ? client.operation : "alquilar",
+    zone: client.zone || "",
+    budget: client.budget || "",
+    rooms: client.rooms || "",
+    status: CLIENT_STATUSES.includes(client.status) ? client.status : "nuevo",
+    notes: client.notes || ""
+  };
+}
+
+function formatAdminDate(value) {
+  if (!value) return "Sin fecha";
+  return new Intl.DateTimeFormat("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  }).format(new Date(value));
+}
+
 const imageContentTypes = ["image/avif", "image/jpeg", "image/png", "image/webp"];
 const imageAccept = imageContentTypes.join(",");
 const maxImageSizeInBytes = 25 * 1024 * 1024;
@@ -727,6 +751,7 @@ function AdminApp() {
   const [selectedId, setSelectedId] = useState("");
   const [form, setForm] = useState(emptyPropertyForm);
   const [sellerForm, setSellerForm] = useState(emptySellerForm);
+  const [clientForm, setClientForm] = useState(emptyClientForm);
   const [clientFilters, setClientFilters] = useState({ operation: "", status: "", createdBy: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
@@ -745,6 +770,7 @@ function AdminApp() {
   const [hasLoadedProperties, setHasLoadedProperties] = useState(false);
   const [route, setRoute] = useState(() => parseAdminRoute());
   const syncedPropertyRouteRef = useRef("");
+  const syncedClientRouteRef = useRef("");
 
   const selectedProperty = useMemo(
     () => properties.find((property) => property.id === selectedId) || null,
@@ -856,6 +882,13 @@ function AdminApp() {
     }));
   };
 
+  const updateClientField = (field, value) => {
+    setClientForm((current) => ({
+      ...current,
+      [field]: value
+    }));
+  };
+
   const updateTitle = (title) => {
     setForm((current) => ({
       ...current,
@@ -928,6 +961,40 @@ function AdminApp() {
     }
   }, [properties.length, route.id, route.mode, route.section, routedProperty]);
 
+  useEffect(() => {
+    if (route.section !== "clients") {
+      syncedClientRouteRef.current = "";
+      return;
+    }
+
+    const routeKey = `${route.mode}:${route.id}`;
+
+    if (route.mode === "new") {
+      if (syncedClientRouteRef.current !== routeKey) {
+        syncedClientRouteRef.current = routeKey;
+        setClientForm(emptyClientForm);
+        setClientMessage("");
+        setClientError("");
+      }
+      return;
+    }
+
+    if (route.mode === "edit") {
+      const client = clients.find((item) => item.id === route.id);
+      if (client && syncedClientRouteRef.current !== routeKey) {
+        syncedClientRouteRef.current = routeKey;
+        setClientForm(clientToForm(client));
+        setClientMessage("");
+        setClientError("");
+      }
+      return;
+    }
+
+    if (route.mode === "list" || route.mode === "view") {
+      syncedClientRouteRef.current = routeKey;
+    }
+  }, [route.section, route.mode, route.id, clients]);
+
   const handleCreateProperty = () => {
     setClientMessage("");
     startNewProperty();
@@ -935,10 +1002,9 @@ function AdminApp() {
   };
 
   const handleCreateClient = () => {
+    setClientForm(emptyClientForm);
     setClientError("");
-    setClientMessage(
-      "La seccion de clientes todavia esta en conversion. El alta dedicada se abrira en la proxima tarea."
-    );
+    setClientMessage("");
     navigateAdmin("/admin/clientes/nuevo");
   };
 
@@ -1020,6 +1086,30 @@ function AdminApp() {
       setError(saveError.message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleClientSave = async (event) => {
+    event.preventDefault();
+
+    if (!session?.user?.id) {
+      setClientError("Tu sesion expiro. Volve a ingresar para administrar clientes.");
+      return;
+    }
+
+    setIsSavingClient(true);
+    setClientMessage("");
+    setClientError("");
+
+    try {
+      const savedClient = await saveClient(clientForm, session.user.id);
+      setClientMessage("Cliente guardado.");
+      await loadClients();
+      navigateAdmin(`/admin/clientes/${savedClient.id}`);
+    } catch (saveError) {
+      setClientError(saveError.message);
+    } finally {
+      setIsSavingClient(false);
     }
   };
 
@@ -1173,6 +1263,11 @@ function AdminApp() {
 
   const getPropertyCategoryLabel = (property) =>
     CATEGORY_META[property.category]?.label || property.category || "Sin categoria";
+
+  const getSellerName = (userId) => {
+    const seller = sellers.find((item) => item.id === userId);
+    return seller ? seller.fullName || seller.username : userId || "Sin asignar";
+  };
 
   const selectPropertyForView = (property) => {
     setSelectedId(property.id);
@@ -1536,6 +1631,278 @@ function AdminApp() {
     </form>
   );
 
+  const renderClientsList = () => (
+    <section className="admin-sellers-panel" aria-labelledby="admin-clients-title">
+      <div className="admin-sellers-header">
+        <div>
+          <p>CRM</p>
+          <h2 id="admin-clients-title">Clientes</h2>
+        </div>
+        <button type="button" className="wa-btn" onClick={handleCreateClient}>
+          Nuevo
+        </button>
+      </div>
+
+      {clientMessage ? <p className="admin-success">{clientMessage}</p> : null}
+      {clientError ? <p className="admin-error">{clientError}</p> : null}
+
+      <div className="admin-grid">
+        <label>
+          Vendedor
+          <select
+            value={clientFilters.createdBy}
+            onChange={(event) =>
+              setClientFilters((current) => ({
+                ...current,
+                createdBy: event.target.value
+              }))
+            }
+          >
+            <option value="">Todos</option>
+            {sellers.map((seller) => (
+              <option value={seller.id} key={seller.id}>
+                {seller.fullName || seller.username}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Operacion
+          <select
+            value={clientFilters.operation}
+            onChange={(event) =>
+              setClientFilters((current) => ({
+                ...current,
+                operation: event.target.value
+              }))
+            }
+          >
+            <option value="">Todas</option>
+            {CLIENT_OPERATIONS.map((operation) => (
+              <option value={operation} key={operation}>
+                {operationLabels[operation]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Estado
+          <select
+            value={clientFilters.status}
+            onChange={(event) =>
+              setClientFilters((current) => ({
+                ...current,
+                status: event.target.value
+              }))
+            }
+          >
+            <option value="">Todos</option>
+            {CLIENT_STATUSES.map((status) => (
+              <option value={status} key={status}>
+                {statusLabels[status]}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="admin-table-list">
+        {clients.map((client) => (
+          <div className="admin-table-row" key={client.id}>
+            <div>
+              <strong>{client.fullName || "Sin nombre"}</strong>
+              <span>{operationLabels[client.operation] || client.operation || "Sin operacion"}</span>
+              <small>
+                {client.zone || "Sin zona"} - {formatAdminDate(client.updatedAt || client.createdAt)}
+              </small>
+              <small>Vendedor: {getSellerName(client.createdBy)}</small>
+            </div>
+            <span className={`seller-status-pill seller-status-pill--${client.status}`}>
+              {statusLabels[client.status] || client.status}
+            </span>
+            <div className="admin-header-actions">
+              <button type="button" className="map-btn" onClick={() => navigateAdmin(`/admin/clientes/${client.id}`)}>
+                Ver
+              </button>
+              <button
+                type="button"
+                className="map-btn"
+                onClick={() => navigateAdmin(`/admin/clientes/${client.id}/editar`)}
+              >
+                Editar
+              </button>
+            </div>
+          </div>
+        ))}
+        {!clients.length ? <p className="seller-empty-state">No hay clientes para estos filtros.</p> : null}
+      </div>
+    </section>
+  );
+
+  const renderClientView = (client) => (
+    <section className="admin-editor" aria-labelledby="admin-client-view-title">
+      <div className="admin-editor-title">
+        <div>
+          <p>{operationLabels[client.operation] || client.operation || "Cliente"}</p>
+          <h2 id="admin-client-view-title">{client.fullName || "Sin nombre"}</h2>
+        </div>
+        <div className="admin-header-actions">
+          <button type="button" className="map-btn" onClick={() => navigateAdmin("/admin/clientes")}>
+            Volver
+          </button>
+          <button type="button" className="wa-btn" onClick={() => navigateAdmin(`/admin/clientes/${client.id}/editar`)}>
+            Editar
+          </button>
+        </div>
+      </div>
+
+      {clientMessage ? <p className="admin-success">{clientMessage}</p> : null}
+      {clientError ? <p className="admin-error">{clientError}</p> : null}
+
+      <div className="admin-grid">
+        <label>
+          Nombre
+          <input readOnly value={client.fullName || "Sin nombre"} />
+        </label>
+        <label>
+          Telefono
+          <input readOnly value={client.phone || "Sin telefono"} />
+        </label>
+        <label>
+          Email
+          <input readOnly value={client.email || "Sin email"} />
+        </label>
+        <label>
+          Operacion
+          <input readOnly value={operationLabels[client.operation] || client.operation || "Sin operacion"} />
+        </label>
+        <label>
+          Zona
+          <input readOnly value={client.zone || "Sin zona"} />
+        </label>
+        <label>
+          Presupuesto
+          <input readOnly value={client.budget || "Sin presupuesto"} />
+        </label>
+        <label>
+          Ambientes
+          <input readOnly value={client.rooms || "Sin ambientes"} />
+        </label>
+        <label>
+          Estado
+          <input readOnly value={statusLabels[client.status] || client.status || "Sin estado"} />
+        </label>
+        <label>
+          Creado
+          <input readOnly value={formatAdminDate(client.createdAt)} />
+        </label>
+        <label>
+          Actualizado
+          <input readOnly value={formatAdminDate(client.updatedAt)} />
+        </label>
+        <label>
+          Creador
+          <input readOnly value={getSellerName(client.createdBy)} />
+        </label>
+        <label>
+          Ultima actualizacion
+          <input readOnly value={getSellerName(client.updatedBy)} />
+        </label>
+        <label className="admin-field-wide">
+          Notas
+          <textarea readOnly rows="7" value={client.notes || "Sin notas"} />
+        </label>
+      </div>
+    </section>
+  );
+
+  const renderClientEditor = () => (
+    <form className="admin-editor" onSubmit={handleClientSave}>
+      <div className="admin-editor-title">
+        <div>
+          <p>{clientForm.id ? "Editar cliente" : "Nuevo cliente"}</p>
+          <h2>{clientForm.fullName || "Sin nombre"}</h2>
+        </div>
+        <div className="admin-header-actions">
+          <button type="button" className="map-btn" onClick={() => navigateAdmin("/admin/clientes")}>
+            Volver
+          </button>
+        </div>
+      </div>
+
+      {clientMessage ? <p className="admin-success">{clientMessage}</p> : null}
+      {clientError ? <p className="admin-error">{clientError}</p> : null}
+
+      <div className="admin-grid">
+        <label>
+          Nombre
+          <input
+            value={clientForm.fullName}
+            onChange={(event) => updateClientField("fullName", event.target.value)}
+            required
+          />
+        </label>
+        <label>
+          Telefono
+          <input value={clientForm.phone} onChange={(event) => updateClientField("phone", event.target.value)} />
+        </label>
+        <label>
+          Email
+          <input
+            type="email"
+            value={clientForm.email}
+            onChange={(event) => updateClientField("email", event.target.value)}
+          />
+        </label>
+        <label>
+          Operacion
+          <select value={clientForm.operation} onChange={(event) => updateClientField("operation", event.target.value)}>
+            {CLIENT_OPERATIONS.map((operation) => (
+              <option value={operation} key={operation}>
+                {operationLabels[operation]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Zona
+          <input value={clientForm.zone} onChange={(event) => updateClientField("zone", event.target.value)} />
+        </label>
+        <label>
+          Presupuesto
+          <input value={clientForm.budget} onChange={(event) => updateClientField("budget", event.target.value)} />
+        </label>
+        <label>
+          Ambientes
+          <input value={clientForm.rooms} onChange={(event) => updateClientField("rooms", event.target.value)} />
+        </label>
+        <label>
+          Estado
+          <select value={clientForm.status} onChange={(event) => updateClientField("status", event.target.value)}>
+            {CLIENT_STATUSES.map((status) => (
+              <option value={status} key={status}>
+                {statusLabels[status]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="admin-field-wide">
+          Notas
+          <textarea rows="7" value={clientForm.notes} onChange={(event) => updateClientField("notes", event.target.value)} />
+        </label>
+      </div>
+
+      <div className="admin-editor-actions">
+        <button type="submit" className="wa-btn" disabled={isSavingClient}>
+          {isSavingClient ? "Guardando..." : "Guardar cliente"}
+        </button>
+        <button type="button" className="map-btn" onClick={() => navigateAdmin("/admin/clientes")}>
+          Volver
+        </button>
+      </div>
+    </form>
+  );
+
   const renderLegacyPropertySidebar = () => (
     <aside className="admin-sidebar">
       <div className="admin-sidebar-header">
@@ -1671,7 +2038,6 @@ function AdminApp() {
 
   const renderInterimAdminSection = () => (
     <>
-      {route.section === "clients" && clientMessage ? <p className="admin-success">{clientMessage}</p> : null}
       <section className="admin-layout">
         {renderLegacyPropertySidebar()}
         {renderPropertyEditor({ showBackButton: false })}
@@ -1706,6 +2072,33 @@ function AdminApp() {
     return renderNotFound("Ruta de propiedades no encontrada", "/admin/propiedades");
   };
 
+  const renderClientNotFound = () => (
+    <section className="admin-panel">
+      <h2>Cliente no encontrado</h2>
+      <p className="seller-empty-state">No encontramos ese cliente en el CRM.</p>
+      <button type="button" className="wa-btn" onClick={() => navigateAdmin("/admin/clientes")}>
+        Volver a clientes
+      </button>
+    </section>
+  );
+
+  const renderClientsSection = () => {
+    if (route.mode === "list") return renderClientsList();
+
+    if (route.mode === "new") return renderClientEditor();
+
+    if (!route.id) return renderClientNotFound();
+
+    const routedClient = clients.find((client) => client.id === route.id);
+    if (!routedClient) return renderClientNotFound();
+
+    if (route.mode === "view") return renderClientView(routedClient);
+
+    if (route.mode === "edit") return renderClientEditor();
+
+    return renderClientNotFound();
+  };
+
   const renderAdminContent = () => {
     if (route.section === "not-found") return <AdminNotFound navigateAdmin={navigateAdmin} />;
 
@@ -1727,7 +2120,9 @@ function AdminApp() {
 
     if (route.section === "properties") return renderPropertiesSection();
 
-    if (route.section === "clients" || route.section === "sellers") return renderInterimAdminSection();
+    if (route.section === "clients") return renderClientsSection();
+
+    if (route.section === "sellers") return renderInterimAdminSection();
 
     return <AdminNotFound navigateAdmin={navigateAdmin} />;
   };
