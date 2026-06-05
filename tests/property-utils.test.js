@@ -4,6 +4,8 @@ import { describe, it } from "node:test";
 import {
   CATEGORY_META,
   filterPropertiesBySearch,
+  getPublicSelectedPropertyId,
+  getVisiblePublicProperties,
   normalizeDatabaseProperty,
   propertyMatchesSearch,
   slugify
@@ -48,6 +50,21 @@ describe("property helpers", () => {
     const properties = [{ id: "1" }, { id: "2" }];
 
     assert.equal(filterPropertiesBySearch(properties, "   "), properties);
+  });
+
+  it("chooses the first visible public property by display order", () => {
+    const properties = [
+      { id: "later", title: "A later property", category: "venta", displayOrder: 5 },
+      { id: "hidden", title: "Hidden first", category: "vendido", displayOrder: 0 },
+      { id: "first", title: "Public first", category: "alquiler_turistico", displayOrder: 1 },
+      { id: "second", title: "Public second", category: "venta", displayOrder: 2 }
+    ];
+
+    assert.deepEqual(
+      getVisiblePublicProperties(properties).map((property) => property.id),
+      ["first", "second", "later"]
+    );
+    assert.equal(getPublicSelectedPropertyId(properties), "first");
   });
 
   it("uses the rose-violet design system colors for property categories", () => {

@@ -166,6 +166,37 @@ export function filterPropertiesBySearch(properties, query) {
   return properties.filter((property) => propertyMatchesSearch(property, query));
 }
 
+const publicPropertyCategories = new Set(["venta", "alquiler_turistico", "alquiler_permanente"]);
+
+function displayOrderValue(property) {
+  const order = Number(property?.displayOrder);
+  return Number.isFinite(order) ? order : 0;
+}
+
+function titleValue(property) {
+  return String(property?.title || "");
+}
+
+export function getVisiblePublicProperties(properties) {
+  return [...properties]
+    .filter((property) => publicPropertyCategories.has(property.category))
+    .sort((first, second) => {
+      const orderDifference = displayOrderValue(first) - displayOrderValue(second);
+      if (orderDifference !== 0) return orderDifference;
+
+      return titleValue(first).localeCompare(titleValue(second), "es", { sensitivity: "base" });
+    });
+}
+
+export function getPublicSelectedPropertyId(properties, currentId = "") {
+  const visibleProperties = getVisiblePublicProperties(properties);
+  if (!visibleProperties.length) return "";
+
+  return visibleProperties.some((property) => property.id === currentId)
+    ? currentId
+    : visibleProperties[0].id;
+}
+
 export function normalizeDatabaseProperty(row) {
   const images = [...(row.property_images || [])]
     .sort((first, second) => (first.sort_order || 0) - (second.sort_order || 0))

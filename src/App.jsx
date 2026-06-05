@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import {
   MapContainer,
   CircleMarker,
@@ -12,7 +12,11 @@ import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import logoMark from "../ISO GRAFITO.png";
-import { CATEGORY_META } from "./utils/properties";
+import {
+  CATEGORY_META,
+  getPublicSelectedPropertyId,
+  getVisiblePublicProperties
+} from "./utils/properties";
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -104,9 +108,7 @@ function PublicApp() {
         if (!active) return;
 
         setProperties(parsed);
-        setSelectedId((currentId) =>
-          parsed.some((property) => property.id === currentId) ? currentId : parsed[0]?.id || ""
-        );
+        setSelectedId((currentId) => getPublicSelectedPropertyId(parsed, currentId));
         setLoadError("");
       } catch (error) {
         if (!active) return;
@@ -135,12 +137,7 @@ function PublicApp() {
     }
   }, [properties, selectedId]);
 
-  const visibleProperties = properties.filter(
-    (property) =>
-      property.category === "venta" ||
-      property.category === "alquiler_turistico" ||
-      property.category === "alquiler_permanente"
-  );
+  const visibleProperties = useMemo(() => getVisiblePublicProperties(properties), [properties]);
 
   useEffect(() => {
     if (!visibleProperties.length) return;
