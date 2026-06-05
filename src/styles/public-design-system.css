@@ -34,6 +34,18 @@
     linear-gradient(90deg, rgba(77, 54, 97, 0.3), transparent 72%);
 }
 
+.page-shell .brand-logo {
+  height: clamp(58px, 7vw, 86px);
+  max-width: min(34vw, 190px);
+  padding: 0.25rem;
+  object-fit: contain;
+  object-position: center;
+  background: rgba(255, 250, 244, 0.78);
+  border: 1px solid rgba(239, 225, 195, 0.54);
+  border-radius: 18px;
+  box-shadow: 0 14px 28px rgba(35, 35, 31, 0.18);
+}
+
 .page-shell .hero h1,
 .page-shell .property-slide-title,
 .page-shell .property-detail-hero-text h2 {
@@ -344,6 +356,14 @@
 }
 
 @media (max-width: 600px) {
+  .page-shell .brand-logo {
+    align-self: flex-start;
+    height: 56px;
+    max-width: 92px;
+    padding: 0.18rem;
+    border-radius: 14px;
+  }
+
   .page-shell .properties {
     --public-slider-edge: 1rem;
     padding-block: 1.25rem;

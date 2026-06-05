@@ -52,4 +52,11 @@ describe("design system CSS layers", () => {
     assert.match(publicLayer, /\.page-shell\s+\.property-slider-stack[\s\S]*width:\s*100vw/);
     assert.match(publicLayer, /\.page-shell\s+\.property-slider-section[\s\S]*box-shadow:\s*none/);
   });
+
+  it("uses ISO GRAFITO as the public homepage logo", () => {
+    const appSource = readFileSync("src/App.jsx", "utf8");
+
+    assert.equal(existsSync("ISO GRAFITO.png"), true, "ISO GRAFITO.png should be available");
+    assert.match(appSource, /import logoMark from "\.\.\/ISO GRAFITO\.png";/);
+  });
 });
