@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "postbuild": "node scripts/generate-static-seo.mjs",
     "test": "node --test",
     "preview": "vite preview",
     "db:seed:generate": "node scripts/generate-seed-from-kml.mjs",

@@ -77,3 +77,13 @@ test("public property pages are routed through the client app", async () => {
     destination: "/"
   });
 });
+
+test("production builds generate static SEO pages for published properties", async () => {
+  const packageJson = JSON.parse(await readProjectFile("package.json"));
+  const staticSeoScript = await readProjectFile("scripts/generate-static-seo.mjs");
+
+  assert.equal(packageJson.scripts.postbuild, "node scripts/generate-static-seo.mjs");
+  assert.match(staticSeoScript, /writeStaticSeoFiles/);
+  assert.match(staticSeoScript, /\.eq\("is_published", true\)/);
+  assert.match(staticSeoScript, /getVisiblePublicProperties/);
+});

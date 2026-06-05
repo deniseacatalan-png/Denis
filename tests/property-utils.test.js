@@ -11,6 +11,7 @@ import {
   normalizeDatabaseProperty,
   propertyMatchesSearch,
   propertyPublicPath,
+  propertyShareData,
   slugify
 } from "../src/utils/properties.js";
 
@@ -22,22 +23,41 @@ describe("property helpers", () => {
   it("builds public property paths from slugs", () => {
     assert.equal(
       propertyPublicPath({ slug: "casa-centro", title: "Casa Centro", id: "prop-1" }),
-      "/propiedades/casa-centro/"
+      "/propiedades/casa-centro"
     );
     assert.equal(
       propertyPublicPath({ slug: "  Casa Ñire Centro  ", title: "Casa Centro", id: "prop-1" }),
-      "/propiedades/casa-nire-centro/"
+      "/propiedades/casa-nire-centro"
     );
   });
 
-  it("resolves a property from a public property path", () => {
+  it("resolves a property from public property paths with or without trailing slash", () => {
     const properties = [
       { id: "1", title: "Casa centro", slug: "casa-centro", category: "venta" },
       { id: "2", title: "Lote Chapelco", slug: "lote-chapelco", category: "venta" }
     ];
 
+    assert.equal(findPropertyByPublicPath(properties, "/propiedades/lote-chapelco")?.id, "2");
     assert.equal(findPropertyByPublicPath(properties, "/propiedades/lote-chapelco/")?.id, "2");
     assert.equal(findPropertyByPublicPath(properties, "/propiedades/no-existe/"), null);
+  });
+
+  it("builds native share data with an absolute canonical property URL", () => {
+    assert.deepEqual(
+      propertyShareData(
+        {
+          slug: "lotes-la-lonja",
+          title: "Lotes La Lonja",
+          location: "San Martín de los Andes"
+        },
+        "https://www.denisecatalanbienesraices.com.ar/"
+      ),
+      {
+        title: "Lotes La Lonja",
+        text: "Compartir propiedad: Lotes La Lonja en San Martín de los Andes.",
+        url: "https://www.denisecatalanbienesraices.com.ar/propiedades/lotes-la-lonja"
+      }
+    );
   });
 
   it("matches properties across all fields with normalized partial terms", () => {

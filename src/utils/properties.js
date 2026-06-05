@@ -63,7 +63,7 @@ function propertySlugValue(property) {
 
 export function propertyPublicPath(property) {
   const slug = propertySlugValue(property);
-  return slug ? `/propiedades/${slug}/` : "/";
+  return slug ? `/propiedades/${slug}` : "/";
 }
 
 export function findPropertyByPublicPath(properties, pathname = "") {
@@ -75,6 +75,20 @@ export function findPropertyByPublicPath(properties, pathname = "") {
   if (!routeSlug) return null;
 
   return properties.find((property) => propertySlugValue(property) === routeSlug) || null;
+}
+
+export function propertyShareData(property, origin = "") {
+  const title = property?.title || "Propiedad Denise Catalán";
+  const location = property?.location || "San Martín de los Andes";
+  const publicPath = propertyPublicPath(property);
+  const baseUrl = String(origin || "").trim();
+  const url = baseUrl ? new URL(publicPath, `${baseUrl.replace(/\/+$/, "")}/`).href : publicPath;
+
+  return {
+    title,
+    text: `Compartir propiedad: ${title} en ${location}.`,
+    url
+  };
 }
 
 function normalizeSearchText(value) {

@@ -17,6 +17,7 @@ import {
   findPropertyByPublicPath,
   getPublicSelectedPropertyId,
   getVisiblePublicProperties,
+  propertyShareData,
   propertyPublicPath
 } from "./utils/properties";
 
@@ -242,7 +243,9 @@ function PublicApp() {
   const [rentalSearch, setRentalSearch] = useState(INITIAL_RENTAL_SEARCH);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [currentPathname, setCurrentPathname] = useState(() => window.location.pathname);
+  const [shareFeedback, setShareFeedback] = useState("");
   const propertySliderRefs = useRef({});
+  const shareFeedbackTimerRef = useRef(0);
 
   useEffect(() => {
     let active = true;
@@ -285,6 +288,14 @@ function PublicApp() {
     const syncPathname = () => setCurrentPathname(window.location.pathname);
     window.addEventListener("popstate", syncPathname);
     return () => window.removeEventListener("popstate", syncPathname);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (shareFeedbackTimerRef.current) {
+        window.clearTimeout(shareFeedbackTimerRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -412,6 +423,51 @@ function PublicApp() {
   const createWhatsAppLink = (property) => {
     const message = `Hola Denise, quiero informacion sobre: ${property.title} (${property.price}) en ${property.location}.`;
     return `https://wa.me/${officeWhatsApp}?text=${encodeURIComponent(message)}`;
+  };
+
+  const showShareFeedback = (message) => {
+    setShareFeedback(message);
+    if (shareFeedbackTimerRef.current) {
+      window.clearTimeout(shareFeedbackTimerRef.current);
+    }
+    shareFeedbackTimerRef.current = window.setTimeout(() => setShareFeedback(""), 2400);
+  };
+
+  const copyPropertyShareUrl = async (url) => {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url);
+      return;
+    }
+
+    const textarea = document.createElement("textarea");
+    textarea.value = url;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.top = "-999px";
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+  };
+
+  const handleShareProperty = async (property) => {
+    const shareData = propertyShareData(property, window.location.origin);
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+      }
+    }
+
+    try {
+      await copyPropertyShareUrl(shareData.url);
+      showShareFeedback("Link copiado");
+    } catch (error) {
+      showShareFeedback("No pudimos copiar el link");
+    }
   };
 
   const createServiceWhatsAppLink = (need = serviceNeed) => {
@@ -598,6 +654,14 @@ function PublicApp() {
                   >
                     Ver en el mapa
                   </button>
+                  <button
+                    type="button"
+                    className="map-btn share-btn"
+                    onClick={() => handleShareProperty(routedProperty)}
+                    aria-label={`Compartir ${routedProperty.title}`}
+                  >
+                    Compartir
+                  </button>
                   <a
                     href={createWhatsAppLink(routedProperty)}
                     target="_blank"
@@ -606,6 +670,11 @@ function PublicApp() {
                   >
                     Consultar por WhatsApp
                   </a>
+                  {shareFeedback ? (
+                    <span className="share-feedback" role="status">
+                      {shareFeedback}
+                    </span>
+                  ) : null}
                 </div>
               </div>
             </article>
