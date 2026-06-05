@@ -2,7 +2,7 @@ import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import {
   MapContainer,
   CircleMarker,
-  Popup,
+  Tooltip,
   TileLayer,
   useMap
 } from "react-leaflet";
@@ -14,8 +14,10 @@ import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import logoMark from "../ISO GRAFITO.png";
 import {
   CATEGORY_META,
+  findPropertyByPublicPath,
   getPublicSelectedPropertyId,
-  getVisiblePublicProperties
+  getVisiblePublicProperties,
+  propertyPublicPath
 } from "./utils/properties";
 
 L.Icon.Default.mergeOptions({
@@ -83,13 +85,12 @@ function MapFocus({ coords }) {
 function PublicApp() {
   const [properties, setProperties] = useState([]);
   const [selectedId, setSelectedId] = useState("");
-  const [detailPropertyId, setDetailPropertyId] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [serviceNeed, setServiceNeed] = useState("vender");
   const [rentalSearch, setRentalSearch] = useState(INITIAL_RENTAL_SEARCH);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
-  const detailScrollPositionRef = useRef({ x: 0, y: 0 });
+  const [currentPathname, setCurrentPathname] = useState(() => window.location.pathname);
   const propertySliderRefs = useRef({});
 
   useEffect(() => {
@@ -130,6 +131,12 @@ function PublicApp() {
   }, []);
 
   useEffect(() => {
+    const syncPathname = () => setCurrentPathname(window.location.pathname);
+    window.addEventListener("popstate", syncPathname);
+    return () => window.removeEventListener("popstate", syncPathname);
+  }, []);
+
+  useEffect(() => {
     if (!properties.length) return;
     const currentExists = properties.some((property) => property.id === selectedId);
     if (!currentExists) {
@@ -147,28 +154,19 @@ function PublicApp() {
     }
   }, [visibleProperties, selectedId]);
 
+  const isPropertyRoute = currentPathname.startsWith("/propiedades/");
+  const routedProperty = useMemo(
+    () => findPropertyByPublicPath(visibleProperties, currentPathname),
+    [visibleProperties, currentPathname]
+  );
   const selectedProperty =
-    visibleProperties.find((property) => property.id === selectedId) || visibleProperties[0] || null;
-  const detailProperty =
-    visibleProperties.find((property) => property.id === detailPropertyId) || null;
+    routedProperty || visibleProperties.find((property) => property.id === selectedId) || visibleProperties[0] || null;
+
   useEffect(() => {
-    if (!detailPropertyId) return;
-
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") {
-        closePropertyDetail();
-      }
-    };
-    const previousOverflow = document.body.style.overflow;
-
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [detailPropertyId]);
+    if (routedProperty && routedProperty.id !== selectedId) {
+      setSelectedId(routedProperty.id);
+    }
+  }, [routedProperty, selectedId]);
 
   const formatDisplayedPrice = (property) =>
     property?.category === "proceso" ? "Sin valor" : property?.price || "Consultar";
@@ -199,29 +197,25 @@ function PublicApp() {
 
   const selectPropertyOnMap = (property) => {
     setSelectedId(property.id);
+    navigateToPath("/");
   };
 
-  const closePropertyDetail = () => {
-    setDetailPropertyId("");
-
-    window.requestAnimationFrame(() => {
-      window.scrollTo({
-        left: detailScrollPositionRef.current.x,
-        top: detailScrollPositionRef.current.y,
-        behavior: "auto"
-      });
-    });
+  const navigateToPath = (path) => {
+    if (window.location.pathname !== path) {
+      window.history.pushState({}, "", path);
+    }
+    setCurrentPathname(path);
+    window.scrollTo({ left: 0, top: 0, behavior: "auto" });
   };
 
-  const openPropertyDetail = (property) => {
-    detailScrollPositionRef.current = { x: window.scrollX, y: window.scrollY };
+  const openPropertyPage = (property) => {
     setSelectedId(property.id);
-    setDetailPropertyId(property.id);
+    navigateToPath(propertyPublicPath(property));
   };
 
   const selectPropertySlide = (property) => {
     if (property.id === selectedProperty?.id) {
-      openPropertyDetail(property);
+      openPropertyPage(property);
       return;
     }
 
@@ -261,6 +255,159 @@ function PublicApp() {
 
     return `https://wa.me/${officeWhatsApp}?text=${encodeURIComponent(message)}`;
   };
+
+  const serviceModal = isServiceModalOpen ? (
+    <div className="service-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="service-modal-title">
+      <div className="service-modal">
+        <label id="service-modal-title" htmlFor="service-need" className="services-label">Quiero solicitar el servicio de:</label>
+        <select
+          id="service-need"
+          value={serviceNeed}
+          onChange={(event) => setServiceNeed(event.target.value)}
+        >
+          <option value="vender">Vender</option>
+          <option value="alquilar">Alquilar</option>
+          <option value="invertir">Invertir</option>
+          <option value="otros">Otros</option>
+        </select>
+        <div className="service-modal-actions">
+          <button type="button" className="map-btn" onClick={() => setIsServiceModalOpen(false)}>
+            Cerrar
+          </button>
+          <a
+            href={createServiceWhatsAppLink(serviceNeed)}
+            target="_blank"
+            rel="noreferrer"
+            className="wa-btn"
+            onClick={() => setIsServiceModalOpen(false)}
+          >
+            Ir a WhatsApp
+          </a>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+  if (isPropertyRoute) {
+    return (
+      <div className="page-shell property-page-shell">
+        <header className="property-page-header">
+          <nav className="top-nav property-page-nav">
+            <button
+              type="button"
+              className="brand-home-button"
+              onClick={() => navigateToPath("/")}
+              aria-label="Volver al inicio"
+            >
+              <img className="brand-logo" src={logoMark} alt="Logo Denise Catalán" />
+            </button>
+            <div className="links">
+              <button type="button" className="map-btn" onClick={() => navigateToPath("/")}>
+                Volver al inicio
+              </button>
+              <button
+                type="button"
+                className="status-pill status-pill--venta nav-service-link nav-service-button"
+                onClick={() => setIsServiceModalOpen(true)}
+              >
+                Solicitar servicios
+              </button>
+            </div>
+          </nav>
+        </header>
+
+        <main className="property-page-main">
+          {loading ? (
+            <p className="loading-state">Leyendo la propiedad...</p>
+          ) : loadError ? (
+            <p className="loading-state">{loadError}</p>
+          ) : routedProperty ? (
+            <article className="property-page-detail">
+              <div className="property-detail-hero property-page-hero">
+                {routedProperty.images?.length ? (
+                  <img
+                    src={resolvePropertyCoverImage(routedProperty)}
+                    alt={`Foto principal de ${routedProperty.title}`}
+                  />
+                ) : null}
+                <div className="property-detail-hero-text">
+                  <p className={`status-pill status-pill--${routedProperty.category}`}>
+                    {CATEGORY_META[routedProperty.category]?.label || "En venta"}
+                  </p>
+                  <h1 id="property-detail-title">{routedProperty.title}</h1>
+                  <p>{routedProperty.location}</p>
+                </div>
+              </div>
+
+              <div className="property-detail-content property-page-content">
+                <div className="detail-stats property-detail-stats">
+                  <div>
+                    <span>Valor</span>
+                    <strong>{formatDisplayedPrice(routedProperty)}</strong>
+                  </div>
+                  <div>
+                    <span>Superficie</span>
+                    <strong>{routedProperty.area}</strong>
+                  </div>
+                  <div>
+                    <span>Geo</span>
+                    <strong>{formatCoords(routedProperty.coords)}</strong>
+                  </div>
+                </div>
+
+                <div
+                  className="rich-text property-detail-description"
+                  dangerouslySetInnerHTML={{
+                    __html: routedProperty.descriptionHtml || "<p>Sin descripcion disponible.</p>"
+                  }}
+                />
+
+                {routedProperty.images?.length ? (
+                  <div className="property-gallery property-detail-gallery">
+                    {routedProperty.images.map((imageUrl) => (
+                      <a href={imageUrl} target="_blank" rel="noreferrer" key={imageUrl}>
+                        <img src={imageUrl} alt={`Foto de ${routedProperty.title}`} loading="lazy" />
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="gallery-empty">Esta propiedad todavia no tiene fotos cargadas.</p>
+                )}
+
+                <div className="property-detail-actions">
+                  <button
+                    type="button"
+                    className="map-btn"
+                    onClick={() => selectPropertyOnMap(routedProperty)}
+                  >
+                    Ver en el mapa
+                  </button>
+                  <a
+                    href={createWhatsAppLink(routedProperty)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="wa-btn"
+                  >
+                    Consultar por WhatsApp
+                  </a>
+                </div>
+              </div>
+            </article>
+          ) : (
+            <section className="property-page-empty">
+              <p className="chip">Propiedad no encontrada</p>
+              <h1>No encontramos esta propiedad publicada.</h1>
+              <p>Puede haber cambiado de estado o no estar disponible en este momento.</p>
+              <button type="button" className="wa-btn" onClick={() => navigateToPath("/")}>
+                Ver propiedades disponibles
+              </button>
+            </section>
+          )}
+        </main>
+        {serviceModal}
+      </div>
+    );
+  }
 
 
   return (
@@ -323,14 +470,43 @@ function PublicApp() {
                           weight: property.id === selectedProperty.id ? 4 : 2
                         }}
                         eventHandlers={{
-                          click: () => setSelectedId(property.id)
+                          click: () => openPropertyPage(property)
                         }}
                       >
-                        <Popup>
-                          <strong>{property.title}</strong>
-                          <br />
-                          {property.price}
-                        </Popup>
+                        <Tooltip
+                          direction="top"
+                          offset={[0, -10]}
+                          opacity={1}
+                          className="property-map-tooltip"
+                          permanent={property.id === selectedProperty.id}
+                          sticky
+                        >
+                          <article className="map-property-preview">
+                            {property.images?.length ? (
+                              <img
+                                src={resolvePropertyCoverImage(property)}
+                                alt={`Vista de ${property.title}`}
+                                loading="lazy"
+                              />
+                            ) : null}
+                            <span className={`status-pill status-pill--${property.category}`}>
+                              {CATEGORY_META[property.category]?.label || "En venta"}
+                            </span>
+                            <strong>{property.title}</strong>
+                            <span>{property.location}</span>
+                            <dl>
+                              <div>
+                                <dt>Valor</dt>
+                                <dd>{formatDisplayedPrice(property)}</dd>
+                              </div>
+                              <div>
+                                <dt>Superficie</dt>
+                                <dd>{property.area}</dd>
+                              </div>
+                            </dl>
+                            <small>Click para ver la propiedad</small>
+                          </article>
+                        </Tooltip>
                       </CircleMarker>
                     ))}
                   </MapContainer>
@@ -340,70 +516,6 @@ function PublicApp() {
                   </div>
                 )}
               </div>
-
-              <aside className="map-highlight details-panel" id="contacto">
-                <p className="chip">Ficha completa</p>
-                {selectedProperty?.images?.length ? (
-                  <div className="details-cover">
-                    <img
-                      src={resolvePropertyCoverImage(selectedProperty)}
-                      alt={`Portada de ${selectedProperty.title}`}
-                      loading="lazy"
-                    />
-                    <h3>{selectedProperty.title}</h3>
-                  </div>
-                ) : (
-                  <h3>{selectedProperty?.title || "Selecciona una propiedad"}</h3>
-                )}
-                <p>{selectedProperty?.location}</p>
-                <p className={`status-pill status-pill--${selectedProperty?.category || "venta"}`}>
-                  {selectedProperty ? CATEGORY_META[selectedProperty.category]?.label : "En venta"}
-                </p>
-                <div className="detail-stats">
-                  <div>
-                    <span>Valor</span>
-                    <strong>{formatDisplayedPrice(selectedProperty)}</strong>
-                  </div>
-                  <div>
-                    <span>Superficie</span>
-                    <strong>{selectedProperty?.area}</strong>
-                  </div>
-                  <div>
-                    <span>Geo</span>
-                    <strong>{selectedProperty ? formatCoords(selectedProperty.coords) : "-"}</strong>
-                  </div>
-                </div>
-                <details className="tech-sheet">
-                  <summary className="map-btn">Ver ficha tecnica</summary>
-                  <div
-                    className="rich-text"
-                    dangerouslySetInnerHTML={{
-                      __html: selectedProperty?.descriptionHtml || "<p>Sin descripcion disponible.</p>"
-                    }}
-                  />
-                </details>
-                {selectedProperty?.images?.length ? (
-                  <div className="property-gallery">
-                    {selectedProperty.images.map((imageUrl) => (
-                      <a href={imageUrl} target="_blank" rel="noreferrer" key={imageUrl}>
-                        <img src={imageUrl} alt={`Foto de ${selectedProperty.title}`} loading="lazy" />
-                      </a>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="gallery-empty">Esta propiedad todavia no tiene fotos cargadas.</p>
-                )}
-                {selectedProperty ? (
-                  <a
-                    href={createWhatsAppLink(selectedProperty)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="wa-btn"
-                  >
-                    Hablar por WhatsApp
-                  </a>
-                ) : null}
-              </aside>
             </div>
           </section>
         </div>
@@ -505,7 +617,7 @@ function PublicApp() {
                                       className="property-slide-detail-btn"
                                       onClick={(event) => {
                                         event.stopPropagation();
-                                        openPropertyDetail(property);
+                                        openPropertyPage(property);
                                       }}
                                     >
                                       Ver descripcion completa
@@ -688,133 +800,7 @@ function PublicApp() {
         </section>
 
       </main>
-      {detailProperty ? (
-        <div
-          className="property-detail-backdrop"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="property-detail-title"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              closePropertyDetail();
-            }
-          }}
-        >
-          <section className="property-detail-screen">
-            <button
-              type="button"
-              className="property-detail-close"
-              onClick={closePropertyDetail}
-              aria-label="Cerrar detalle"
-            >
-              ×
-            </button>
-            <div className="property-detail-hero">
-              {detailProperty.images?.length ? (
-                <img
-                  src={resolvePropertyCoverImage(detailProperty)}
-                  alt={`Foto principal de ${detailProperty.title}`}
-                />
-              ) : null}
-              <div className="property-detail-hero-text">
-                <p className={`status-pill status-pill--${detailProperty.category}`}>
-                  {CATEGORY_META[detailProperty.category]?.label || "En venta"}
-                </p>
-                <h2 id="property-detail-title">{detailProperty.title}</h2>
-                <p>{detailProperty.location}</p>
-              </div>
-            </div>
-
-            <div className="property-detail-content">
-              <div className="detail-stats property-detail-stats">
-                <div>
-                  <span>Valor</span>
-                  <strong>{formatDisplayedPrice(detailProperty)}</strong>
-                </div>
-                <div>
-                  <span>Superficie</span>
-                  <strong>{detailProperty.area}</strong>
-                </div>
-                <div>
-                  <span>Geo</span>
-                  <strong>{formatCoords(detailProperty.coords)}</strong>
-                </div>
-              </div>
-
-              <div
-                className="rich-text property-detail-description"
-                dangerouslySetInnerHTML={{
-                  __html: detailProperty.descriptionHtml || "<p>Sin descripcion disponible.</p>"
-                }}
-              />
-
-              {detailProperty.images?.length ? (
-                <div className="property-gallery property-detail-gallery">
-                  {detailProperty.images.map((imageUrl) => (
-                    <a href={imageUrl} target="_blank" rel="noreferrer" key={imageUrl}>
-                      <img src={imageUrl} alt={`Foto de ${detailProperty.title}`} loading="lazy" />
-                    </a>
-                  ))}
-                </div>
-              ) : (
-                <p className="gallery-empty">Esta propiedad todavia no tiene fotos cargadas.</p>
-              )}
-
-              <div className="property-detail-actions">
-                <button
-                  type="button"
-                  className="map-btn"
-                  onClick={() => {
-                    closePropertyDetail();
-                    selectPropertyOnMap(detailProperty);
-                  }}
-                >
-                  Seleccionar en mapa
-                </button>
-                <a
-                  href={createWhatsAppLink(detailProperty)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="wa-btn"
-                >
-                  Consultar por WhatsApp
-                </a>
-              </div>
-            </div>
-          </section>
-        </div>
-      ) : null}
-      {isServiceModalOpen ? (
-        <div className="service-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="service-modal-title">
-          <div className="service-modal">
-            <label id="service-modal-title" htmlFor="service-need" className="services-label">Quiero solicitar el servicio de:</label>
-            <select
-              id="service-need"
-              value={serviceNeed}
-              onChange={(event) => setServiceNeed(event.target.value)}
-            >
-              <option value="vender">Vender</option>
-              <option value="alquilar">Alquilar</option>
-              <option value="invertir">Invertir</option>
-              <option value="otros">Otros</option>
-            </select>
-            <div className="service-modal-actions">
-              <button type="button" className="map-btn" onClick={() => setIsServiceModalOpen(false)}>
-                Cerrar
-              </button>
-              <a
-                href={createServiceWhatsAppLink(serviceNeed)}
-                target="_blank"
-                rel="noreferrer"
-                className="wa-btn"
-                onClick={() => setIsServiceModalOpen(false)}
-              >
-                Ir a WhatsApp
-              </a>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {serviceModal}
     </div>
   );
 }

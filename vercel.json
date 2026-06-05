@@ -11,6 +11,10 @@
     {
       "source": "/vendedor",
       "destination": "/"
+    },
+    {
+      "source": "/propiedades/:path*",
+      "destination": "/"
     }
   ]
 }

@@ -48,7 +48,7 @@
 
 .page-shell .hero h1,
 .page-shell .property-slide-title,
-.page-shell .property-detail-hero-text h2 {
+.page-shell .property-detail-hero-text :is(h1, h2) {
   color: var(--blanco-calido);
   letter-spacing: 0;
   text-shadow: 0 8px 24px rgba(35, 35, 31, 0.3);

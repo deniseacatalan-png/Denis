@@ -57,6 +57,26 @@ export function slugify(value, maxLength = Number.POSITIVE_INFINITY) {
   return Number.isFinite(maxLength) ? normalized.slice(0, maxLength) : normalized;
 }
 
+function propertySlugValue(property) {
+  return slugify(property?.slug || property?.title || property?.id || "");
+}
+
+export function propertyPublicPath(property) {
+  const slug = propertySlugValue(property);
+  return slug ? `/propiedades/${slug}/` : "/";
+}
+
+export function findPropertyByPublicPath(properties, pathname = "") {
+  const path = String(pathname || "").split(/[?#]/)[0];
+  const match = path.match(/^\/propiedades\/([^/]+)\/?$/);
+  if (!match) return null;
+
+  const routeSlug = slugify(decodeURIComponent(match[1]));
+  if (!routeSlug) return null;
+
+  return properties.find((property) => propertySlugValue(property) === routeSlug) || null;
+}
+
 function normalizeSearchText(value) {
   return String(value || "")
     .toLowerCase()

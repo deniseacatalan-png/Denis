@@ -4,16 +4,39 @@ import { describe, it } from "node:test";
 import {
   CATEGORY_META,
   filterPropertiesBySearch,
+  findPropertyByPublicPath,
   getPublicSelectedPropertyId,
   getVisiblePublicProperties,
   normalizeDatabaseProperty,
   propertyMatchesSearch,
+  propertyPublicPath,
   slugify
 } from "../src/utils/properties.js";
 
 describe("property helpers", () => {
   it("normalizes text into URL-safe slugs", () => {
     assert.equal(slugify("Cabaña Ñire en San Martín"), "cabana-nire-en-san-martin");
+  });
+
+  it("builds public property paths from slugs", () => {
+    assert.equal(
+      propertyPublicPath({ slug: "casa-centro", title: "Casa Centro", id: "prop-1" }),
+      "/propiedades/casa-centro/"
+    );
+    assert.equal(
+      propertyPublicPath({ slug: "  Casa Ñire Centro  ", title: "Casa Centro", id: "prop-1" }),
+      "/propiedades/casa-nire-centro/"
+    );
+  });
+
+  it("resolves a property from a public property path", () => {
+    const properties = [
+      { id: "1", title: "Casa centro", slug: "casa-centro", category: "venta" },
+      { id: "2", title: "Lote Chapelco", slug: "lote-chapelco", category: "venta" }
+    ];
+
+    assert.equal(findPropertyByPublicPath(properties, "/propiedades/lote-chapelco/")?.id, "2");
+    assert.equal(findPropertyByPublicPath(properties, "/propiedades/no-existe/"), null);
   });
 
   it("matches properties across all fields with normalized partial terms", () => {

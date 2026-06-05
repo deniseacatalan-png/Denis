@@ -65,3 +65,15 @@ test("robots and sitemap expose the public site to search engines", async () => 
   assert.doesNotMatch(sitemap, /\/admin/);
   assert.doesNotMatch(sitemap, /\/vendedor/);
 });
+
+test("public property pages are routed through the client app", async () => {
+  const vercelConfig = JSON.parse(await readProjectFile("vercel.json"));
+  const propertyRewrite = vercelConfig.rewrites.find(
+    (rewrite) => rewrite.source === "/propiedades/:path*"
+  );
+
+  assert.deepEqual(propertyRewrite, {
+    source: "/propiedades/:path*",
+    destination: "/"
+  });
+});
