@@ -192,6 +192,50 @@ function ServiceOptionVisual({ icon }) {
   );
 }
 
+function PublicSiteNavbar({
+  logoUrl,
+  onOpenService,
+  onNavigateHome,
+  isPropertyRoute = false
+}) {
+  return (
+    <header className="site-navbar">
+      <nav className="site-nav" aria-label="Navegación principal">
+        <button
+          type="button"
+          className="site-nav-brand"
+          onClick={onNavigateHome}
+          aria-label="Ir al inicio"
+        >
+          <img src={logoUrl} alt="Logo Denise Catalán" />
+        </button>
+        <div className="site-nav-links">
+          {isPropertyRoute ? (
+            <button type="button" className="site-nav-link" onClick={onNavigateHome}>
+              Inicio
+            </button>
+          ) : (
+            <>
+              <a href="#inicio" className="site-nav-link">
+                Inicio
+              </a>
+              <a href="#propiedades" className="site-nav-link">
+                Propiedades
+              </a>
+            </>
+          )}
+          <a href="/clientes" className="site-nav-link">
+            Portal clientes
+          </a>
+          <button type="button" className="site-nav-cta" onClick={onOpenService}>
+            Solicitar servicio
+          </button>
+        </div>
+      </nav>
+    </header>
+  );
+}
+
 function MapPropertyPreview({ property, isPinned, displayedPrice, onPreviewClick }) {
   return (
     <article
@@ -572,33 +616,12 @@ function PublicApp({ initialProperties = [] }) {
   if (isPropertyRoute) {
     return (
       <div className="page-shell property-page-shell">
-        <header className="property-page-header">
-          <nav className="top-nav property-page-nav">
-            <button
-              type="button"
-              className="brand-home-button"
-              onClick={() => navigateToPath("/")}
-              aria-label="Volver al inicio"
-            >
-              <img className="brand-logo" src={logoMarkUrl} alt="Logo Denise Catalán" />
-            </button>
-            <div className="links">
-              <button type="button" className="map-btn" onClick={() => navigateToPath("/")}>
-                Volver al inicio
-              </button>
-              <a href="/clientes" className="map-btn nav-client-link">
-                Portal clientes
-              </a>
-              <button
-                type="button"
-                className="status-pill status-pill--venta nav-service-link nav-service-button"
-                onClick={() => setIsServiceModalOpen(true)}
-              >
-                Solicitar servicios
-              </button>
-            </div>
-          </nav>
-        </header>
+        <PublicSiteNavbar
+          logoUrl={logoMarkUrl}
+          onNavigateHome={() => navigateToPath("/")}
+          onOpenService={() => setIsServiceModalOpen(true)}
+          isPropertyRoute
+        />
 
         <main className="property-page-main">
           {loading ? (
@@ -709,23 +732,12 @@ function PublicApp({ initialProperties = [] }) {
 
   return (
     <div className="page-shell">
+      <PublicSiteNavbar
+        logoUrl={logoMarkUrl}
+        onNavigateHome={() => navigateToPath("/")}
+        onOpenService={() => setIsServiceModalOpen(true)}
+      />
       <header className="hero" id="inicio">
-        <nav className="top-nav">
-          <img className="brand-logo" src={logoMarkUrl} alt="Logo Denise Catalán" />
-          <div className="links">
-            <a href="/clientes" className="map-btn nav-client-link">
-              Portal clientes
-            </a>
-            <button
-              type="button"
-              className="status-pill status-pill--venta nav-service-link nav-service-button"
-              onClick={() => setIsServiceModalOpen(true)}
-            >
-              Solicitar servicios
-            </button>
-          </div>
-        </nav>
-
         <div className="hero-layout">
           <div className="hero-content">
             <p className="overline">Inmobiliaria boutique en Patagonia</p>
@@ -799,7 +811,7 @@ function PublicApp({ initialProperties = [] }) {
       </header>
 
       <main className="content-wrap">
-        <section className="properties" aria-labelledby="properties-title">
+        <section className="properties" id="propiedades" aria-labelledby="properties-title">
           <div className="section-title">
             <p>Una selección dentro de nuestra propuesta integral</p>
             <h2 id="properties-title">Propiedades disponibles</h2>
