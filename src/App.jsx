@@ -654,6 +654,42 @@ function PublicApp() {
           </div>
         </section>
 
+        <section className="local-seo-section" aria-labelledby="local-seo-title">
+          <div className="local-seo-copy">
+            <p>Inmobiliaria local en Neuquén</p>
+            <h2 id="local-seo-title">Bienes raíces en San Martín de los Andes</h2>
+            <span>
+              Acompañamos búsquedas de compra, venta, alquiler e inversión con foco en propiedades
+              reales de la Patagonia: casas, departamentos, lotes, terrenos, chacras y espacios para
+              proyectos turísticos o residenciales.
+            </span>
+          </div>
+
+          <div className="local-seo-grid">
+            <article>
+              <h3>Compra y venta de propiedades</h3>
+              <p>
+                Publicamos casas, departamentos y oportunidades seleccionadas para quienes buscan
+                comprar o vender en San Martín de los Andes y zonas cercanas.
+              </p>
+            </article>
+            <article>
+              <h3>Lotes y terrenos</h3>
+              <p>
+                Relevamos lotes, terrenos y fracciones con ubicación, superficie, entorno y
+                documentación para evaluar cada inversión con claridad.
+              </p>
+            </article>
+            <article>
+              <h3>Alquiler permanente y turístico</h3>
+              <p>
+                Recibimos consultas para alquileres permanentes, estadías turísticas y propiedades
+                amobladas según zona, presupuesto, fechas y preferencias.
+              </p>
+            </article>
+          </div>
+        </section>
+
       </main>
       {detailProperty ? (
         <div
