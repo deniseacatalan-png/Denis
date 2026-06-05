@@ -32,6 +32,10 @@ test("homepage exposes local real estate SEO metadata", async () => {
   );
   assert.match(
     html,
+    /<meta name="msvalidate\.01" content="6118C32A03A52B21126726471B922963" \/>/
+  );
+  assert.match(
+    html,
     /<meta property="og:url" content="https:\/\/www\.denisecatalanbienesraices\.com\.ar\/" \/>/
   );
   assert.match(html, /<meta property="og:locale" content="es_AR" \/>/);
