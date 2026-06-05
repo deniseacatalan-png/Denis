@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 
 import {
@@ -75,19 +76,25 @@ describe("property helpers", () => {
     assert.equal(filterPropertiesBySearch(properties, "   "), properties);
   });
 
-  it("chooses the first visible public property by display order", () => {
+  it("chooses the first public property by inventory display order", () => {
     const properties = [
       { id: "later", title: "A later property", category: "venta", displayOrder: 5 },
-      { id: "hidden", title: "Hidden first", category: "vendido", displayOrder: 0 },
-      { id: "first", title: "Public first", category: "alquiler_turistico", displayOrder: 1 },
+      { id: "inventory-first", title: "Inventory first", category: "vendido", displayOrder: 0 },
+      { id: "rental-first", title: "Public first", category: "alquiler_turistico", displayOrder: 1 },
       { id: "second", title: "Public second", category: "venta", displayOrder: 2 }
     ];
 
     assert.deepEqual(
       getVisiblePublicProperties(properties).map((property) => property.id),
-      ["first", "second", "later"]
+      ["inventory-first", "rental-first", "second", "later"]
     );
-    assert.equal(getPublicSelectedPropertyId(properties), "first");
+    assert.equal(getPublicSelectedPropertyId(properties), "inventory-first");
+  });
+
+  it("does not filter published properties by category before public ordering", () => {
+    const supabasePropertiesSource = readFileSync("src/utils/supabase/properties.js", "utf8");
+
+    assert.doesNotMatch(supabasePropertiesSource, /\.in\("category"/);
   });
 
   it("uses the rose-violet design system colors for property categories", () => {

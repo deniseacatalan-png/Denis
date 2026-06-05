@@ -186,7 +186,7 @@ export function filterPropertiesBySearch(properties, query) {
   return properties.filter((property) => propertyMatchesSearch(property, query));
 }
 
-const publicPropertyCategories = new Set(["venta", "alquiler_turistico", "alquiler_permanente"]);
+const publicPropertyCategories = new Set(Object.keys(CATEGORY_META));
 
 function displayOrderValue(property) {
   const order = Number(property?.displayOrder);

@@ -62,7 +62,6 @@ export async function fetchPublishedProperties() {
     .from("properties")
     .select(PROPERTY_SELECT)
     .eq("is_published", true)
-    .in("category", ["venta", "alquiler_turistico", "alquiler_permanente"])
     .order("display_order", { ascending: true })
     .order("title", { ascending: true });
 
