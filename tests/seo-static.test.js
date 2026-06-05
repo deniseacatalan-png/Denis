@@ -26,13 +26,19 @@ test("homepage exposes local real estate SEO metadata", async () => {
   );
   assert.match(html, /compra y venta de casas, departamentos, lotes y terrenos/i);
   assert.match(html, /alquileres permanentes y tur[ií]sticos/i);
-  assert.match(html, /<link rel="canonical" href="https:\/\/denisecatalanbienesraices\.com\.ar\/" \/>/);
-  assert.match(html, /<meta property="og:url" content="https:\/\/denisecatalanbienesraices\.com\.ar\/" \/>/);
+  assert.match(
+    html,
+    /<link rel="canonical" href="https:\/\/www\.denisecatalanbienesraices\.com\.ar\/" \/>/
+  );
+  assert.match(
+    html,
+    /<meta property="og:url" content="https:\/\/www\.denisecatalanbienesraices\.com\.ar\/" \/>/
+  );
   assert.match(html, /<meta property="og:locale" content="es_AR" \/>/);
 
   assert.deepEqual(jsonLd["@type"], ["RealEstateAgent", "LocalBusiness"]);
   assert.equal(jsonLd.name, "Denise Catalán Bienes Raíces");
-  assert.equal(jsonLd.url, "https://denisecatalanbienesraices.com.ar/");
+  assert.equal(jsonLd.url, "https://www.denisecatalanbienesraices.com.ar/");
   assert.equal(jsonLd.telephone, "+5492944688613");
   assert.equal(jsonLd.address.addressLocality, "San Martín de los Andes");
   assert.ok(
@@ -49,9 +55,9 @@ test("robots and sitemap expose the public site to search engines", async () => 
   assert.match(robots, /Allow: \//);
   assert.match(robots, /Disallow: \/admin/);
   assert.match(robots, /Disallow: \/vendedor/);
-  assert.match(robots, /Sitemap: https:\/\/denisecatalanbienesraices\.com\.ar\/sitemap\.xml/);
+  assert.match(robots, /Sitemap: https:\/\/www\.denisecatalanbienesraices\.com\.ar\/sitemap\.xml/);
 
-  assert.match(sitemap, /<loc>https:\/\/denisecatalanbienesraices\.com\.ar\/<\/loc>/);
+  assert.match(sitemap, /<loc>https:\/\/www\.denisecatalanbienesraices\.com\.ar\/<\/loc>/);
   assert.doesNotMatch(sitemap, /\/admin/);
   assert.doesNotMatch(sitemap, /\/vendedor/);
 });
