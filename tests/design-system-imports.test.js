@@ -59,4 +59,34 @@ describe("design system CSS layers", () => {
     assert.equal(existsSync("ISO GRAFITO.png"), true, "ISO GRAFITO.png should be available");
     assert.match(appSource, /import logoMark from "\.\.\/ISO GRAFITO\.png";/);
   });
+
+  it("keeps the public map intro hidden and the property preview unpinned by default", () => {
+    const appSource = readFileSync("src/App.jsx", "utf8");
+
+    assert.doesNotMatch(appSource, /Geolocalizacion/);
+    assert.doesNotMatch(appSource, /Plano de ubicaciones/);
+    assert.doesNotMatch(appSource, /permanent=\{property\.id === selectedProperty\.id\}/);
+    assert.match(appSource, /const \[pinnedPropertyId, setPinnedPropertyId\]/);
+    assert.match(
+      appSource,
+      /const pinPropertyPreview = \(property\) => \{\s*setPinnedPropertyId\(property\.id\);\s*\};/
+    );
+  });
+
+  it("keeps map markers clickable above pinned property previews", () => {
+    const styles = readFileSync("src/styles.css", "utf8");
+
+    assert.match(styles, /\.map-frame\s+\.leaflet-tooltip-pane[\s\S]*z-index:\s*350/);
+    assert.match(styles, /\.map-frame\s+\.leaflet-overlay-pane\s+svg[\s\S]*pointer-events:\s*none/);
+    assert.match(styles, /\.map-frame\s+\.leaflet-overlay-pane\s+path\.leaflet-interactive[\s\S]*pointer-events:\s*auto/);
+  });
+
+  it("keeps map focus stable when property data refreshes with the same coordinates", () => {
+    const appSource = readFileSync("src/App.jsx", "utf8");
+
+    assert.match(appSource, /const \[lat, lng\] = coords;/);
+    assert.match(appSource, /map\.flyTo\(\[lat, lng\], 13, \{ duration: 1\.1 \}\);/);
+    assert.match(appSource, /\}, \[lat, lng, map\]\);/);
+    assert.doesNotMatch(appSource, /\}, \[coords, map\]\);/);
+  });
 });

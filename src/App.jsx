@@ -4,7 +4,8 @@ import {
   CircleMarker,
   Tooltip,
   TileLayer,
-  useMap
+  useMap,
+  useMapEvents
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -74,10 +75,19 @@ function resolvePropertyCoverImage(property) {
 
 function MapFocus({ coords }) {
   const map = useMap();
+  const [lat, lng] = coords;
 
   useEffect(() => {
-    map.flyTo(coords, 13, { duration: 1.1 });
-  }, [coords, map]);
+    map.flyTo([lat, lng], 13, { duration: 1.1 });
+  }, [lat, lng, map]);
+
+  return null;
+}
+
+function MapClickReset({ onClear }) {
+  useMapEvents({
+    click: onClear
+  });
 
   return null;
 }
@@ -85,6 +95,7 @@ function MapFocus({ coords }) {
 function PublicApp() {
   const [properties, setProperties] = useState([]);
   const [selectedId, setSelectedId] = useState("");
+  const [pinnedPropertyId, setPinnedPropertyId] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [serviceNeed, setServiceNeed] = useState("vender");
@@ -142,7 +153,11 @@ function PublicApp() {
     if (!currentExists) {
       setSelectedId(properties[0].id);
     }
-  }, [properties, selectedId]);
+
+    if (pinnedPropertyId && !properties.some((property) => property.id === pinnedPropertyId)) {
+      setPinnedPropertyId("");
+    }
+  }, [properties, selectedId, pinnedPropertyId]);
 
   const visibleProperties = useMemo(() => getVisiblePublicProperties(properties), [properties]);
 
@@ -161,6 +176,7 @@ function PublicApp() {
   );
   const selectedProperty =
     routedProperty || visibleProperties.find((property) => property.id === selectedId) || visibleProperties[0] || null;
+  const activeMapPropertyId = pinnedPropertyId || selectedProperty?.id || "";
 
   useEffect(() => {
     if (routedProperty && routedProperty.id !== selectedId) {
@@ -197,6 +213,7 @@ function PublicApp() {
 
   const selectPropertyOnMap = (property) => {
     setSelectedId(property.id);
+    setPinnedPropertyId(property.id);
     navigateToPath("/");
   };
 
@@ -210,7 +227,12 @@ function PublicApp() {
 
   const openPropertyPage = (property) => {
     setSelectedId(property.id);
+    setPinnedPropertyId("");
     navigateToPath(propertyPublicPath(property));
+  };
+
+  const pinPropertyPreview = (property) => {
+    setPinnedPropertyId(property.id);
   };
 
   const selectPropertySlide = (property) => {
@@ -435,14 +457,7 @@ function PublicApp() {
             </p>
           </div>
 
-          <section className="map-section hero-map-section" id="mapa">
-            <div className="section-title map-section-header">
-              <div>
-                <p>Geolocalizacion</p>
-                <h2>Plano de ubicaciones</h2>
-              </div>
-            </div>
-
+          <section className="map-section hero-map-section" id="mapa" aria-label="Mapa de propiedades disponibles">
             <div className="map-layout">
               <div className="map-frame">
                 {selectedProperty ? (
@@ -453,62 +468,83 @@ function PublicApp() {
                     className="map-view"
                   >
                     <MapFocus coords={selectedProperty.coords} />
+                    <MapClickReset onClear={() => setPinnedPropertyId("")} />
                     <TileLayer
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
-                    {visibleProperties.map((property) => (
-                      <CircleMarker
-                        key={property.id}
-                        center={property.coords}
-                        radius={property.id === selectedProperty.id ? 11 : 8}
-                        pathOptions={{
-                          color: property.markerColor || CATEGORY_META[property.category]?.mapColor || CATEGORY_META.venta.mapColor,
-                          fillColor:
-                            property.markerColor || CATEGORY_META[property.category]?.mapColor || CATEGORY_META.venta.mapColor,
-                          fillOpacity: 0.9,
-                          weight: property.id === selectedProperty.id ? 4 : 2
-                        }}
-                        eventHandlers={{
-                          click: () => openPropertyPage(property)
-                        }}
-                      >
-                        <Tooltip
-                          direction="top"
-                          offset={[0, -10]}
-                          opacity={1}
-                          className="property-map-tooltip"
-                          permanent={property.id === selectedProperty.id}
-                          sticky
+                    {visibleProperties.map((property) => {
+                      const isPinned = property.id === pinnedPropertyId;
+
+                      return (
+                        <CircleMarker
+                          key={property.id}
+                          center={property.coords}
+                          radius={property.id === activeMapPropertyId ? 11 : 8}
+                          bubblingMouseEvents={false}
+                          pathOptions={{
+                            color: property.markerColor || CATEGORY_META[property.category]?.mapColor || CATEGORY_META.venta.mapColor,
+                            fillColor:
+                              property.markerColor || CATEGORY_META[property.category]?.mapColor || CATEGORY_META.venta.mapColor,
+                            fillOpacity: 0.9,
+                            weight: property.id === activeMapPropertyId ? 4 : 2
+                          }}
+                          eventHandlers={{
+                            click: () => pinPropertyPreview(property)
+                          }}
                         >
-                          <article className="map-property-preview">
-                            {property.images?.length ? (
-                              <img
-                                src={resolvePropertyCoverImage(property)}
-                                alt={`Vista de ${property.title}`}
-                                loading="lazy"
-                              />
-                            ) : null}
-                            <span className={`status-pill status-pill--${property.category}`}>
-                              {CATEGORY_META[property.category]?.label || "En venta"}
-                            </span>
-                            <strong>{property.title}</strong>
-                            <span>{property.location}</span>
-                            <dl>
-                              <div>
-                                <dt>Valor</dt>
-                                <dd>{formatDisplayedPrice(property)}</dd>
-                              </div>
-                              <div>
-                                <dt>Superficie</dt>
-                                <dd>{property.area}</dd>
-                              </div>
-                            </dl>
-                            <small>Click para ver la propiedad</small>
-                          </article>
-                        </Tooltip>
-                      </CircleMarker>
-                    ))}
+                          <Tooltip
+                            direction="auto"
+                            offset={[0, 0]}
+                            opacity={1}
+                            className={`property-map-tooltip ${isPinned ? "property-map-tooltip--pinned" : ""}`}
+                            interactive={isPinned}
+                            permanent={isPinned}
+                            sticky={!isPinned}
+                          >
+                            <article
+                              className={`map-property-preview ${isPinned ? "map-property-preview--pinned" : ""}`}
+                              role={isPinned ? "button" : undefined}
+                              tabIndex={isPinned ? 0 : undefined}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                openPropertyPage(property);
+                              }}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter" || event.key === " ") {
+                                  event.preventDefault();
+                                  openPropertyPage(property);
+                                }
+                              }}
+                            >
+                              {property.images?.length ? (
+                                <img
+                                  src={resolvePropertyCoverImage(property)}
+                                  alt={`Vista de ${property.title}`}
+                                  loading="lazy"
+                                />
+                              ) : null}
+                              <span className={`status-pill status-pill--${property.category}`}>
+                                {CATEGORY_META[property.category]?.label || "En venta"}
+                              </span>
+                              <strong>{property.title}</strong>
+                              <span>{property.location}</span>
+                              <dl>
+                                <div>
+                                  <dt>Valor</dt>
+                                  <dd>{formatDisplayedPrice(property)}</dd>
+                                </div>
+                                <div>
+                                  <dt>Superficie</dt>
+                                  <dd>{property.area}</dd>
+                                </div>
+                              </dl>
+                              <small>Click para ver la propiedad</small>
+                            </article>
+                          </Tooltip>
+                        </CircleMarker>
+                      );
+                    })}
                   </MapContainer>
                 ) : (
                   <div className="map-empty">

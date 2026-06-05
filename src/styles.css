@@ -649,6 +649,18 @@ body {
   min-height: 430px;
 }
 
+.map-frame .leaflet-tooltip-pane {
+  z-index: 350;
+}
+
+.map-frame .leaflet-overlay-pane svg {
+  pointer-events: none;
+}
+
+.map-frame .leaflet-overlay-pane path.leaflet-interactive {
+  pointer-events: auto;
+}
+
 .leaflet-tooltip.property-map-tooltip {
   padding: 0;
   border: 0;
@@ -658,8 +670,24 @@ body {
   pointer-events: none;
 }
 
+.leaflet-tooltip.property-map-tooltip:has(.map-property-preview--pinned) {
+  pointer-events: auto;
+}
+
 .leaflet-tooltip-top.property-map-tooltip::before {
   border-top-color: rgba(255, 250, 244, 0.96);
+}
+
+.leaflet-tooltip-bottom.property-map-tooltip::before {
+  border-bottom-color: rgba(255, 250, 244, 0.96);
+}
+
+.leaflet-tooltip-left.property-map-tooltip::before {
+  border-left-color: rgba(255, 250, 244, 0.96);
+}
+
+.leaflet-tooltip-right.property-map-tooltip::before {
+  border-right-color: rgba(255, 250, 244, 0.96);
 }
 
 .map-property-preview {
@@ -673,6 +701,15 @@ body {
   border-radius: 16px;
   box-shadow: 0 18px 44px rgba(35, 35, 31, 0.22);
   white-space: normal;
+}
+
+.map-property-preview--pinned {
+  cursor: pointer;
+}
+
+.map-property-preview--pinned:focus-visible {
+  outline: 2px solid rgba(176, 82, 140, 0.86);
+  outline-offset: 4px;
 }
 
 .map-property-preview img {
