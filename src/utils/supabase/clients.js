@@ -1,25 +1,7 @@
-import { createClient } from "./client.js";
+import { fetchJsonWithAuth } from "./api.js";
 
 export const CLIENT_OPERATIONS = ["comprar", "alquilar", "temporada"];
 export const CLIENT_STATUSES = ["nuevo", "contactado", "visitando", "cerrado", "pausado"];
-
-const CLIENT_SELECT = `
-  id,
-  created_by,
-  updated_by,
-  full_name,
-  phone,
-  email,
-  is_owner,
-  operation,
-  zone,
-  budget,
-  rooms,
-  status,
-  notes,
-  created_at,
-  updated_at
-`;
 
 function textValue(value) {
   return String(value || "").trim();
@@ -71,55 +53,31 @@ export function clientToDatabasePayload(values, userId) {
 }
 
 export async function fetchClients(filters = {}) {
-  const supabase = createClient();
-  let query = supabase
-    .from("clients")
-    .select(CLIENT_SELECT)
-    .order("updated_at", { ascending: false })
-    .order("created_at", { ascending: false });
+  const params = new URLSearchParams();
 
   if (CLIENT_OPERATIONS.includes(filters.operation)) {
-    query = query.eq("operation", filters.operation);
+    params.set("operation", filters.operation);
   }
 
   if (CLIENT_STATUSES.includes(filters.status)) {
-    query = query.eq("status", filters.status);
+    params.set("status", filters.status);
   }
 
   if (filters.createdBy) {
-    query = query.eq("created_by", filters.createdBy);
+    params.set("createdBy", filters.createdBy);
   }
 
-  const { data, error } = await query;
-  if (error) throw error;
-  return (data || []).map(normalizeClient);
+  const query = params.toString();
+  const payload = await fetchJsonWithAuth(`/api/internal/clients${query ? `?${query}` : ""}`);
+  return payload.clients || [];
 }
 
 export async function saveClient(values, userId) {
-  const supabase = createClient();
-  const payload = clientToDatabasePayload(values, userId);
+  clientToDatabasePayload(values, userId);
+  const payload = await fetchJsonWithAuth("/api/internal/clients", {
+    method: "POST",
+    body: JSON.stringify({ client: values })
+  });
 
-  if (values.id) {
-    const { data, error } = await supabase
-      .from("clients")
-      .update(payload)
-      .eq("id", values.id)
-      .select(CLIENT_SELECT)
-      .single();
-
-    if (error) throw error;
-    return normalizeClient(data);
-  }
-
-  const { data, error } = await supabase
-    .from("clients")
-    .insert({
-      ...payload,
-      created_by: userId
-    })
-    .select(CLIENT_SELECT)
-    .single();
-
-  if (error) throw error;
-  return normalizeClient(data);
+  return payload.client;
 }

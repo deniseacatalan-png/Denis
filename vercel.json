@@ -1,21 +1,3 @@
 {
-  "trailingSlash": false,
-  "rewrites": [
-    {
-      "source": "/admin",
-      "destination": "/"
-    },
-    {
-      "source": "/admin/:path*",
-      "destination": "/"
-    },
-    {
-      "source": "/vendedor",
-      "destination": "/"
-    },
-    {
-      "source": "/propiedades/:path*",
-      "destination": "/"
-    }
-  ]
+  "trailingSlash": false
 }

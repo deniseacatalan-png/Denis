@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
-import { describe, it } from "node:test";
+import { describe, it } from "vitest";
 
 const cssLayers = [
   "src/styles/design-system.css",
@@ -11,13 +11,13 @@ const cssLayers = [
 
 describe("design system CSS layers", () => {
   it("loads the design system layers after the legacy stylesheet in a stable order", () => {
-    const mainSource = readFileSync("src/main.jsx", "utf8");
+    const mainSource = readFileSync("src/app/layout.tsx", "utf8");
     const orderedImports = [
-      'import "./styles/design-system.css";',
-      'import "./styles.css";',
-      'import "./styles/public-design-system.css";',
-      'import "./styles/crm-design-system.css";',
-      'import "./styles/activity-design-system.css";'
+      'import "../styles/design-system.css";',
+      'import "../styles.css";',
+      'import "../styles/public-design-system.css";',
+      'import "../styles/crm-design-system.css";',
+      'import "../styles/activity-design-system.css";'
     ];
 
     let lastIndex = -1;

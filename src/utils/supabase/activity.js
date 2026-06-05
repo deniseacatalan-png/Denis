@@ -1,25 +1,4 @@
-import { createClient } from "./client.js";
-
-const NOTE_SELECT = `
-  id,
-  body,
-  created_by,
-  author_role,
-  author_name,
-  created_at
-`;
-
-const DOCUMENT_SELECT = `
-  id,
-  file_name,
-  file_url,
-  file_type,
-  file_size,
-  created_by,
-  author_role,
-  author_name,
-  created_at
-`;
+import { fetchJsonWithAuth } from "./api.js";
 
 const entityConfig = {
   property: {
@@ -149,57 +128,55 @@ export function documentToDatabasePayload(entityType, entityId, fileMetadata, au
 }
 
 async function fetchNotes(entityType, entityId) {
-  const config = configForEntity(entityType);
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from(config.notesTable)
-    .select(`${config.idColumn}, ${NOTE_SELECT}`)
-    .eq(config.idColumn, entityId)
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return (data || []).map(normalizeActivityNote);
+  configForEntity(entityType);
+  const params = new URLSearchParams({
+    entityType,
+    entityId,
+    kind: "notes"
+  });
+  const payload = await fetchJsonWithAuth(`/api/internal/activity?${params.toString()}`);
+  return payload.items || [];
 }
 
 async function createNote(entityType, entityId, body, author) {
-  const config = configForEntity(entityType);
-  const payload = noteToDatabasePayload(entityType, entityId, body, author);
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from(config.notesTable)
-    .insert(payload)
-    .select(`${config.idColumn}, ${NOTE_SELECT}`)
-    .single();
+  noteToDatabasePayload(entityType, entityId, body, author);
+  const payload = await fetchJsonWithAuth("/api/internal/activity", {
+    method: "POST",
+    body: JSON.stringify({
+      entityType,
+      entityId,
+      kind: "notes",
+      body
+    })
+  });
 
-  if (error) throw error;
-  return normalizeActivityNote(data);
+  return payload.item;
 }
 
 async function fetchDocuments(entityType, entityId) {
-  const config = configForEntity(entityType);
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from(config.documentsTable)
-    .select(`${config.idColumn}, ${DOCUMENT_SELECT}`)
-    .eq(config.idColumn, entityId)
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return (data || []).map(normalizeActivityDocument);
+  configForEntity(entityType);
+  const params = new URLSearchParams({
+    entityType,
+    entityId,
+    kind: "documents"
+  });
+  const payload = await fetchJsonWithAuth(`/api/internal/activity?${params.toString()}`);
+  return payload.items || [];
 }
 
 async function createDocument(entityType, entityId, fileMetadata, author) {
-  const config = configForEntity(entityType);
-  const payload = documentToDatabasePayload(entityType, entityId, fileMetadata, author);
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from(config.documentsTable)
-    .insert(payload)
-    .select(`${config.idColumn}, ${DOCUMENT_SELECT}`)
-    .single();
+  documentToDatabasePayload(entityType, entityId, fileMetadata, author);
+  const payload = await fetchJsonWithAuth("/api/internal/activity", {
+    method: "POST",
+    body: JSON.stringify({
+      entityType,
+      entityId,
+      kind: "documents",
+      fileMetadata
+    })
+  });
 
-  if (error) throw error;
-  return normalizeActivityDocument(data);
+  return payload.item;
 }
 
 export function fetchPropertyNotes(propertyId) {

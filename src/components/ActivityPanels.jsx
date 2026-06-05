@@ -1,3 +1,5 @@
+"use client";
+
 import { upload } from "@vercel/blob/client";
 import { useEffect, useMemo, useState } from "react";
 import { slugify } from "../utils/properties";

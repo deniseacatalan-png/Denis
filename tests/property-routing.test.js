@@ -1,15 +1,14 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
-import path from "node:path";
-import test from "node:test";
-import { fileURLToPath } from "node:url";
+import { existsSync, readFileSync } from "node:fs";
+import { test } from "vitest";
 
-const projectRoot = fileURLToPath(new URL("../", import.meta.url));
+test("Next handles public property routes without Vercel SPA rewrites", () => {
+  assert.equal(existsSync("src/app/propiedades/[slug]/page.tsx"), true);
 
-test("Vercel normalizes trailing slashes before serving public property routes", async () => {
-  const vercelConfig = JSON.parse(
-    await readFile(path.join(projectRoot, "vercel.json"), "utf8")
-  );
+  const nextConfig = readFileSync("next.config.ts", "utf8");
+  assert.match(nextConfig, /trailingSlash:\s*false/);
 
+  const vercelConfig = JSON.parse(readFileSync("vercel.json", "utf8"));
   assert.equal(vercelConfig.trailingSlash, false);
+  assert.equal(vercelConfig.rewrites, undefined);
 });

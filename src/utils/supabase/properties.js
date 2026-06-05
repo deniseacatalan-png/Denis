@@ -1,33 +1,5 @@
 import { createClient } from "./client";
-import {
-  normalizeDatabaseProperty,
-  propertyToDatabasePayload
-} from "../properties";
-
-const PROPERTY_SELECT = `
-  id,
-  kml_id,
-  title,
-  slug,
-  location,
-  price,
-  area,
-  category,
-  latitude,
-  longitude,
-  marker_color,
-  summary,
-  description_html,
-  raw_description,
-  is_published,
-  display_order,
-  property_images (
-    id,
-    url,
-    alt,
-    sort_order
-  )
-`;
+import { fetchJson, fetchJsonWithAuth } from "./api.js";
 
 const ADMIN_EMAIL_DOMAIN = "admin.denise-catalan.local";
 
@@ -57,98 +29,34 @@ export async function signOutAdmin() {
 }
 
 export async function fetchPublishedProperties() {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from("properties")
-    .select(PROPERTY_SELECT)
-    .eq("is_published", true)
-    .order("display_order", { ascending: true })
-    .order("title", { ascending: true });
-
-  if (error) throw error;
-  return (data || []).map(normalizeDatabaseProperty);
+  const payload = await fetchJson("/api/properties/public");
+  return payload.properties || [];
 }
 
 export async function fetchAdminProperties() {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from("properties")
-    .select(PROPERTY_SELECT)
-    .order("display_order", { ascending: true })
-    .order("title", { ascending: true });
-
-  if (error) throw error;
-  return (data || []).map(normalizeDatabaseProperty);
+  const payload = await fetchJsonWithAuth("/api/admin/properties");
+  return payload.properties || [];
 }
 
 export async function saveAdminProperty(values) {
-  const supabase = createClient();
-  const payload = propertyToDatabasePayload(values);
-  const imageUrls = values.images
-    .map((url) => url.trim())
-    .filter(Boolean);
+  const payload = await fetchJsonWithAuth("/api/admin/properties", {
+    method: "POST",
+    body: JSON.stringify({ property: values })
+  });
 
-  if (!payload.title) {
-    throw new Error("El titulo es obligatorio.");
-  }
-
-  if (payload.latitude === null || payload.longitude === null) {
-    throw new Error("La latitud y longitud son obligatorias.");
-  }
-
-  let propertyId = values.databaseId || "";
-
-  if (propertyId) {
-    const { error } = await supabase
-      .from("properties")
-      .update(payload)
-      .eq("id", propertyId);
-    if (error) throw error;
-  } else {
-    const { data, error } = await supabase
-      .from("properties")
-      .insert(payload)
-      .select("id")
-      .single();
-    if (error) throw error;
-    propertyId = data.id;
-  }
-
-  const { error: deleteError } = await supabase
-    .from("property_images")
-    .delete()
-    .eq("property_id", propertyId);
-  if (deleteError) throw deleteError;
-
-  if (imageUrls.length) {
-    const rows = imageUrls.map((url, index) => ({
-      property_id: propertyId,
-      url,
-      alt: values.title.trim(),
-      sort_order: index
-    }));
-    const { error: imageError } = await supabase.from("property_images").insert(rows);
-    if (imageError) throw imageError;
-  }
-
-  return propertyId;
+  return payload.propertyId;
 }
 
 export async function updateAdminPropertyOrder(orderedProperties) {
-  const supabase = createClient();
-
-  for (const [index, property] of orderedProperties.entries()) {
-    const { error } = await supabase
-      .from("properties")
-      .update({ display_order: index })
-      .eq("id", property.id);
-
-    if (error) throw error;
-  }
+  await fetchJsonWithAuth("/api/admin/properties/order", {
+    method: "PATCH",
+    body: JSON.stringify({ properties: orderedProperties })
+  });
 }
 
 export async function deleteAdminProperty(propertyId) {
-  const supabase = createClient();
-  const { error } = await supabase.from("properties").delete().eq("id", propertyId);
-  if (error) throw error;
+  await fetchJsonWithAuth("/api/admin/properties", {
+    method: "DELETE",
+    body: JSON.stringify({ propertyId })
+  });
 }

@@ -4,11 +4,13 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "postbuild": "node scripts/generate-static-seo.mjs",
-    "test": "node --test",
-    "preview": "vite preview",
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:node": "node --test",
+    "prisma:generate": "prisma generate",
     "db:seed:generate": "node scripts/generate-seed-from-kml.mjs",
     "db:seed": "node scripts/seed-supabase.mjs",
     "admin:create": "node scripts/create-admin.mjs",
@@ -16,17 +18,30 @@
     "e2e:blob-upload": "node scripts/e2e-blob-upload.mjs"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
     "@supabase/ssr": "^0.10.3",
-    "@supabase/supabase-js": "^2.105.4",
-    "@vercel/blob": "^2.3.3",
+    "@supabase/supabase-js": "^2.107.0",
+    "@vercel/blob": "^2.4.0",
+    "dotenv": "^17.4.2",
     "leaflet": "^1.9.4",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-leaflet": "^4.2.1"
+    "next": "^16.2.7",
+    "pg": "^8.21.0",
+    "prisma": "^7.8.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-leaflet": "^5.0.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.1",
+    "@types/node": "^25.9.1",
+    "@types/pg": "^8.20.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.7",
     "fast-xml-parser": "^5.8.0",
-    "vite": "^5.4.2"
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
   }
 }

@@ -1,4 +1,6 @@
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   MapContainer,
   CircleMarker,
@@ -21,14 +23,17 @@ import {
   propertyPublicPath
 } from "./utils/properties";
 
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow
-});
+function assetUrl(asset) {
+  return typeof asset === "string" ? asset : asset?.src || "";
+}
 
-const AdminApp = lazy(() => import("./admin/AdminApp"));
-const SellerApp = lazy(() => import("./seller/SellerApp"));
+const logoMarkUrl = assetUrl(logoMark);
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: assetUrl(markerIcon2x),
+  iconUrl: assetUrl(markerIcon),
+  shadowUrl: assetUrl(markerShadow)
+});
 
 const officeWhatsApp = "5492944688613";
 
@@ -232,12 +237,12 @@ function MapPropertyPreview({ property, isPinned, displayedPrice, onPreviewClick
   );
 }
 
-function PublicApp() {
-  const [properties, setProperties] = useState([]);
+function PublicApp({ initialProperties = [] }) {
+  const [properties, setProperties] = useState(() => initialProperties);
   const [selectedId, setSelectedId] = useState("");
   const [pinnedPropertyId, setPinnedPropertyId] = useState("");
   const [hoveredPropertyId, setHoveredPropertyId] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !initialProperties.length);
   const [loadError, setLoadError] = useState("");
   const [serviceNeed, setServiceNeed] = useState("vender");
   const [rentalSearch, setRentalSearch] = useState(INITIAL_RENTAL_SEARCH);
@@ -252,10 +257,14 @@ function PublicApp() {
 
     async function loadProperties() {
       try {
-        const { fetchPublishedProperties } = await import("./utils/supabase/properties");
-        const supabaseProperties = await fetchPublishedProperties();
+        const response = await fetch("/api/properties/public");
+        const payload = await response.json().catch(() => ({}));
 
-        const parsed = supabaseProperties.map((property) => ({
+        if (!response.ok) {
+          throw new Error(payload.error || "No pudimos cargar las propiedades desde la base de datos.");
+        }
+
+        const parsed = (payload.properties || []).map((property) => ({
           ...property,
           images: property.images || []
         }));
@@ -571,7 +580,7 @@ function PublicApp() {
               onClick={() => navigateToPath("/")}
               aria-label="Volver al inicio"
             >
-              <img className="brand-logo" src={logoMark} alt="Logo Denise Catalán" />
+              <img className="brand-logo" src={logoMarkUrl} alt="Logo Denise Catalán" />
             </button>
             <div className="links">
               <button type="button" className="map-btn" onClick={() => navigateToPath("/")}>
@@ -699,7 +708,7 @@ function PublicApp() {
     <div className="page-shell">
       <header className="hero" id="inicio">
         <nav className="top-nav">
-          <img className="brand-logo" src={logoMark} alt="Logo Denise Catalán" />
+          <img className="brand-logo" src={logoMarkUrl} alt="Logo Denise Catalán" />
           <div className="links">
             <button
               type="button"
@@ -1067,44 +1076,5 @@ function PublicApp() {
   );
 }
 
-function App() {
-  const isAdminRoute =
-    window.location.pathname === "/admin" ||
-    window.location.pathname.startsWith("/admin/") ||
-    window.location.hash === "#admin";
-  const isSellerRoute = window.location.pathname === "/vendedor" || window.location.hash === "#vendedor";
-
-  if (isAdminRoute) {
-    return (
-      <Suspense
-        fallback={
-          <main className="admin-shell admin-shell--login">
-            <section className="admin-login-panel">
-              <p>Cargando administrador...</p>
-            </section>
-          </main>
-        }
-      >
-        <AdminApp />
-      </Suspense>
-    );
-  }
-
-  return isSellerRoute ? (
-    <Suspense
-      fallback={
-        <main className="admin-shell admin-shell--login">
-          <section className="admin-login-panel">
-            <p>Cargando vendedor...</p>
-          </section>
-        </main>
-      }
-    >
-      <SellerApp />
-    </Suspense>
-  ) : (
-    <PublicApp />
-  );
-}
-
-export default App;
+export { PublicApp };
+export default PublicApp;

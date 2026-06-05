@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model AdminProfile {
+  id        String   @id @db.Uuid
+  username  String
+  email     String
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@map("admin_profiles")
+}
+
+model Property {
+  id              String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  kmlId           String?            @unique @map("kml_id")
+  title           String
+  slug            String             @unique
+  location        String             @default("")
+  price           String             @default("Consultar")
+  area            String             @default("Superficie a confirmar")
+  category        String             @default("venta")
+  latitude        Float?
+  longitude       Float?
+  markerColor     String             @default("#a65774") @map("marker_color")
+  summary         String             @default("")
+  descriptionHtml String             @default("") @map("description_html")
+  rawDescription  String             @default("") @map("raw_description")
+  isPublished     Boolean            @default(true) @map("is_published")
+  displayOrder    Int                @default(0) @map("display_order")
+  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime           @default(now()) @map("updated_at") @db.Timestamptz(6)
+  propertyImages  PropertyImage[]
+  propertyNotes   PropertyNote[]
+  propertyDocs    PropertyDocument[]
+
+  @@map("properties")
+}
+
+model PropertyImage {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  propertyId String   @map("property_id") @db.Uuid
+  url        String
+  alt        String   @default("")
+  sortOrder  Int      @default(0) @map("sort_order")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@map("property_images")
+}
+
+model SellerProfile {
+  id        String   @id @db.Uuid
+  username  String
+  email     String
+  fullName  String   @default("") @map("full_name")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdBy String?  @map("created_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@map("seller_profiles")
+}
+
+model Client {
+  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdBy       String           @map("created_by") @db.Uuid
+  updatedBy       String?          @map("updated_by") @db.Uuid
+  fullName        String           @map("full_name")
+  phone           String           @default("")
+  email           String           @default("")
+  isOwner         Boolean          @default(false) @map("is_owner")
+  operation       String           @default("alquilar")
+  zone            String           @default("")
+  budget          String           @default("")
+  rooms           String           @default("")
+  status          String           @default("nuevo")
+  notes           String           @default("")
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
+  clientNotes     ClientNote[]
+  clientDocuments ClientDocument[]
+
+  @@map("clients")
+}
+
+model PropertyNote {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  propertyId String   @map("property_id") @db.Uuid
+  body       String
+  createdBy  String   @map("created_by") @db.Uuid
+  authorRole String   @map("author_role")
+  authorName String   @default("") @map("author_name")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@map("property_notes")
+}
+
+model ClientNote {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clientId   String   @map("client_id") @db.Uuid
+  body       String
+  createdBy  String   @map("created_by") @db.Uuid
+  authorRole String   @map("author_role")
+  authorName String   @default("") @map("author_name")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  client     Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@map("client_notes")
+}
+
+model PropertyDocument {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  propertyId String   @map("property_id") @db.Uuid
+  fileName   String   @map("file_name")
+  fileUrl    String   @map("file_url")
+  fileType   String   @default("") @map("file_type")
+  fileSize   BigInt   @default(0) @map("file_size")
+  createdBy  String   @map("created_by") @db.Uuid
+  authorRole String   @map("author_role")
+  authorName String   @default("") @map("author_name")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@map("property_documents")
+}
+
+model ClientDocument {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clientId   String   @map("client_id") @db.Uuid
+  fileName   String   @map("file_name")
+  fileUrl    String   @map("file_url")
+  fileType   String   @default("") @map("file_type")
+  fileSize   BigInt   @default(0) @map("file_size")
+  createdBy  String   @map("created_by") @db.Uuid
+  authorRole String   @map("author_role")
+  authorName String   @default("") @map("author_name")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  client     Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@map("client_documents")
+}

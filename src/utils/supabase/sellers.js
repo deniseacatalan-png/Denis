@@ -1,17 +1,7 @@
 import { createClient } from "./client.js";
+import { fetchJsonWithAuth } from "./api.js";
 
 export const SELLER_EMAIL_DOMAIN = "vendedor.denise-catalan.local";
-
-const SELLER_PROFILE_SELECT = `
-  id,
-  username,
-  email,
-  full_name,
-  is_active,
-  created_by,
-  created_at,
-  updated_at
-`;
 
 function normalizeUsername(value) {
   return String(value || "").trim().toLowerCase();
@@ -56,53 +46,14 @@ export async function signOutSeller() {
 }
 
 export async function fetchInternalProfile(userId) {
-  const supabase = createClient();
-  const { data: sellerProfile, error: sellerError } = await supabase
-    .from("seller_profiles")
-    .select(SELLER_PROFILE_SELECT)
-    .eq("id", userId)
-    .eq("is_active", true)
-    .maybeSingle();
-
-  if (sellerError) throw sellerError;
-  if (sellerProfile) {
-    return {
-      role: "seller",
-      profile: normalizeSellerProfile(sellerProfile)
-    };
-  }
-
-  const { data: adminProfile, error: adminError } = await supabase
-    .from("admin_profiles")
-    .select("id, username, email, is_active")
-    .eq("id", userId)
-    .eq("is_active", true)
-    .maybeSingle();
-
-  if (adminError) throw adminError;
-  if (!adminProfile) return null;
-
-  return {
-    role: "admin",
-    profile: {
-      id: adminProfile.id,
-      username: adminProfile.username || "",
-      email: adminProfile.email || "",
-      fullName: adminProfile.username || "Administrador",
-      isActive: Boolean(adminProfile.is_active)
-    }
-  };
+  if (!userId) return null;
+  const payload = await fetchJsonWithAuth("/api/internal/profile");
+  return payload.internalProfile || null;
 }
 
 export async function fetchSellerProfiles() {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from("seller_profiles")
-    .select(SELLER_PROFILE_SELECT)
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return (data || []).map(normalizeSellerProfile);
+  const payload = await fetchJsonWithAuth("/api/admin/sellers");
+  return payload.sellers || [];
 }
 
 export async function createSellerFromAdmin({ accessToken, seller }) {

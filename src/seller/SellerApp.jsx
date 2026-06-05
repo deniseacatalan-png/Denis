@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DocumentsPanel, NotesPanel } from "../components/ActivityPanels";
 import {
@@ -21,6 +23,12 @@ import {
   signOutSeller
 } from "../utils/supabase/sellers";
 import logoMark from "../../Design System/assets/logo-dc-mark.svg";
+
+function assetUrl(asset) {
+  return typeof asset === "string" ? asset : asset?.src || "";
+}
+
+const logoMarkUrl = assetUrl(logoMark);
 
 const operationLabels = {
   comprar: "Comprar",
@@ -104,7 +112,7 @@ function LoginPanel({ onLogin }) {
   return (
     <main className="admin-shell admin-shell--login seller-shell">
       <section className="admin-login-panel">
-        <img src={logoMark} alt="Logo Denise Catalán" />
+        <img src={logoMarkUrl} alt="Logo Denise Catalán" />
         <h1>Vendedor</h1>
         <form onSubmit={handleSubmit} className="admin-form">
           <label>

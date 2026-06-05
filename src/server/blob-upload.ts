@@ -1,12 +1,10 @@
 import { handleUpload } from "@vercel/blob/client";
-import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const supabaseKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-  process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+import { getPrisma } from "./prisma";
+import { resolveInternalProfileForUser } from "./auth/guards";
+import { getSupabaseUserFromAccessToken } from "./auth/supabase";
+
 const maxUploadSizeInBytes = 25 * 1024 * 1024;
-const supabaseRequestTimeoutMs = 10_000;
 
 const imageContentTypes = [
   "image/avif",
@@ -26,18 +24,20 @@ const documentContentTypes = [
 const allowedAttachmentContentTypes = [...imageContentTypes, ...documentContentTypes];
 
 class UploadRouteError extends Error {
-  constructor(message, status = 400) {
+  status: number;
+
+  constructor(message: string, status = 400) {
     super(message);
     this.status = status;
   }
 }
 
-function isJsonRequest(request) {
+function isJsonRequest(request: Request) {
   const contentType = request.headers.get("content-type") || "";
   return contentType.toLowerCase().includes("application/json");
 }
 
-async function readUploadBody(request) {
+async function readUploadBody(request: Request) {
   if (!isJsonRequest(request)) {
     throw new UploadRouteError(
       "La ruta de subida espera JSON de Vercel Blob, no el archivo completo.",
@@ -48,47 +48,7 @@ async function readUploadBody(request) {
   return request.json();
 }
 
-async function fetchWithTimeout(input, init = {}) {
-  const controller = new AbortController();
-  const upstreamSignal = init.signal;
-  let didTimeout = false;
-
-  const timeout = setTimeout(() => {
-    didTimeout = true;
-    controller.abort();
-  }, supabaseRequestTimeoutMs);
-
-  const abortFromUpstream = () => controller.abort(upstreamSignal.reason);
-  if (upstreamSignal) {
-    if (upstreamSignal.aborted) {
-      abortFromUpstream();
-    } else {
-      upstreamSignal.addEventListener("abort", abortFromUpstream, { once: true });
-    }
-  }
-
-  try {
-    return await fetch(input, {
-      ...init,
-      signal: controller.signal
-    });
-  } catch (error) {
-    if (didTimeout) {
-      throw new Error(
-        "Supabase no respondio a tiempo. Revisa las variables publicas de Supabase en Vercel."
-      );
-    }
-
-    throw error;
-  } finally {
-    clearTimeout(timeout);
-    if (upstreamSignal) {
-      upstreamSignal.removeEventListener("abort", abortFromUpstream);
-    }
-  }
-}
-
-function parseClientPayload(clientPayload) {
+function parseClientPayload(clientPayload?: string | null) {
   if (!clientPayload) return {};
 
   try {
@@ -98,26 +58,7 @@ function parseClientPayload(clientPayload) {
   }
 }
 
-function makeSupabaseClient(accessToken) {
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Faltan variables publicas de Supabase.");
-  }
-
-  return createClient(supabaseUrl, supabaseKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false
-    },
-    global: {
-      headers: {
-        Authorization: `Bearer ${accessToken}`
-      },
-      fetch: fetchWithTimeout
-    }
-  });
-}
-
-async function resolveInternalUser(clientPayload) {
+async function resolveInternalUser(clientPayload?: string | null) {
   const payload = parseClientPayload(clientPayload);
   const accessToken = payload.accessToken;
 
@@ -125,62 +66,27 @@ async function resolveInternalUser(clientPayload) {
     throw new Error("Tenes que iniciar sesion para subir archivos.");
   }
 
-  const supabase = makeSupabaseClient(accessToken);
+  const user = await getSupabaseUserFromAccessToken(accessToken);
+  const internalProfile = await resolveInternalProfileForUser(getPrisma(), user.id);
 
-  const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
-
-  if (userError || !userData.user) {
-    throw new Error("La sesion interna no es valida.");
-  }
-
-  const { data: adminProfile, error: adminError } = await supabase
-    .from("admin_profiles")
-    .select("id")
-    .eq("id", userData.user.id)
-    .eq("is_active", true)
-    .maybeSingle();
-
-  if (adminError) {
-    throw adminError;
-  }
-
-  if (adminProfile) {
-    return {
-      payload,
-      role: "admin",
-      userId: userData.user.id
-    };
-  }
-
-  const { data: sellerProfile, error: sellerError } = await supabase
-    .from("seller_profiles")
-    .select("id")
-    .eq("id", userData.user.id)
-    .eq("is_active", true)
-    .maybeSingle();
-
-  if (sellerError) {
-    throw sellerError;
-  }
-
-  if (!sellerProfile) {
+  if (!internalProfile) {
     throw new Error("El usuario no tiene permiso para subir archivos.");
   }
 
   return {
     payload,
-    role: "seller",
-    userId: userData.user.id
+    role: internalProfile.role,
+    userId: user.id
   };
 }
 
-function assertPathStartsWith(pathname, expectedPrefix, message) {
+function assertPathStartsWith(pathname: string, expectedPrefix: string, message: string) {
   if (!pathname.startsWith(expectedPrefix)) {
     throw new Error(message);
   }
 }
 
-async function authorizeUpload(pathname, clientPayload) {
+async function authorizeUpload(pathname: string, clientPayload?: string | null) {
   const internalUser = await resolveInternalUser(clientPayload);
   const uploadType = internalUser.payload.uploadType || "property-image";
   const propertyId = internalUser.payload.propertyId || null;
@@ -255,7 +161,7 @@ async function authorizeUpload(pathname, clientPayload) {
   throw new Error("Tipo de subida invalido.");
 }
 
-async function handleBlobUploadRequest(request) {
+export async function handleBlobUploadRequest(request: Request) {
   if (request.method && request.method !== "POST") {
     return Response.json({ error: "Metodo no permitido." }, { status: 405 });
   }
@@ -283,18 +189,10 @@ async function handleBlobUploadRequest(request) {
     });
 
     return Response.json(jsonResponse);
-  } catch (error) {
+  } catch (error: any) {
     return Response.json(
       { error: error instanceof Error ? error.message : "No se pudo preparar la subida." },
       { status: error?.status || 400 }
     );
   }
 }
-
-export function POST(request) {
-  return handleBlobUploadRequest(request);
-}
-
-export default {
-  fetch: handleBlobUploadRequest
-};

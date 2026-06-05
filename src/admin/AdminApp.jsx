@@ -1,3 +1,5 @@
+"use client";
+
 import { upload } from "@vercel/blob/client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
@@ -38,6 +40,12 @@ import {
   setSellerActiveFromAdmin
 } from "../utils/supabase/sellers";
 import logoMark from "../../Design System/assets/logo-dc-mark.svg";
+
+function assetUrl(asset) {
+  return typeof asset === "string" ? asset : asset?.src || "";
+}
+
+const logoMarkUrl = assetUrl(logoMark);
 
 const emptyPropertyForm = {
   databaseId: "",
@@ -666,7 +674,7 @@ function LoginPanel({ onLogin }) {
   return (
     <main className="admin-shell admin-shell--login">
       <section className="admin-login-panel">
-        <img src={logoMark} alt="Logo Denise Catalán" />
+        <img src={logoMarkUrl} alt="Logo Denise Catalán" />
         <h1>Administrador</h1>
         <form onSubmit={handleSubmit} className="admin-form">
           <label>
