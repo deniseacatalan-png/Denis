@@ -5,4 +5,4 @@ Disallow: /admin/
 Disallow: /vendedor
 Disallow: /vendedor/
 
-Sitemap: https://denisecatalanbienesraices.com/sitemap.xml
+Sitemap: https://denisecatalanbienesraices.com.ar/sitemap.xml
