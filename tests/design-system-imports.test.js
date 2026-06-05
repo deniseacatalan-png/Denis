@@ -69,16 +69,41 @@ describe("design system CSS layers", () => {
     assert.match(appSource, /const \[pinnedPropertyId, setPinnedPropertyId\]/);
     assert.match(
       appSource,
-      /const pinPropertyPreview = \(property\) => \{\s*setPinnedPropertyId\(property\.id\);\s*\};/
+      /const pinPropertyPreview = \(property\) => \{\s*setPinnedPropertyId\(property\.id\);\s*setHoveredPropertyId\(property\.id\);\s*\};/
     );
+  });
+
+  it("lets hover property previews be clicked once to pin and clicked again to open", () => {
+    const appSource = readFileSync("src/App.jsx", "utf8");
+    const styles = readFileSync("src/styles.css", "utf8");
+
+    assert.doesNotMatch(appSource, /Tooltip/);
+    assert.match(appSource, /const \[hoveredPropertyId, setHoveredPropertyId\]/);
+    assert.match(appSource, /const mapPreviewPropertyId = pinnedPropertyId \|\| hoveredPropertyId;/);
+    assert.match(appSource, /className=\{`map-preview-overlay/);
+    assert.match(
+      appSource,
+      /mouseover: \(\) => setHoveredPropertyId\(property\.id\),\s*click: \(\) => pinPropertyPreview\(property\)/
+    );
+    assert.match(appSource, /onPreviewClick=\{\(\) => handleMapPreviewClick\(mapPreviewProperty\)\}/);
+    assert.match(appSource, /data-property-id=\{property\.id\}/);
+    assert.match(appSource, /role="button"/);
+    assert.match(appSource, /tabIndex=\{0\}/);
+    assert.match(
+      appSource,
+      /if \(property\.id === pinnedPropertyId\) \{\s*openPropertyPage\(property\);\s*return;\s*\}\s*pinPropertyPreview\(property\);/
+    );
+    assert.match(appSource, /isPinned \? "Click para ver la propiedad" : "Click para fijar la propiedad"/);
+    assert.match(styles, /\.map-frame[\s\S]*position:\s*relative/);
+    assert.match(styles, /\.map-preview-overlay[\s\S]*z-index:\s*500/);
   });
 
   it("keeps map markers clickable above pinned property previews", () => {
     const styles = readFileSync("src/styles.css", "utf8");
 
-    assert.match(styles, /\.map-frame\s+\.leaflet-tooltip-pane[\s\S]*z-index:\s*350/);
     assert.match(styles, /\.map-frame\s+\.leaflet-overlay-pane\s+svg[\s\S]*pointer-events:\s*none/);
     assert.match(styles, /\.map-frame\s+\.leaflet-overlay-pane\s+path\.leaflet-interactive[\s\S]*pointer-events:\s*auto/);
+    assert.match(styles, /\.map-preview-overlay[\s\S]*pointer-events:\s*auto/);
   });
 
   it("keeps map focus stable when property data refreshes with the same coordinates", () => {
