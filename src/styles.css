@@ -1249,9 +1249,9 @@ body {
 }
 
 .service-modal {
-  width: min(460px, 100%);
+  width: min(620px, 100%);
   border-radius: 20px;
-  padding: 1.2rem;
+  padding: clamp(1rem, 3vw, 1.4rem);
   border: 1px solid var(--border);
   background: var(--blanco-calido);
   box-shadow: var(--shadow);
@@ -1274,15 +1274,166 @@ body {
   justify-content: flex-end;
 }
 
-.service-modal select {
+.service-option-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+.service-option-card {
+  position: relative;
+  min-height: 126px;
+  display: flex;
+  gap: 0.85rem;
+  align-items: center;
   width: 100%;
-  margin-top: 0.5rem;
-  border-radius: 999px;
   border: 1px solid var(--border);
-  padding: 0.62rem 0.95rem;
-  background: var(--blanco-calido);
+  border-radius: 16px;
+  padding: 0.9rem 2.65rem 0.9rem 0.9rem;
+  color: var(--fg-1, var(--tinta));
+  background: rgba(255, 250, 244, 0.82);
   font-family: inherit;
-  font-size: 1rem;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.service-option-card:hover,
+.service-option-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(216, 191, 143, 0.78);
+  box-shadow: 0 12px 24px rgba(77, 54, 97, 0.16);
+  outline: none;
+}
+
+.service-option-card.is-selected {
+  border-color: rgba(110, 79, 130, 0.62);
+  background:
+    linear-gradient(145deg, rgba(255, 250, 244, 0.96), rgba(239, 225, 195, 0.64)),
+    radial-gradient(circle at top right, rgba(217, 168, 173, 0.22), transparent 38%);
+  box-shadow:
+    inset 0 0 0 1px rgba(110, 79, 130, 0.16),
+    0 14px 28px rgba(77, 54, 97, 0.18);
+}
+
+.service-option-visual {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(110, 79, 130, 0.16);
+  border-radius: 16px;
+  color: var(--brand, var(--verde-bosque));
+  background:
+    linear-gradient(145deg, rgba(255, 250, 244, 0.96), rgba(239, 225, 195, 0.54)),
+    radial-gradient(circle at top right, rgba(216, 191, 143, 0.24), transparent 42%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62);
+}
+
+.service-option-visual svg {
+  width: 42px;
+  height: 42px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.service-option-visual--sale {
+  color: #8d3568;
+}
+
+.service-option-visual--rent {
+  color: #6a4f78;
+}
+
+.service-option-visual--investment {
+  color: var(--violeta-profundo, var(--verde-bosque));
+}
+
+.service-option-visual--custom {
+  color: var(--marron-tierra);
+}
+
+.service-option-card.is-selected .service-option-visual {
+  color: var(--blanco-calido);
+  border-color: rgba(255, 250, 244, 0.5);
+  background: var(--button-gradient, linear-gradient(135deg, var(--verde-bosque), #243c30));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    0 10px 22px rgba(77, 54, 97, 0.16);
+}
+
+.service-option-marker {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid rgba(110, 79, 130, 0.42);
+  border-radius: 999px;
+  background: rgba(255, 250, 244, 0.72);
+}
+
+.service-option-card.is-selected .service-option-marker {
+  border-color: var(--brand, var(--verde-bosque));
+  background: var(--brand, var(--verde-bosque));
+}
+
+.service-option-card.is-selected .service-option-marker::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: inherit;
+  background: var(--blanco-calido);
+}
+
+.service-option-copy {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.service-option-copy strong {
+  font-size: 1.05rem;
+  color: var(--brand, var(--verde-bosque));
+}
+
+.service-option-copy small {
+  color: var(--fg-2, var(--gris-texto));
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+@media (max-width: 600px) {
+  .service-option-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .service-option-card {
+    gap: 0.75rem;
+    min-height: auto;
+    padding: 0.75rem 2.55rem 0.75rem 0.75rem;
+  }
+
+  .service-option-visual {
+    flex-basis: 54px;
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+  }
+
+  .service-option-visual svg {
+    width: 36px;
+    height: 36px;
+  }
 }
 
 /* --- Premium boutique theme override --- */

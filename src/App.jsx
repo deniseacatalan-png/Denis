@@ -52,6 +52,33 @@ const PROPERTY_SLIDER_GROUPS = [
   }
 ];
 
+const SERVICE_OPTIONS = [
+  {
+    value: "vender",
+    icon: "sale",
+    label: "Vender",
+    description: "Quiero vender una propiedad."
+  },
+  {
+    value: "alquilar",
+    icon: "rent",
+    label: "Alquilar",
+    description: "Quiero alquilar o publicar un alquiler."
+  },
+  {
+    value: "invertir",
+    icon: "investment",
+    label: "Invertir",
+    description: "Busco oportunidades para invertir."
+  },
+  {
+    value: "otros",
+    icon: "custom",
+    label: "Otros",
+    description: "Necesito una consulta personalizada."
+  }
+];
+
 
 const INITIAL_RENTAL_SEARCH = {
   type: "permanente",
@@ -97,6 +124,66 @@ function MapClickReset({ onClear }) {
   });
 
   return null;
+}
+
+function ServiceOptionVisual({ icon }) {
+  const iconClassName = `service-option-visual service-option-visual--${icon}`;
+
+  if (icon === "rent") {
+    return (
+      <span className={iconClassName} aria-hidden="true">
+        <svg viewBox="0 0 48 48" focusable="false">
+          <path d="M17 27.5a9.5 9.5 0 1 1 6.7-2.8L40 41l-4 4-5-5-4 4-4-4 4-4-6.7-6.7a9.4 9.4 0 0 1-3.3.2Z" />
+          <circle cx="16" cy="16" r="3.5" />
+          <path d="M30 14h9v19" />
+          <path d="M33 33h12" />
+        </svg>
+      </span>
+    );
+  }
+
+  if (icon === "investment") {
+    return (
+      <span className={iconClassName} aria-hidden="true">
+        <svg viewBox="0 0 48 48" focusable="false">
+          <path d="M8 39h34" />
+          <path d="M12 34l8-9 7 5 11-15" />
+          <path d="M31 15h7v7" />
+          <circle cx="15" cy="17" r="6" />
+          <path d="M15 13v8" />
+          <path d="M12 17h6" />
+        </svg>
+      </span>
+    );
+  }
+
+  if (icon === "custom") {
+    return (
+      <span className={iconClassName} aria-hidden="true">
+        <svg viewBox="0 0 48 48" focusable="false">
+          <path d="M9 13h24a6 6 0 0 1 6 6v7a6 6 0 0 1-6 6H21l-9 7v-7H9a6 6 0 0 1-6-6v-7a6 6 0 0 1 6-6Z" />
+          <path d="M17 10h22a6 6 0 0 1 6 6v8a6 6 0 0 1-4 5.7" />
+          <path d="M13 23h1" />
+          <path d="M21 23h1" />
+          <path d="M29 23h1" />
+        </svg>
+      </span>
+    );
+  }
+
+  return (
+    <span className={iconClassName} aria-hidden="true">
+      <svg viewBox="0 0 48 48" focusable="false">
+        <path d="M8 24 24 11l16 13" />
+        <path d="M13 23v18h22V23" />
+        <path d="M20 41V30h8v11" />
+        <path d="M31 13h7v13" />
+        <path d="M8 10h13v9H8z" />
+        <path d="M11 14h7" />
+        <path d="M11 17h4" />
+      </svg>
+    </span>
+  );
 }
 
 function MapPropertyPreview({ property, isPinned, displayedPrice, onPreviewClick }) {
@@ -332,6 +419,24 @@ function PublicApp() {
     return `https://wa.me/${officeWhatsApp}?text=${encodeURIComponent(message)}`;
   };
 
+  const handleServiceOptionKeyDown = (event, optionIndex) => {
+    const keyDirection = {
+      ArrowDown: 1,
+      ArrowRight: 1,
+      ArrowLeft: -1,
+      ArrowUp: -1
+    }[event.key];
+
+    if (!keyDirection) return;
+
+    event.preventDefault();
+    const nextIndex = (optionIndex + keyDirection + SERVICE_OPTIONS.length) % SERVICE_OPTIONS.length;
+    setServiceNeed(SERVICE_OPTIONS[nextIndex].value);
+    event.currentTarget.parentElement
+      ?.querySelectorAll(".service-option-card")
+      ?.[nextIndex]?.focus();
+  };
+
   const updateRentalSearch = (field, value) => {
     setRentalSearch((currentSearch) => ({
       ...currentSearch,
@@ -359,17 +464,28 @@ function PublicApp() {
   const serviceModal = isServiceModalOpen ? (
     <div className="service-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="service-modal-title">
       <div className="service-modal">
-        <label id="service-modal-title" htmlFor="service-need" className="services-label">Quiero solicitar el servicio de:</label>
-        <select
-          id="service-need"
-          value={serviceNeed}
-          onChange={(event) => setServiceNeed(event.target.value)}
-        >
-          <option value="vender">Vender</option>
-          <option value="alquilar">Alquilar</option>
-          <option value="invertir">Invertir</option>
-          <option value="otros">Otros</option>
-        </select>
+        <h3 id="service-modal-title" className="services-label">Quiero solicitar el servicio de:</h3>
+        <div className="service-option-grid" role="radiogroup" aria-labelledby="service-modal-title">
+          {SERVICE_OPTIONS.map((option, optionIndex) => (
+            <button
+              type="button"
+              key={option.value}
+              className={`service-option-card ${serviceNeed === option.value ? "is-selected" : ""}`}
+              role="radio"
+              aria-checked={serviceNeed === option.value}
+              tabIndex={serviceNeed === option.value ? 0 : -1}
+              onClick={() => setServiceNeed(option.value)}
+              onKeyDown={(event) => handleServiceOptionKeyDown(event, optionIndex)}
+            >
+              <ServiceOptionVisual icon={option.icon} />
+              <span className="service-option-copy">
+                <strong>{option.label}</strong>
+                <small>{option.description}</small>
+              </span>
+              <span className="service-option-marker" aria-hidden="true" />
+            </button>
+          ))}
+        </div>
         <div className="service-modal-actions">
           <button type="button" className="map-btn" onClick={() => setIsServiceModalOpen(false)}>
             Cerrar
