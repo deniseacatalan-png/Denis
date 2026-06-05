@@ -121,6 +121,7 @@ describe("static property SEO generation", () => {
     assert.doesNotMatch(sitemap, /oculta/);
     assert.doesNotMatch(sitemap, /\/admin/);
     assert.doesNotMatch(sitemap, /\/vendedor/);
+    assert.doesNotMatch(sitemap, /\/clientes/);
   });
 
   it("parses Argentine-formatted real estate prices for structured data", () => {

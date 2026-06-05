@@ -39,6 +39,7 @@ model Property {
   propertyImages  PropertyImage[]
   propertyNotes   PropertyNote[]
   propertyDocs    PropertyDocument[]
+  portalSubmissions ClientPropertySubmission[]
 
   @@map("properties")
 }
@@ -146,4 +147,94 @@ model ClientDocument {
   client     Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@map("client_documents")
+}
+
+model ClientPortalProfile {
+  userId    String   @id @map("user_id") @db.Uuid
+  email     String
+  fullName  String   @default("") @map("full_name")
+  avatarUrl String   @default("") @map("avatar_url")
+  phone     String   @default("")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@map("client_portal_profiles")
+}
+
+model ClientPropertySubmission {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId              String    @map("user_id") @db.Uuid
+  title               String    @default("")
+  operation           String    @default("venta")
+  intent              String    @default("ofrecer")
+  status              String    @default("borrador")
+  propertyType        String    @default("") @map("property_type")
+  address             String    @default("")
+  zone                String    @default("")
+  price               String    @default("")
+  area                String    @default("")
+  rooms               String    @default("")
+  bedrooms            Int?
+  bathrooms           Int?
+  description         String    @default("")
+  features            Json      @default("{}")
+  latitude            Float?
+  longitude           Float?
+  adminMessage        String    @default("") @map("admin_message")
+  convertedPropertyId String?   @map("converted_property_id") @db.Uuid
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  convertedProperty   Property? @relation(fields: [convertedPropertyId], references: [id], onDelete: SetNull)
+
+  @@map("client_property_submissions")
+}
+
+model ClientSearchRequest {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  operation    String   @default("comprar")
+  status       String   @default("borrador")
+  searchDetail String   @default("") @map("search_detail")
+  zone         String   @default("")
+  budget       String   @default("")
+  rooms        String   @default("")
+  preferences  Json     @default("{}")
+  mustHaves    Json     @default("[]") @map("must_haves")
+  adminMessage String   @default("") @map("admin_message")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@map("client_search_requests")
+}
+
+model ClientPortalFile {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  entityType  String   @map("entity_type")
+  entityId    String   @map("entity_id") @db.Uuid
+  bucket      String   @default("client-portal-files")
+  storagePath String   @map("storage_path")
+  fileName    String   @map("file_name")
+  fileType    String   @default("") @map("file_type")
+  fileSize    BigInt   @default(0) @map("file_size")
+  kind        String   @default("document")
+  status      String   @default("active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@map("client_portal_files")
+}
+
+model ClientPortalMessage {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id") @db.Uuid
+  body       String
+  authorRole String   @map("author_role")
+  createdBy  String   @map("created_by") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("client_portal_messages")
 }

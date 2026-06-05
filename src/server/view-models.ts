@@ -102,6 +102,69 @@ export type ActivityDocumentViewModel = {
   createdAt: string;
 };
 
+export type ClientPortalProfileViewModel = {
+  userId: string;
+  email: string;
+  fullName: string;
+  avatarUrl: string;
+  phone: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ClientPropertySubmissionViewModel = {
+  id: string;
+  userId: string;
+  title: string;
+  operation: string;
+  status: string;
+  location: string;
+  zone: string;
+  price: string;
+  area: string;
+  rooms: string;
+  description: string;
+  adminMessage: string;
+  convertedPropertyId: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ClientSearchRequestViewModel = {
+  id: string;
+  userId: string;
+  operation: string;
+  status: string;
+  searchDetail: string;
+  zone: string;
+  budget: string;
+  rooms: string;
+  preferences: string;
+  mustHaves: string;
+  adminMessage: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ClientPortalFileViewModel = {
+  id: string;
+  userId: string;
+  entityType: string;
+  entityId: string;
+  bucket: string;
+  storagePath: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  kind: string;
+  status: string;
+  isImage: boolean;
+  signedUrl: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type InternalProfile =
   | {
       role: "admin";
@@ -210,5 +273,93 @@ export function activityDocumentToViewModel(row: any): ActivityDocumentViewModel
     authorRole: row.authorRole || row.author_role || "admin",
     authorName: row.authorName || row.author_name || "",
     createdAt: isoDate(row.createdAt || row.created_at)
+  };
+}
+
+function jsonText(value: unknown, fallback = "") {
+  if (!value) return fallback;
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) return value.map((item) => String(item || "").trim()).filter(Boolean).join(", ");
+
+  return Object.values(value as Record<string, unknown>)
+    .map((item) => String(item || "").trim())
+    .filter(Boolean)
+    .join(", ") || fallback;
+}
+
+export function clientPortalProfileToViewModel(row: any = {}, user: any = {}): ClientPortalProfileViewModel {
+  const metadata = user.user_metadata || {};
+  const fullName = row.fullName || row.full_name || metadata.full_name || metadata.name || "";
+  const avatarUrl = row.avatarUrl || row.avatar_url || metadata.avatar_url || metadata.picture || "";
+
+  return {
+    userId: row.userId || row.user_id || user.id || "",
+    email: row.email || user.email || "",
+    fullName,
+    avatarUrl,
+    phone: row.phone || "",
+    isActive: row.isActive ?? row.is_active ?? true,
+    createdAt: isoDate(row.createdAt || row.created_at),
+    updatedAt: isoDate(row.updatedAt || row.updated_at)
+  };
+}
+
+export function clientPropertySubmissionToViewModel(row: any): ClientPropertySubmissionViewModel {
+  return {
+    id: row.id || "",
+    userId: row.userId || row.user_id || "",
+    title: row.title || "",
+    operation: row.operation || "venta",
+    status: row.status || "borrador",
+    location: row.address || row.location || row.zone || "",
+    zone: row.zone || "",
+    price: row.price || "",
+    area: row.area || "",
+    rooms: row.rooms || "",
+    description: row.description || "",
+    adminMessage: row.adminMessage || row.admin_message || "",
+    convertedPropertyId: row.convertedPropertyId || row.converted_property_id || "",
+    createdAt: isoDate(row.createdAt || row.created_at),
+    updatedAt: isoDate(row.updatedAt || row.updated_at)
+  };
+}
+
+export function clientSearchRequestToViewModel(row: any): ClientSearchRequestViewModel {
+  return {
+    id: row.id || "",
+    userId: row.userId || row.user_id || "",
+    operation: row.operation || "alquilar",
+    status: row.status || "borrador",
+    searchDetail: row.searchDetail || row.search_detail || "",
+    zone: row.zone || "",
+    budget: row.budget || "",
+    rooms: row.rooms || "",
+    preferences: jsonText(row.preferences),
+    mustHaves: jsonText(row.mustHaves || row.must_haves),
+    adminMessage: row.adminMessage || row.admin_message || "",
+    createdAt: isoDate(row.createdAt || row.created_at),
+    updatedAt: isoDate(row.updatedAt || row.updated_at)
+  };
+}
+
+export function clientPortalFileToViewModel(row: any, signedUrl = ""): ClientPortalFileViewModel {
+  const fileType = row.fileType || row.file_type || "";
+
+  return {
+    id: row.id || "",
+    userId: row.userId || row.user_id || "",
+    entityType: row.entityType || row.entity_type || "",
+    entityId: row.entityId || row.entity_id || "",
+    bucket: row.bucket || "client-portal-files",
+    storagePath: row.storagePath || row.storage_path || "",
+    fileName: row.fileName || row.file_name || "",
+    fileType,
+    fileSize: Number(row.fileSize ?? row.file_size ?? 0),
+    kind: row.kind || "document",
+    status: row.status || "active",
+    isImage: fileType.startsWith("image/"),
+    signedUrl,
+    createdAt: isoDate(row.createdAt || row.created_at),
+    updatedAt: isoDate(row.updatedAt || row.updated_at)
   };
 }

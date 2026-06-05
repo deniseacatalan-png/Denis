@@ -586,6 +586,9 @@ function PublicApp({ initialProperties = [] }) {
               <button type="button" className="map-btn" onClick={() => navigateToPath("/")}>
                 Volver al inicio
               </button>
+              <a href="/clientes" className="map-btn nav-client-link">
+                Portal clientes
+              </a>
               <button
                 type="button"
                 className="status-pill status-pill--venta nav-service-link nav-service-button"
@@ -710,6 +713,9 @@ function PublicApp({ initialProperties = [] }) {
         <nav className="top-nav">
           <img className="brand-logo" src={logoMarkUrl} alt="Logo Denise Catalán" />
           <div className="links">
+            <a href="/clientes" className="map-btn nav-client-link">
+              Portal clientes
+            </a>
             <button
               type="button"
               className="status-pill status-pill--venta nav-service-link nav-service-button"

@@ -35,13 +35,14 @@ describe("Next SEO metadata", () => {
     const sitemapSource = readFileSync("src/app/sitemap.ts", "utf8");
 
     assert.match(robotsSource, /allow:\s*"\/"/);
-    assert.match(robotsSource, /disallow:\s*\["\/admin",\s*"\/vendedor"\]/);
+    assert.match(robotsSource, /disallow:\s*\["\/admin",\s*"\/vendedor",\s*"\/clientes"\]/);
     assert.match(robotsSource, /sitemap:\s*`\$\{DEFAULT_SITE_URL\}\/sitemap\.xml`/);
 
     assert.match(sitemapSource, /listPublishedProperties/);
     assert.match(sitemapSource, /propertyPublicPath/);
     assert.doesNotMatch(sitemapSource, /\/admin/);
     assert.doesNotMatch(sitemapSource, /\/vendedor/);
+    assert.doesNotMatch(sitemapSource, /\/clientes/);
   });
 
   it("public property pages are first-class App Router routes", () => {
