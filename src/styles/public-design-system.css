@@ -399,3 +399,109 @@
     transform: translateY(-50%) scale(1.04);
   }
 }
+
+.page-shell .property-slider-section {
+  overflow: hidden;
+}
+
+.page-shell .property-slider-viewport {
+  width: 100vw;
+  max-width: 100vw;
+}
+
+.page-shell .property-slider-viewport .property-slider-track {
+  gap: 0;
+  width: 100vw;
+  padding: 0;
+  scroll-padding-inline: 0;
+}
+
+.page-shell .property-slide {
+  flex: 0 0 100vw;
+  width: 100vw;
+  max-width: 100vw;
+}
+
+.page-shell .property-slide-card {
+  min-height: clamp(420px, 68vh, 760px);
+  border-right: 0;
+  border-left: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.page-shell .property-slide.active .property-slide-card,
+.page-shell .property-slide-card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+@media (max-width: 600px) {
+  .page-shell .property-slider-viewport .property-slider-track {
+    padding: 0;
+  }
+
+  .page-shell .property-slide-card {
+    min-height: min(72vh, 560px);
+    padding-bottom: 4rem;
+  }
+
+  .page-shell .property-slider-nav {
+    top: auto;
+    bottom: 1rem;
+    transform: none;
+  }
+
+  .page-shell .property-slider-nav:hover:not(:disabled),
+  .page-shell .property-slider-nav:focus-visible:not(:disabled) {
+    transform: scale(1.04);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .page-shell .property-slider-nav {
+    top: 0;
+    bottom: auto;
+    width: clamp(4.5rem, 10vw, 8.5rem);
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+    color: rgba(255, 250, 244, 0);
+    background: transparent;
+    box-shadow: none;
+    opacity: 0;
+    transform: none;
+  }
+
+  .page-shell .property-slider-nav--prev {
+    left: 0;
+    justify-items: start;
+    padding-left: clamp(1rem, 2vw, 1.8rem);
+  }
+
+  .page-shell .property-slider-nav--next {
+    right: 0;
+    justify-items: end;
+    padding-right: clamp(1rem, 2vw, 1.8rem);
+  }
+
+  .page-shell .property-slider-nav--prev:hover:not(:disabled),
+  .page-shell .property-slider-nav--prev:focus-visible:not(:disabled) {
+    color: var(--blanco-calido);
+    background: linear-gradient(90deg, rgba(35, 35, 31, 0.48), transparent);
+    opacity: 1;
+    transform: none;
+  }
+
+  .page-shell .property-slider-nav--next:hover:not(:disabled),
+  .page-shell .property-slider-nav--next:focus-visible:not(:disabled) {
+    color: var(--blanco-calido);
+    background: linear-gradient(270deg, rgba(35, 35, 31, 0.48), transparent);
+    opacity: 1;
+    transform: none;
+  }
+
+  .page-shell .property-slider-nav:disabled {
+    opacity: 0;
+  }
+}
