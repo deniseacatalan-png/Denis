@@ -289,7 +289,6 @@ function PublicApp({ initialProperties = [] }) {
   const [hoveredPropertyId, setHoveredPropertyId] = useState("");
   const [loading, setLoading] = useState(() => !initialProperties.length);
   const [loadError, setLoadError] = useState("");
-  const [serviceNeed, setServiceNeed] = useState("vender");
   const [rentalSearch, setRentalSearch] = useState(INITIAL_RENTAL_SEARCH);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [currentPathname, setCurrentPathname] = useState(() => window.location.pathname);
@@ -505,27 +504,9 @@ function PublicApp({ initialProperties = [] }) {
     }
   };
 
-  const createServiceWhatsAppLink = (need = serviceNeed) => {
+  const createServiceWhatsAppLink = (need) => {
     const message = `Hola Denise, quiero solicitar el servicio de ${need}.`;
     return `https://wa.me/${officeWhatsApp}?text=${encodeURIComponent(message)}`;
-  };
-
-  const handleServiceOptionKeyDown = (event, optionIndex) => {
-    const keyDirection = {
-      ArrowDown: 1,
-      ArrowRight: 1,
-      ArrowLeft: -1,
-      ArrowUp: -1
-    }[event.key];
-
-    if (!keyDirection) return;
-
-    event.preventDefault();
-    const nextIndex = (optionIndex + keyDirection + SERVICE_OPTIONS.length) % SERVICE_OPTIONS.length;
-    setServiceNeed(SERVICE_OPTIONS[nextIndex].value);
-    event.currentTarget.parentElement
-      ?.querySelectorAll(".service-option-card")
-      ?.[nextIndex]?.focus();
   };
 
   const updateRentalSearch = (field, value) => {
@@ -555,41 +536,33 @@ function PublicApp({ initialProperties = [] }) {
   const serviceModal = isServiceModalOpen ? (
     <div className="service-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="service-modal-title">
       <div className="service-modal">
+        <button
+          type="button"
+          className="service-modal-close"
+          onClick={() => setIsServiceModalOpen(false)}
+          aria-label="Cerrar"
+        >
+          ×
+        </button>
         <h3 id="service-modal-title" className="services-label">Quiero solicitar el servicio de:</h3>
-        <div className="service-option-grid" role="radiogroup" aria-labelledby="service-modal-title">
-          {SERVICE_OPTIONS.map((option, optionIndex) => (
-            <button
-              type="button"
+        <div className="service-option-grid" aria-labelledby="service-modal-title">
+          {SERVICE_OPTIONS.map((option) => (
+            <a
               key={option.value}
-              className={`service-option-card ${serviceNeed === option.value ? "is-selected" : ""}`}
-              role="radio"
-              aria-checked={serviceNeed === option.value}
-              tabIndex={serviceNeed === option.value ? 0 : -1}
-              onClick={() => setServiceNeed(option.value)}
-              onKeyDown={(event) => handleServiceOptionKeyDown(event, optionIndex)}
+              className="service-option-card"
+              href={createServiceWhatsAppLink(option.value)}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`Solicitar servicio de ${option.label} por WhatsApp`}
+              onClick={() => setIsServiceModalOpen(false)}
             >
               <ServiceOptionVisual icon={option.icon} />
               <span className="service-option-copy">
                 <strong>{option.label}</strong>
                 <small>{option.description}</small>
               </span>
-              <span className="service-option-marker" aria-hidden="true" />
-            </button>
+            </a>
           ))}
-        </div>
-        <div className="service-modal-actions">
-          <button type="button" className="map-btn" onClick={() => setIsServiceModalOpen(false)}>
-            Cerrar
-          </button>
-          <a
-            href={createServiceWhatsAppLink(serviceNeed)}
-            target="_blank"
-            rel="noreferrer"
-            className="wa-btn"
-            onClick={() => setIsServiceModalOpen(false)}
-          >
-            Ir a WhatsApp
-          </a>
         </div>
       </div>
     </div>
