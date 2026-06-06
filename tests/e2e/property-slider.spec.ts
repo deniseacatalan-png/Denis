@@ -89,8 +89,10 @@ async function loadHomeWithFixture(page) {
   });
 
   await page.goto("/#propiedades");
-  const saleSlider = page.locator('[aria-labelledby="property-slider-venta-title"]');
-  await expect(saleSlider.locator(".property-slider-counter")).toHaveText("1 / 3");
+  const saleSlider = page.getByRole("region", { name: "En venta" });
+  await expect(saleSlider.locator(".property-slide.active .property-slide-title")).toHaveText(
+    "Casa Arrayanes"
+  );
   await saleSlider.locator(".property-slider-viewport").scrollIntoViewIfNeeded();
 
   return saleSlider;
@@ -101,10 +103,13 @@ test.describe("property slider", () => {
     const saleSlider = await loadHomeWithFixture(page);
     const viewport = saleSlider.locator(".property-slider-viewport");
     const track = saleSlider.locator(".property-slider-track");
-    const counter = saleSlider.locator(".property-slider-counter");
     const nextButton = saleSlider.locator(".property-slider-nav--next");
     const previousButton = saleSlider.locator(".property-slider-nav--prev");
 
+    await expect(saleSlider.locator(".property-slider-copy")).toHaveCount(0);
+    await expect(saleSlider.locator(".property-slider-counter")).toHaveCount(0);
+    await expect(nextButton).toHaveText("");
+    await expect(previousButton).toHaveText("");
     await expect(saleSlider.locator(".property-slide.active .property-slide-title")).toHaveText(
       "Casa Arrayanes"
     );
@@ -126,7 +131,6 @@ test.describe("property slider", () => {
       .not.toBe("none");
 
     await page.mouse.click(rightEdge.x, rightEdge.y);
-    await expect(counter).toHaveText("2 / 3");
     await expect(saleSlider.locator(".property-slide.active .property-slide-title")).toHaveText(
       "Lote Lago"
     );
@@ -141,7 +145,6 @@ test.describe("property slider", () => {
       .not.toBe("none");
 
     await page.mouse.click(leftEdge.x, leftEdge.y);
-    await expect(counter).toHaveText("1 / 3");
     await expect(saleSlider.locator(".property-slide.active .property-slide-title")).toHaveText(
       "Casa Arrayanes"
     );

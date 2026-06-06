@@ -817,6 +817,8 @@ function PublicApp({ initialProperties = [] }) {
                     items={categoryProperties}
                     selectedId={selectedProperty?.id}
                     emptyMessage={group.emptyMessage}
+                    showHeader={false}
+                    showCounter={false}
                     onActiveItemChange={(property) => {
                       if (property?.id) {
                         setSelectedId(property.id);

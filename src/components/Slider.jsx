@@ -20,7 +20,9 @@ export default function Slider({
   getItemId = getDefaultItemId,
   renderItem,
   onActiveItemChange,
-  className = ""
+  className = "",
+  showHeader = true,
+  showCounter = true
 }) {
   const trackRef = useRef(null);
   const frameRef = useRef(0);
@@ -124,16 +126,21 @@ export default function Slider({
   return (
     <section
       className={`slider-section property-slider-section ${className}`.trim()}
-      aria-labelledby={titleId}
+      aria-label={showHeader ? undefined : title}
+      aria-labelledby={showHeader ? titleId : undefined}
     >
       <div className="slider-shell property-slider-shell">
-        <div className="slider-copy property-slider-copy">
-          {eyebrow ? <p>{eyebrow}</p> : null}
-          <h3 id={titleId}>{title}</h3>
-        </div>
-        <div className="slider-counter property-slider-counter" aria-label={`${title}: slide actual`}>
-          {items.length ? activeIndex + 1 : 0} / {items.length}
-        </div>
+        {showHeader ? (
+          <div className="slider-copy property-slider-copy">
+            {eyebrow ? <p>{eyebrow}</p> : null}
+            <h3 id={titleId}>{title}</h3>
+          </div>
+        ) : null}
+        {showCounter ? (
+          <div className="slider-counter property-slider-counter" aria-label={`${title}: slide actual`}>
+            {items.length ? activeIndex + 1 : 0} / {items.length}
+          </div>
+        ) : null}
 
         <div className="slider-viewport property-slider-viewport">
           <button
@@ -143,9 +150,7 @@ export default function Slider({
             onClick={() => handleNavClick(activeIndex - 1)}
             disabled={items.length <= 1 || activeIndex === 0}
             aria-label={`Deslizar ${title} hacia la izquierda`}
-          >
-            ‹
-          </button>
+          />
           <div
             className="slider-track property-slider-track"
             ref={trackRef}
@@ -182,9 +187,7 @@ export default function Slider({
             onClick={() => handleNavClick(activeIndex + 1)}
             disabled={items.length <= 1 || activeIndex >= items.length - 1}
             aria-label={`Deslizar ${title} hacia la derecha`}
-          >
-            ›
-          </button>
+          />
         </div>
       </div>
     </section>

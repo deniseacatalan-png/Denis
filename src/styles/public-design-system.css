@@ -436,6 +436,21 @@
   box-shadow: none;
 }
 
+.page-shell .property-slider-nav::before {
+  color: inherit;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(2.1rem, 4vw, 3rem);
+  line-height: 1;
+}
+
+.page-shell .property-slider-nav--prev::before {
+  content: "‹";
+}
+
+.page-shell .property-slider-nav--next::before {
+  content: "›";
+}
+
 @media (max-width: 600px) {
   .page-shell .property-slider-viewport .property-slider-track {
     padding: 0;
