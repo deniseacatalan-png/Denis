@@ -24,6 +24,7 @@ export default function Slider({
 }) {
   const trackRef = useRef(null);
   const frameRef = useRef(0);
+  const navMouseDownHandledRef = useRef(false);
   const [visibleIndex, setVisibleIndex] = useState(0);
   const itemIds = useMemo(
     () => items.map((item, index) => getItemId(item, index)),
@@ -52,7 +53,7 @@ export default function Slider({
     const targetLeft = track.clientWidth * selectedIndex;
 
     if (Math.abs(track.scrollLeft - targetLeft) > 2) {
-      track.scrollTo({ left: targetLeft, behavior: "smooth" });
+      track.scrollLeft = targetLeft;
     }
   }, [selectedIndex]);
 
@@ -95,12 +96,29 @@ export default function Slider({
 
     if (!track) return;
 
-    track.scrollTo({
-      left: track.clientWidth * nextIndex,
-      behavior: "smooth"
-    });
+    track.scrollLeft = track.clientWidth * nextIndex;
     setVisibleIndex(nextIndex);
     onActiveItemChange?.(items[nextIndex], nextIndex);
+  };
+
+  const handleNavMouseDown = (event, index) => {
+    if (event.button !== 0) return;
+
+    event.preventDefault();
+    navMouseDownHandledRef.current = true;
+    window.setTimeout(() => {
+      navMouseDownHandledRef.current = false;
+    }, 250);
+    scrollToIndex(index);
+  };
+
+  const handleNavClick = (index) => {
+    if (navMouseDownHandledRef.current) {
+      navMouseDownHandledRef.current = false;
+      return;
+    }
+
+    scrollToIndex(index);
   };
 
   return (
@@ -121,7 +139,8 @@ export default function Slider({
           <button
             type="button"
             className="slider-nav slider-nav--prev property-slider-nav property-slider-nav--prev"
-            onClick={() => scrollToIndex(activeIndex - 1)}
+            onMouseDown={(event) => handleNavMouseDown(event, activeIndex - 1)}
+            onClick={() => handleNavClick(activeIndex - 1)}
             disabled={items.length <= 1 || activeIndex === 0}
             aria-label={`Deslizar ${title} hacia la izquierda`}
           >
@@ -159,7 +178,8 @@ export default function Slider({
           <button
             type="button"
             className="slider-nav slider-nav--next property-slider-nav property-slider-nav--next"
-            onClick={() => scrollToIndex(activeIndex + 1)}
+            onMouseDown={(event) => handleNavMouseDown(event, activeIndex + 1)}
+            onClick={() => handleNavClick(activeIndex + 1)}
             disabled={items.length <= 1 || activeIndex >= items.length - 1}
             aria-label={`Deslizar ${title} hacia la derecha`}
           >

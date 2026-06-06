@@ -467,9 +467,9 @@
     border: 0;
     border-radius: 0;
     color: rgba(255, 250, 244, 0);
-    background: transparent;
+    background: rgba(35, 35, 31, 0.01);
     box-shadow: none;
-    opacity: 0;
+    opacity: 1;
     transform: none;
   }
 
@@ -489,7 +489,6 @@
   .page-shell .property-slider-nav--prev:focus-visible:not(:disabled) {
     color: var(--blanco-calido);
     background: linear-gradient(90deg, rgba(35, 35, 31, 0.48), transparent);
-    opacity: 1;
     transform: none;
   }
 
@@ -497,7 +496,6 @@
   .page-shell .property-slider-nav--next:focus-visible:not(:disabled) {
     color: var(--blanco-calido);
     background: linear-gradient(270deg, rgba(35, 35, 31, 0.48), transparent);
-    opacity: 1;
     transform: none;
   }
 

@@ -5015,7 +5015,7 @@ body {
   min-width: 0;
   overflow-x: auto;
   padding: 0;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   scroll-padding-inline: 0;
   scroll-snap-type: x mandatory;
   -ms-overflow-style: none;

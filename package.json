@@ -12,6 +12,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "test:node": "node --test",
     "prisma:generate": "prisma generate",
     "db:seed:generate": "node scripts/generate-seed-from-kml.mjs",
@@ -36,6 +37,7 @@
     "react-leaflet": "^5.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@types/node": "^25.9.1",
     "@types/pg": "^8.20.0",
     "@types/react": "^19.2.17",
