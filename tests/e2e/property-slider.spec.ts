@@ -69,14 +69,6 @@ const properties = [
     slug: "cabana-turistica",
     category: "alquiler_turistico",
     displayOrder: 4
-  },
-  {
-    ...saleProperties[0],
-    id: "permanent-1",
-    title: "Departamento Permanente",
-    slug: "departamento-permanente",
-    category: "alquiler_permanente",
-    displayOrder: 5
   }
 ];
 
@@ -89,6 +81,11 @@ async function loadHomeWithFixture(page) {
   });
 
   await page.goto("/#propiedades");
+  await expect(page.getByRole("region", { name: "Alquiler permanente" })).toHaveCount(0);
+  await expect(
+    page.getByText("No hay alquileres permanentes disponibles por el momento.")
+  ).toHaveCount(0);
+
   const saleSlider = page.getByRole("region", { name: "En venta" });
   await expect(saleSlider.locator(".property-slide.active .property-slide-title")).toHaveText(
     "Casa Arrayanes"

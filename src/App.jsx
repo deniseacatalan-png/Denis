@@ -808,6 +808,10 @@ function PublicApp({ initialProperties = [] }) {
               {PROPERTY_SLIDER_GROUPS.map((group) => {
                 const categoryProperties = getPropertiesByCategory(group.category);
 
+                if (!categoryProperties.length) {
+                  return null;
+                }
+
                 return (
                   <Slider
                     id={`property-slider-${group.category}`}
