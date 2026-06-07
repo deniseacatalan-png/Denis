@@ -203,32 +203,65 @@ function FileList({ files }) {
 
 function ClientPortalNavbar({ session, activeView, authMode, onAuthMode, onNavigate, onSignOut }) {
   const isAuthenticated = Boolean(session?.user);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  function closeMobileMenu() {
+    setIsMobileMenuOpen(false);
+  }
+
+  function handleAuthMode(mode) {
+    onAuthMode(mode);
+    closeMobileMenu();
+  }
+
+  function handleNavigate(path, viewId) {
+    onNavigate(path, viewId);
+    closeMobileMenu();
+  }
+
+  function handleSignOutClick() {
+    onSignOut();
+    closeMobileMenu();
+  }
 
   return (
-    <nav className="client-portal-navbar" aria-label="Navegacion del portal de clientes">
+    <nav className={`client-portal-navbar ${isMobileMenuOpen ? "is-menu-open" : ""}`} aria-label="Navegacion del portal de clientes">
       <a href="/" className="client-nav-brand" aria-label="Volver al sitio principal">
         <img src={logoMarkUrl} alt="Denise Catalan" />
         <span>Portal de clientes</span>
       </a>
 
-      <div className="client-nav-actions">
+      <button
+        type="button"
+        className="client-nav-menu-button"
+        aria-controls="client-nav-actions"
+        aria-expanded={isMobileMenuOpen}
+        aria-label={isMobileMenuOpen ? "Cerrar menu" : "Abrir menu"}
+        onClick={() => setIsMobileMenuOpen((current) => !current)}
+      >
+        <span />
+        <span />
+        <span />
+      </button>
+
+      <div className="client-nav-actions" id="client-nav-actions">
         {isAuthenticated ? (
           <>
             <button
               type="button"
               className={`client-nav-link ${activeView === "panel" ? "is-active" : ""}`}
-              onClick={() => onNavigate("/clientes", "panel")}
+              onClick={() => handleNavigate("/clientes", "panel")}
             >
               Panel
             </button>
             <button
               type="button"
               className={`client-nav-link ${activeView === "perfil" ? "is-active" : ""}`}
-              onClick={() => onNavigate("/clientes/perfil", "perfil")}
+              onClick={() => handleNavigate("/clientes/perfil", "perfil")}
             >
               Perfil
             </button>
-            <button type="button" className="client-nav-link client-nav-link--ghost" onClick={onSignOut}>
+            <button type="button" className="client-nav-link client-nav-link--ghost" onClick={handleSignOutClick}>
               Salir
             </button>
           </>
@@ -237,14 +270,14 @@ function ClientPortalNavbar({ session, activeView, authMode, onAuthMode, onNavig
             <button
               type="button"
               className={`client-nav-link ${authMode === "login" ? "is-active" : ""}`}
-              onClick={() => onAuthMode("login")}
+              onClick={() => handleAuthMode("login")}
             >
               Ingresar
             </button>
             <button
               type="button"
               className={`client-nav-link client-nav-link--primary ${authMode === "signup" ? "is-active" : ""}`}
-              onClick={() => onAuthMode("signup")}
+              onClick={() => handleAuthMode("signup")}
             >
               Crear cuenta
             </button>
