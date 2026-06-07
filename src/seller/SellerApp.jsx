@@ -22,7 +22,7 @@ import {
   signInSeller,
   signOutSeller
 } from "../utils/supabase/sellers";
-import logoMark from "../../Design System/assets/logo-dc-mark.svg";
+import logoMark from "../../ISO GRAFITO.png";
 
 function assetUrl(asset) {
   return typeof asset === "string" ? asset : asset?.src || "";
