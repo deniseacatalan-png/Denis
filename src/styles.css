@@ -4274,7 +4274,21 @@ body {
 .client-login-shell {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 1rem;
+  gap: 0;
+  padding: 0;
+  background: var(--blanco-roto);
+}
+
+.client-login-shell .client-portal-navbar {
+  top: 0;
+  width: 100%;
+  min-height: 80px;
+  margin: 0;
+  padding: 0.68rem clamp(1rem, 4vw, 3rem);
+  border-right: 0;
+  border-left: 0;
+  border-radius: 0;
+  box-shadow: 0 10px 28px rgba(47, 79, 62, 0.08);
 }
 
 .client-login-content,
@@ -4284,29 +4298,30 @@ body {
 }
 
 .client-login-content {
-  width: min(100%, 1180px);
-  min-height: calc(100vh - 132px);
-  margin: 0 auto;
+  width: 100%;
+  min-height: calc(100vh - 80px);
+  margin: 0;
+  place-items: stretch;
 }
 
 .client-auth-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(380px, 0.72fr);
-  width: min(100%, 1100px);
-  min-height: min(680px, calc(100vh - 148px));
+  grid-template-columns: minmax(0, 1fr) minmax(430px, 0.62fr);
+  width: 100%;
+  min-height: calc(100vh - 80px);
   overflow: hidden;
   background: rgba(255, 250, 244, 0.96);
-  border: 1px solid rgba(47, 79, 62, 0.12);
-  border-radius: 8px;
-  box-shadow: 0 26px 70px rgba(47, 79, 62, 0.16);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .client-auth-visual {
   position: relative;
   display: grid;
   align-content: space-between;
-  min-height: 520px;
-  padding: clamp(1.2rem, 3vw, 2rem);
+  min-height: calc(100vh - 80px);
+  padding: clamp(1.4rem, 4vw, 3.4rem);
   color: var(--blanco-calido);
   background:
     linear-gradient(180deg, rgba(35, 35, 31, 0.04) 0%, rgba(35, 35, 31, 0.68) 100%),
@@ -4467,13 +4482,18 @@ body {
 .client-login-panel {
   display: grid;
   align-content: center;
+  justify-items: center;
   gap: 1rem;
   width: 100%;
   min-height: 100%;
-  padding: clamp(1.3rem, 4vw, 2.4rem);
+  padding: clamp(1.4rem, 5vw, 4rem);
   background:
     linear-gradient(180deg, rgba(255, 250, 244, 0.98), rgba(251, 247, 240, 0.94)),
     radial-gradient(circle at top right, rgba(216, 191, 143, 0.24), transparent 34%);
+}
+
+.client-login-panel > * {
+  width: min(100%, 430px);
 }
 
 .client-login-panel h1,
@@ -5002,9 +5022,17 @@ body {
     padding: 0.75rem;
   }
 
+  .client-login-shell {
+    padding: 0;
+  }
+
   .client-portal-navbar {
     position: static;
     margin-bottom: 0.75rem;
+  }
+
+  .client-login-shell .client-portal-navbar {
+    margin-bottom: 0;
   }
 
   .client-nav-brand img {
