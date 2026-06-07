@@ -501,7 +501,18 @@ function PublicApp({ initialProperties = [] }) {
   const sliderGroupsWithProperties = PROPERTY_SLIDER_GROUPS.map((group) => ({
     ...group,
     properties: getPropertiesByCategory(group.category)
-  })).filter((group) => group.properties.length);
+  }))
+    .filter((group) => group.properties.length)
+    .sort((firstGroup, secondGroup) => {
+      const firstGroupIndex = visibleProperties.findIndex(
+        (property) => property.id === firstGroup.properties[0]?.id
+      );
+      const secondGroupIndex = visibleProperties.findIndex(
+        (property) => property.id === secondGroup.properties[0]?.id
+      );
+
+      return firstGroupIndex - secondGroupIndex;
+    });
 
   const selectPropertyOnMap = (property) => {
     setSelectedId(property.id);

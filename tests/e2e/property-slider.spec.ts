@@ -72,14 +72,17 @@ const properties = [
   }
 ];
 
-async function loadHomeWithFixture(page) {
+async function routePublicProperties(page, propertyFixture = properties) {
   await page.route("**/api/properties/public", async (route) => {
     await route.fulfill({
       contentType: "application/json",
-      body: JSON.stringify({ properties })
+      body: JSON.stringify({ properties: propertyFixture })
     });
   });
+}
 
+async function loadHomeWithFixture(page, propertyFixture = properties) {
+  await routePublicProperties(page, propertyFixture);
   await page.goto("/#propiedades");
   await expect(page.getByRole("region", { name: "Alquiler permanente" })).toHaveCount(0);
   await expect(
@@ -96,6 +99,42 @@ async function loadHomeWithFixture(page) {
 }
 
 test.describe("property slider", () => {
+  test("orders slider sections by the first property in the admin display order", async ({ page }) => {
+    await routePublicProperties(page, [
+      {
+        ...saleProperties[0],
+        id: "tourist-first",
+        title: "Cabana Turistica",
+        slug: "cabana-turistica",
+        category: "alquiler_turistico",
+        displayOrder: 0
+      },
+      {
+        ...saleProperties[1],
+        id: "sale-second",
+        title: "Casa en Venta",
+        slug: "casa-en-venta",
+        category: "venta",
+        displayOrder: 1
+      },
+      {
+        ...saleProperties[2],
+        id: "permanent-third",
+        title: "Casa Permanente",
+        slug: "casa-permanente",
+        category: "alquiler_permanente",
+        displayOrder: 2
+      }
+    ]);
+
+    await page.goto("/#propiedades");
+    await expect(page.getByText("Cabana Turistica")).toBeVisible();
+    await expect(page.locator(".property-slider-stack > .property-slider-section").first()).toHaveAttribute(
+      "aria-label",
+      "Alquiler turístico"
+    );
+  });
+
   test("advances and returns from the full-height image edge controls", async ({ page }) => {
     const saleSlider = await loadHomeWithFixture(page);
     const viewport = saleSlider.locator(".property-slider-viewport");
