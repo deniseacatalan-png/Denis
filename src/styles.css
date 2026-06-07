@@ -4263,8 +4263,10 @@ body {
 }
 
 .client-portal-shell {
+  --client-shell-pad: clamp(1rem, 3vw, 2rem);
+
   min-height: 100vh;
-  padding: clamp(1rem, 3vw, 2rem);
+  padding: var(--client-shell-pad);
   color: var(--tinta);
   background:
     linear-gradient(135deg, rgba(47, 79, 62, 0.08), rgba(166, 87, 116, 0.08)),
@@ -4272,6 +4274,8 @@ body {
 }
 
 .client-login-shell {
+  --client-shell-pad: 0rem;
+
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 0;
@@ -4281,14 +4285,8 @@ body {
 
 .client-login-shell .client-portal-navbar {
   top: 0;
-  width: 100%;
   min-height: 80px;
   margin: 0;
-  padding: 0.68rem clamp(1rem, 4vw, 3rem);
-  border-right: 0;
-  border-left: 0;
-  border-radius: 0;
-  box-shadow: 0 10px 28px rgba(47, 79, 62, 0.08);
 }
 
 .client-login-content,
@@ -4376,20 +4374,21 @@ body {
 
 .client-portal-navbar {
   position: sticky;
-  top: clamp(0.6rem, 2vw, 1rem);
+  top: 0;
   z-index: 20;
   display: flex;
   gap: 1rem;
   align-items: center;
   justify-content: space-between;
-  width: min(100%, 1180px);
+  width: calc(100% + var(--client-shell-pad, 0rem) + var(--client-shell-pad, 0rem));
   min-height: 74px;
-  margin: 0 auto 1rem;
-  padding: 0.68rem 0.78rem;
-  background: rgba(255, 250, 244, 0.94);
-  border: 1px solid rgba(47, 79, 62, 0.13);
-  border-radius: 8px;
-  box-shadow: 0 14px 34px rgba(47, 79, 62, 0.1);
+  margin: calc(0rem - var(--client-shell-pad, 0rem)) calc(0rem - var(--client-shell-pad, 0rem)) 1.25rem;
+  padding: 0.62rem max(var(--client-shell-pad, 1rem), clamp(1rem, 4vw, 3rem));
+  background: rgba(255, 255, 255, 0.96);
+  border: 0;
+  border-bottom: 1px solid rgba(47, 79, 62, 0.12);
+  border-radius: 0;
+  box-shadow: 0 10px 24px rgba(35, 35, 31, 0.08);
   backdrop-filter: blur(10px);
 }
 
@@ -5074,10 +5073,14 @@ body {
 
 @media (max-width: 640px) {
   .client-portal-shell {
+    --client-shell-pad: 0.75rem;
+
     padding: 0.75rem;
   }
 
   .client-login-shell {
+    --client-shell-pad: 0rem;
+
     padding: 0;
   }
 
