@@ -74,8 +74,6 @@ describe("app navbar configuration", () => {
         ["properties", "Propiedades", false, "link"],
         ["clients", "Clientes", true, "link"],
         ["sellers", "Vendedores", false, "link"],
-        ["sellerPortal", "Portal vendedor", false, "link"],
-        ["publicSite", "Ver web", false, "link"],
         ["signout", "Cerrar sesión", false, "cta"]
       ]
     );

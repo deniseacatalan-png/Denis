@@ -32,8 +32,6 @@ export function adminNavbarItems({ activeSection = "dashboard" } = {}) {
     { id: "properties", label: "Propiedades", path: "/admin/propiedades", active: activeSection === "properties" },
     { id: "clients", label: "Clientes", path: "/admin/clientes", active: activeSection === "clients" },
     { id: "sellers", label: "Vendedores", path: "/admin/vendedores", active: activeSection === "sellers" },
-    { id: "sellerPortal", label: "Portal vendedor", href: "/vendedor" },
-    { id: "publicSite", label: "Ver web", href: "/" },
     { id: "signout", label: "Cerrar sesión", action: "signout", variant: "cta" }
   ];
 }
