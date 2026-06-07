@@ -13,7 +13,18 @@ const PublicApp = dynamic(() => import("../App").then((mod) => mod.PublicApp), {
           <a className="site-nav-brand" href="/" aria-label="Ir al inicio">
             <img src="/isonegro.jpg" alt="Logo Denise Catalán" />
           </a>
-          <div className="site-nav-links">
+          <button
+            type="button"
+            className="site-nav-menu-button"
+            aria-controls="site-nav-loading-links"
+            aria-expanded="false"
+            aria-label="Abrir menu"
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+          <div className="site-nav-links" id="site-nav-loading-links">
             <a href="#inicio" className="site-nav-link">
               Inicio
             </a>

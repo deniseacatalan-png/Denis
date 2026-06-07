@@ -199,36 +199,64 @@ function PublicSiteNavbar({
   onNavigateHome,
   isPropertyRoute = false
 }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  function closeMenu() {
+    setIsMenuOpen(false);
+  }
+
+  function handleNavigateHome() {
+    onNavigateHome();
+    closeMenu();
+  }
+
+  function handleOpenService() {
+    onOpenService();
+    closeMenu();
+  }
+
   return (
     <header className="site-navbar">
-      <nav className="site-nav" aria-label="Navegación principal">
+      <nav className={`site-nav ${isMenuOpen ? "is-menu-open" : ""}`} aria-label="Navegación principal">
         <button
           type="button"
           className="site-nav-brand"
-          onClick={onNavigateHome}
+          onClick={handleNavigateHome}
           aria-label="Ir al inicio"
         >
           <img src={logoUrl} alt="Logo Denise Catalán" />
         </button>
-        <div className="site-nav-links">
+        <button
+          type="button"
+          className="site-nav-menu-button"
+          aria-controls="site-nav-links"
+          aria-expanded={isMenuOpen}
+          aria-label={isMenuOpen ? "Cerrar menu" : "Abrir menu"}
+          onClick={() => setIsMenuOpen((current) => !current)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+        <div className="site-nav-links" id="site-nav-links">
           {isPropertyRoute ? (
-            <button type="button" className="site-nav-link" onClick={onNavigateHome}>
+            <button type="button" className="site-nav-link" onClick={handleNavigateHome}>
               Inicio
             </button>
           ) : (
             <>
-              <a href="#inicio" className="site-nav-link">
+              <a href="#inicio" className="site-nav-link" onClick={closeMenu}>
                 Inicio
               </a>
-              <a href="#propiedades" className="site-nav-link">
+              <a href="#propiedades" className="site-nav-link" onClick={closeMenu}>
                 Propiedades
               </a>
             </>
           )}
-          <a href="/clientes" className="site-nav-link">
+          <a href="/clientes" className="site-nav-link" onClick={closeMenu}>
             Portal clientes
           </a>
-          <button type="button" className="site-nav-cta" onClick={onOpenService}>
+          <button type="button" className="site-nav-cta" onClick={handleOpenService}>
             Solicitar servicio
           </button>
         </div>
