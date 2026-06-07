@@ -225,6 +225,7 @@ function PublicSiteNavbar({
           aria-label="Ir al inicio"
         >
           <img src={logoUrl} alt="Logo Denise Catalán" />
+          <span>Denise Catalán</span>
         </button>
         <button
           type="button"
