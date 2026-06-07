@@ -4,6 +4,7 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import {
   MapContainer,
   CircleMarker,
+  Marker,
   TileLayer,
   useMap,
   useMapEvents
@@ -97,9 +98,64 @@ const INITIAL_RENTAL_SEARCH = {
   mustHaves: ""
 };
 
+const DEFAULT_MAP_CENTER = [-40.1573, -71.3524];
+
+function hasValidPropertyCoords(property) {
+  const [lat, lng] = property?.coords || [];
+  return Number.isFinite(lat) && Number.isFinite(lng);
+}
+
 function formatCoords(coords) {
   const [lat, lng] = coords;
   return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+}
+
+function escapeMarkerText(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function safeMarkerColor(value, category) {
+  const fallback = CATEGORY_META[category]?.mapColor || CATEGORY_META.venta.mapColor;
+  const color = String(value || "").trim();
+  return /^#[0-9a-f]{3,8}$/i.test(color) ? color : fallback;
+}
+
+function normalizeMapSearchText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function propertyMatchesMapSearch(property, query) {
+  const tokens = normalizeMapSearchText(query).split(" ").filter(Boolean);
+  if (!tokens.length) return true;
+
+  const categoryLabel = CATEGORY_META[property.category]?.label || "";
+  const searchText = normalizeMapSearchText([
+    property.title,
+    property.slug,
+    property.location,
+    property.price,
+    property.area,
+    property.summary,
+    categoryLabel
+  ].join(" "));
+
+  return tokens.every((token) => searchText.includes(token));
+}
+
+function filterMapPropertiesBySearch(properties, query) {
+  return properties.filter((property) => propertyMatchesMapSearch(property, query));
 }
 
 function resolvePropertyCoverImage(property) {
@@ -131,6 +187,76 @@ function MapClickReset({ onClear }) {
   });
 
   return null;
+}
+
+function MapAutoViewport({ properties, focusProperty }) {
+  const map = useMap();
+  const boundsKey = properties
+    .map((property) => `${property.id}:${property.coords?.[0]},${property.coords?.[1]}`)
+    .join("|");
+  const focusKey = focusProperty?.id || "";
+
+  useEffect(() => {
+    if (focusProperty && hasValidPropertyCoords(focusProperty)) {
+      map.flyTo(focusProperty.coords, 14, { duration: 0.8 });
+      return;
+    }
+
+    const coords = properties.filter(hasValidPropertyCoords).map((property) => property.coords);
+
+    if (!coords.length) {
+      map.setView(DEFAULT_MAP_CENTER, 12);
+      return;
+    }
+
+    if (coords.length === 1) {
+      map.flyTo(coords[0], 13, { duration: 0.8 });
+      return;
+    }
+
+    map.fitBounds(L.latLngBounds(coords), {
+      padding: [74, 74],
+      maxZoom: 13
+    });
+  }, [boundsKey, focusKey, focusProperty, map, properties]);
+
+  return null;
+}
+
+function PriceMapMarker({ property, isActive, displayedPrice, onHover, onClick }) {
+  const markerColor = safeMarkerColor(property.markerColor, property.category);
+  const markerHtml = useMemo(() => {
+    const activeClass = isActive ? " map-price-marker--active" : "";
+    return `
+      <span class="map-price-marker${activeClass}" style="--marker-color: ${markerColor};">
+        <span class="map-price-marker-dot" aria-hidden="true"></span>
+        <span class="map-price-marker-label">${escapeMarkerText(displayedPrice)}</span>
+      </span>
+    `;
+  }, [displayedPrice, isActive, markerColor]);
+  const markerIcon = useMemo(
+    () =>
+      L.divIcon({
+        className: "map-price-marker-icon",
+        html: markerHtml,
+        iconSize: [172, 34],
+        iconAnchor: [10, 17]
+      }),
+    [markerHtml]
+  );
+
+  return (
+    <Marker
+      position={property.coords}
+      icon={markerIcon}
+      title={`${property.title} - ${displayedPrice}`}
+      zIndexOffset={isActive ? 1000 : 0}
+      eventHandlers={{
+        mouseover: () => onHover(property),
+        click: () => onClick(property)
+      }}
+    />
+  );
 }
 
 function ServiceOptionVisual({ icon }) {
@@ -326,6 +452,7 @@ function PublicApp({ initialProperties = [] }) {
   const [selectedId, setSelectedId] = useState("");
   const [pinnedPropertyId, setPinnedPropertyId] = useState("");
   const [hoveredPropertyId, setHoveredPropertyId] = useState("");
+  const [mapSearchQuery, setMapSearchQuery] = useState("");
   const [loading, setLoading] = useState(() => !initialProperties.length);
   const [loadError, setLoadError] = useState("");
   const [rentalSearch, setRentalSearch] = useState(INITIAL_RENTAL_SEARCH);
@@ -451,7 +578,7 @@ function PublicApp({ initialProperties = [] }) {
     setSelectedId(property.id);
     setPinnedPropertyId(property.id);
     setHoveredPropertyId(property.id);
-    navigateToPath("/");
+    navigateToPath("/map");
   };
 
   const navigateToPath = (path) => {
@@ -472,6 +599,17 @@ function PublicApp({ initialProperties = [] }) {
   const pinPropertyPreview = (property) => {
     setPinnedPropertyId(property.id);
     setHoveredPropertyId(property.id);
+  };
+
+  const updateFullscreenMapSearch = (value) => {
+    setMapSearchQuery(value);
+    setPinnedPropertyId("");
+    setHoveredPropertyId("");
+  };
+
+  const focusFullscreenMapProperty = (property) => {
+    setSelectedId(property.id);
+    pinPropertyPreview(property);
   };
 
   const clearMapPropertyPreview = () => {
@@ -611,6 +749,165 @@ function PublicApp({ initialProperties = [] }) {
     </div>
   ) : null;
 
+  const normalizedPathname = currentPathname.replace(/\/+$/, "") || "/";
+  const isFullscreenMapRoute = normalizedPathname === "/map";
+  const fullscreenMapProperties = useMemo(
+    () => filterMapPropertiesBySearch(visibleProperties, mapSearchQuery),
+    [mapSearchQuery, visibleProperties]
+  );
+  const fullscreenMapPropertiesWithCoords = useMemo(
+    () => fullscreenMapProperties.filter(hasValidPropertyCoords),
+    [fullscreenMapProperties]
+  );
+  const fullscreenMapPreviewProperty =
+    fullscreenMapPropertiesWithCoords.find((property) => property.id === (pinnedPropertyId || hoveredPropertyId)) ||
+    null;
+  const fullscreenActiveMapPropertyId =
+    fullscreenMapPreviewProperty?.id ||
+    (fullscreenMapPropertiesWithCoords.some((property) => property.id === selectedId) ? selectedId : "");
+  const fullscreenMapCenter = fullscreenMapPropertiesWithCoords[0]?.coords || DEFAULT_MAP_CENTER;
+  const fullscreenResultLabel = loading
+    ? "Cargando propiedades..."
+    : `${fullscreenMapProperties.length} ${
+        fullscreenMapProperties.length === 1 ? "propiedad encontrada" : "propiedades encontradas"
+      }`;
+
+  if (isFullscreenMapRoute) {
+    return (
+      <div className="page-shell fullscreen-map-shell">
+        <main className="fullscreen-map-main" aria-label="Mapa de propiedades en pantalla completa">
+          <div className="fullscreen-map-toolbar">
+            <button
+              type="button"
+              className="fullscreen-map-brand"
+              onClick={() => navigateToPath("/")}
+              aria-label="Volver al inicio"
+            >
+              <img src={logoMarkUrl} alt="Logo Denise Catalán" />
+              <span>Mapa de propiedades</span>
+            </button>
+
+            <form className="fullscreen-map-search" onSubmit={(event) => event.preventDefault()}>
+              <label htmlFor="fullscreen-property-search">Buscar propiedad</label>
+              <div className="fullscreen-map-search-control">
+                <input
+                  id="fullscreen-property-search"
+                  type="search"
+                  value={mapSearchQuery}
+                  onChange={(event) => updateFullscreenMapSearch(event.target.value)}
+                  placeholder="Nombre, zona, precio o categoría"
+                  autoComplete="off"
+                />
+                {mapSearchQuery ? (
+                  <button
+                    type="button"
+                    className="fullscreen-map-clear"
+                    onClick={() => updateFullscreenMapSearch("")}
+                    aria-label="Limpiar búsqueda"
+                  >
+                    ×
+                  </button>
+                ) : null}
+              </div>
+              <span className="fullscreen-map-count" role="status">
+                {fullscreenResultLabel}
+              </span>
+
+              {mapSearchQuery ? (
+                <div className="fullscreen-map-results" role="listbox" aria-label="Resultados de propiedades">
+                  {fullscreenMapPropertiesWithCoords.length ? (
+                    fullscreenMapPropertiesWithCoords.slice(0, 6).map((property) => (
+                      <button
+                        type="button"
+                        key={property.id}
+                        onClick={() => focusFullscreenMapProperty(property)}
+                        role="option"
+                        aria-selected={property.id === fullscreenActiveMapPropertyId}
+                      >
+                        <strong>{property.title}</strong>
+                        <span>{formatDisplayedPrice(property)} · {property.location}</span>
+                      </button>
+                    ))
+                  ) : (
+                    <p>No encontramos propiedades para esa búsqueda.</p>
+                  )}
+                </div>
+              ) : null}
+            </form>
+
+            <a
+              href="/"
+              className="map-btn fullscreen-map-home"
+              onClick={(event) => {
+                event.preventDefault();
+                navigateToPath("/");
+              }}
+            >
+              Volver
+            </a>
+          </div>
+
+          <section className="fullscreen-map-canvas" aria-label="Mapa con precios de propiedades">
+            <MapContainer
+              center={fullscreenMapCenter}
+              zoom={12}
+              scrollWheelZoom={true}
+              className="map-view fullscreen-map-view"
+            >
+              <MapAutoViewport
+                properties={fullscreenMapPropertiesWithCoords}
+                focusProperty={fullscreenMapPreviewProperty}
+              />
+              <MapClickReset onClear={clearMapPropertyPreview} />
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              {fullscreenMapPropertiesWithCoords.map((property) => (
+                <PriceMapMarker
+                  key={property.id}
+                  property={property}
+                  isActive={property.id === fullscreenActiveMapPropertyId}
+                  displayedPrice={formatDisplayedPrice(property)}
+                  onHover={(hoveredProperty) => setHoveredPropertyId(hoveredProperty.id)}
+                  onClick={focusFullscreenMapProperty}
+                />
+              ))}
+            </MapContainer>
+
+            {!fullscreenMapPropertiesWithCoords.length ? (
+              <div className="fullscreen-map-empty">
+                <p>{loading ? "Cargando mapa..." : "No hay propiedades para mostrar en el mapa."}</p>
+              </div>
+            ) : null}
+
+            {loadError ? (
+              <p className="fullscreen-map-status" role="alert">
+                {loadError}
+              </p>
+            ) : null}
+
+            {fullscreenMapPreviewProperty ? (
+              <div
+                className={`map-preview-overlay ${
+                  fullscreenMapPreviewProperty.id === pinnedPropertyId ? "map-preview-overlay--pinned" : ""
+                }`}
+              >
+                <MapPropertyPreview
+                  property={fullscreenMapPreviewProperty}
+                  isPinned={fullscreenMapPreviewProperty.id === pinnedPropertyId}
+                  displayedPrice={formatDisplayedPrice(fullscreenMapPreviewProperty)}
+                  onPreviewClick={() => handleMapPreviewClick(fullscreenMapPreviewProperty)}
+                />
+              </div>
+            ) : null}
+          </section>
+        </main>
+        {serviceModal}
+      </div>
+    );
+  }
+
   if (isPropertyRoute) {
     return (
       <div className="page-shell property-page-shell">
@@ -746,6 +1043,18 @@ function PublicApp({ initialProperties = [] }) {
           </div>
 
           <section className="map-section hero-map-section" id="mapa" aria-label="Mapa de propiedades disponibles">
+            <div className="map-section-header hero-map-section-header">
+              <a
+                href="/map"
+                className="map-btn map-fullscreen-link"
+                onClick={(event) => {
+                  event.preventDefault();
+                  navigateToPath("/map");
+                }}
+              >
+                Pantalla completa
+              </a>
+            </div>
             <div className="map-layout">
               <div className="map-frame">
                 {selectedProperty ? (

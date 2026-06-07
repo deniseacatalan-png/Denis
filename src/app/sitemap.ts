@@ -12,6 +12,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${DEFAULT_SITE_URL}/`,
       priority: 1
     },
+    {
+      url: absoluteUrl("/map"),
+      priority: 0.7
+    },
     ...properties.map((property) => ({
       url: absoluteUrl(propertyPublicPath(property)),
       priority: 0.8
