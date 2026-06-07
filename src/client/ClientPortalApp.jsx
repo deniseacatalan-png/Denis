@@ -255,6 +255,24 @@ function ClientPortalNavbar({ session, activeView, authMode, onAuthMode, onNavig
   );
 }
 
+function ClientAuthLayout({ children }) {
+  return (
+    <main className="client-login-content">
+      <section className="client-auth-layout" aria-label="Acceso al portal de clientes">
+        <aside className="client-auth-visual">
+          <img className="client-auth-visual-logo" src={logoMarkUrl} alt="Denise Catalan" />
+          <div className="client-auth-visual-copy">
+            <p>Portal privado</p>
+            <h2>Propiedades, busquedas y archivos en un solo lugar.</h2>
+            <span>San Martin de los Andes</span>
+          </div>
+        </aside>
+        {children}
+      </section>
+    </main>
+  );
+}
+
 export default function ClientPortalApp() {
   const [activeView, setActiveView] = useState(activeViewFromPath);
   const [session, setSession] = useState(undefined);
@@ -541,7 +559,7 @@ export default function ClientPortalApp() {
           onNavigate={navigate}
           onSignOut={handleSignOut}
         />
-        <main className="client-login-content">
+        <ClientAuthLayout>
           <section className="client-login-panel">
             <div>
               <h1>{authMode === "recover" ? "Recuperar acceso" : "Portal de clientes"}</h1>
@@ -635,7 +653,7 @@ export default function ClientPortalApp() {
               Volver al sitio
             </a>
           </section>
-        </main>
+        </ClientAuthLayout>
       </div>
     );
   }
@@ -651,7 +669,7 @@ export default function ClientPortalApp() {
           onNavigate={navigate}
           onSignOut={handleSignOut}
         />
-        <main className="client-login-content">
+        <ClientAuthLayout>
           <section className="client-login-panel client-password-panel">
             <div>
               <h1>Nueva contrasenia</h1>
@@ -687,7 +705,7 @@ export default function ClientPortalApp() {
               </button>
             </form>
           </section>
-        </main>
+        </ClientAuthLayout>
       </div>
     );
   }
