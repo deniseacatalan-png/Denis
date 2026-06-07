@@ -1046,7 +1046,7 @@ function PublicApp({ initialProperties = [] }) {
             <div className="map-section-header hero-map-section-header">
               <a
                 href="/map"
-                className="map-btn map-fullscreen-link"
+                className="map-fullscreen-link"
                 onClick={(event) => {
                   event.preventDefault();
                   navigateToPath("/map");

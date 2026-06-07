@@ -5333,12 +5333,19 @@ body {
 }
 
 .page-shell .hero-map-section-header .map-fullscreen-link {
-  min-height: 38px;
-  padding-inline: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0;
   color: var(--verde-bosque);
-  background: rgba(255, 250, 244, 0.92);
-  border-color: rgba(47, 79, 62, 0.16);
-  box-shadow: 0 8px 18px rgba(47, 79, 62, 0.1);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  font-family: "Manrope", sans-serif;
+  font-size: 0.86rem;
+  font-weight: 900;
+  line-height: 1.2;
+  text-decoration: underline;
+  text-underline-offset: 0.22em;
 }
 
 .page-shell.fullscreen-map-shell {
@@ -5654,11 +5661,11 @@ body {
 
 @media (max-width: 760px) {
   .page-shell .hero-map-section-header {
-    justify-content: stretch;
+    justify-content: flex-end;
   }
 
   .page-shell .hero-map-section-header .map-fullscreen-link {
-    width: 100%;
+    width: auto;
   }
 
   .page-shell.fullscreen-map-shell .fullscreen-map-toolbar {
