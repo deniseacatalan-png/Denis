@@ -4376,7 +4376,8 @@ body {
   position: sticky;
   top: 0;
   z-index: 20;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 1rem;
   align-items: center;
   justify-content: space-between;
@@ -4417,16 +4418,20 @@ body {
 }
 
 .client-nav-actions {
-  display: flex;
+  display: none;
+  grid-column: 1 / -1;
+  grid-template-columns: 1fr;
   gap: 0.45rem;
-  align-items: center;
-  justify-content: flex-end;
+  width: 100%;
   min-width: 0;
+  padding: 0.75rem 0 0;
+  overflow: visible;
+  border-top: 1px solid rgba(47, 79, 62, 0.1);
 }
 
 .client-nav-menu-button {
   position: relative;
-  display: none;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 44px;
@@ -4468,11 +4473,16 @@ body {
   transform: rotate(-45deg);
 }
 
+.client-portal-navbar.is-menu-open .client-nav-actions {
+  display: grid;
+}
+
 .client-nav-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 42px;
+  width: 100%;
+  min-height: 44px;
   padding: 0.58rem 0.88rem;
   color: var(--verde-bosque);
   background: transparent;
@@ -5047,18 +5057,6 @@ body {
     grid-template-columns: 1fr;
   }
 
-  .client-portal-navbar {
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  .client-nav-actions {
-    width: 100%;
-    justify-content: flex-start;
-    overflow-x: auto;
-    padding-bottom: 0.05rem;
-  }
-
   .client-portal-sidebar {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     position: static;
@@ -5086,9 +5084,6 @@ body {
 
   .client-portal-navbar {
     position: static;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
     margin-bottom: 0.75rem;
   }
 
@@ -5104,28 +5099,7 @@ body {
     font-size: 0.7rem;
   }
 
-  .client-nav-menu-button {
-    display: inline-flex;
-  }
-
-  .client-nav-actions {
-    display: none;
-    grid-column: 1 / -1;
-    grid-template-columns: 1fr;
-    gap: 0.45rem;
-    width: 100%;
-    padding: 0.75rem 0 0;
-    overflow: visible;
-    border-top: 1px solid rgba(47, 79, 62, 0.1);
-  }
-
-  .client-portal-navbar.is-menu-open .client-nav-actions {
-    display: grid;
-  }
-
   .client-nav-link {
-    width: 100%;
-    min-height: 44px;
     padding-right: 0.62rem;
     padding-left: 0.62rem;
   }
