@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import {
   MapContainer,
   CircleMarker,
@@ -282,6 +282,16 @@ function MapPropertyPreview({ property, isPinned, displayedPrice, onPreviewClick
   );
 }
 
+function PropertySliderDivider() {
+  return (
+    <div className="property-slider-divider" aria-hidden="true">
+      <span className="property-slider-divider-line" />
+      <span className="property-slider-divider-mark" />
+      <span className="property-slider-divider-line" />
+    </div>
+  );
+}
+
 function PublicApp({ initialProperties = [] }) {
   const [properties, setProperties] = useState(() => initialProperties);
   const [selectedId, setSelectedId] = useState("");
@@ -403,6 +413,10 @@ function PublicApp({ initialProperties = [] }) {
 
   const getPropertiesByCategory = (category) =>
     visibleProperties.filter((property) => property.category === category);
+  const sliderGroupsWithProperties = PROPERTY_SLIDER_GROUPS.map((group) => ({
+    ...group,
+    properties: getPropertiesByCategory(group.category)
+  })).filter((group) => group.properties.length);
 
   const selectPropertyOnMap = (property) => {
     setSelectedId(property.id);
@@ -778,74 +792,70 @@ function PublicApp({ initialProperties = [] }) {
             <p className="loading-state">{loadError}</p>
           ) : (
             <div className="property-slider-stack">
-              {PROPERTY_SLIDER_GROUPS.map((group) => {
-                const categoryProperties = getPropertiesByCategory(group.category);
-
-                if (!categoryProperties.length) {
-                  return null;
-                }
-
+              {sliderGroupsWithProperties.map((group, index) => {
                 return (
-                  <Slider
-                    id={`property-slider-${group.category}`}
-                    key={group.category}
-                    eyebrow={group.eyebrow}
-                    title={group.title}
-                    items={categoryProperties}
-                    selectedId={selectedProperty?.id}
-                    emptyMessage={group.emptyMessage}
-                    showHeader={false}
-                    showCounter={false}
-                    onActiveItemChange={(property) => {
-                      if (property?.id) {
-                        setSelectedId(property.id);
-                      }
-                    }}
-                    renderItem={({ item: property, active }) => (
-                      <div
-                        className="property-slide-card"
-                        role={active ? undefined : "button"}
-                        tabIndex={active ? undefined : 0}
-                        onClick={() => selectPropertySlide(property)}
-                        onKeyDown={(event) => {
-                          if (!active && (event.key === "Enter" || event.key === " ")) {
-                            event.preventDefault();
-                            selectPropertySlide(property);
-                          }
-                        }}
-                      >
-                        {property.images.length ? (
-                          <img
-                            className="property-slide-image"
-                            src={resolvePropertyCoverImage(property)}
-                            alt=""
-                            loading="lazy"
-                          />
-                        ) : null}
-                        <span className={`status-pill status-pill--${property.category}`}>
-                          {CATEGORY_META[property.category]?.label || "En venta"}
-                        </span>
-                        <span className="property-slide-text">
-                          <span className="property-slide-kicker">{formatDisplayedPrice(property)}</span>
-                          <span className="property-slide-title">{property.title}</span>
-                          <span className="property-slide-intro">{getPropertyIntro(property)}</span>
-                        </span>
-                        <span className="property-slide-footer">
-                          <span>{property.location}</span>
-                          <button
-                            type="button"
-                            className="property-slide-detail-btn"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              openPropertyPage(property);
-                            }}
-                          >
-                            Ver descripcion completa
-                          </button>
-                        </span>
-                      </div>
-                    )}
-                  />
+                  <Fragment key={group.category}>
+                    {index > 0 ? <PropertySliderDivider /> : null}
+                    <Slider
+                      id={`property-slider-${group.category}`}
+                      eyebrow={group.eyebrow}
+                      title={group.title}
+                      items={group.properties}
+                      selectedId={selectedProperty?.id}
+                      emptyMessage={group.emptyMessage}
+                      showHeader={false}
+                      showCounter={false}
+                      onActiveItemChange={(property) => {
+                        if (property?.id) {
+                          setSelectedId(property.id);
+                        }
+                      }}
+                      renderItem={({ item: property, active }) => (
+                        <div
+                          className="property-slide-card"
+                          role={active ? undefined : "button"}
+                          tabIndex={active ? undefined : 0}
+                          onClick={() => selectPropertySlide(property)}
+                          onKeyDown={(event) => {
+                            if (!active && (event.key === "Enter" || event.key === " ")) {
+                              event.preventDefault();
+                              selectPropertySlide(property);
+                            }
+                          }}
+                        >
+                          {property.images.length ? (
+                            <img
+                              className="property-slide-image"
+                              src={resolvePropertyCoverImage(property)}
+                              alt=""
+                              loading="lazy"
+                            />
+                          ) : null}
+                          <span className={`status-pill status-pill--${property.category}`}>
+                            {CATEGORY_META[property.category]?.label || "En venta"}
+                          </span>
+                          <span className="property-slide-text">
+                            <span className="property-slide-kicker">{formatDisplayedPrice(property)}</span>
+                            <span className="property-slide-title">{property.title}</span>
+                            <span className="property-slide-intro">{getPropertyIntro(property)}</span>
+                          </span>
+                          <span className="property-slide-footer">
+                            <span>{property.location}</span>
+                            <button
+                              type="button"
+                              className="property-slide-detail-btn"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                openPropertyPage(property);
+                              }}
+                            >
+                              Ver descripcion completa
+                            </button>
+                          </span>
+                        </div>
+                      )}
+                    />
+                  </Fragment>
                 );
               })}
             </div>
