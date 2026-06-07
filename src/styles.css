@@ -84,7 +84,7 @@ body {
 }
 
 .site-nav-brand span {
-  display: none;
+  display: inline-block;
   color: var(--marron-tierra);
   font-family: "Manrope", sans-serif;
   font-size: 0.76rem;
@@ -3844,7 +3844,6 @@ body {
   }
 
   .site-nav-brand span {
-    display: inline-block;
     font-size: 0.7rem;
     text-align: left;
   }
