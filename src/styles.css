@@ -4319,7 +4319,7 @@ body {
 .client-auth-visual {
   position: relative;
   display: grid;
-  align-content: space-between;
+  align-content: end;
   min-height: calc(100vh - 80px);
   padding: clamp(1.4rem, 4vw, 3.4rem);
   color: var(--blanco-calido);
@@ -4327,16 +4327,6 @@ body {
     linear-gradient(180deg, rgba(35, 35, 31, 0.04) 0%, rgba(35, 35, 31, 0.68) 100%),
     linear-gradient(122deg, rgba(47, 79, 62, 0.76) 0%, rgba(47, 79, 62, 0.16) 62%),
     url("/images/sma1.jpg") center/cover no-repeat;
-}
-
-.client-auth-visual-logo {
-  width: min(150px, 38vw);
-  height: auto;
-  padding: 0.32rem;
-  background: rgba(255, 250, 244, 0.86);
-  border: 1px solid rgba(255, 250, 244, 0.42);
-  border-radius: 8px;
-  box-shadow: 0 16px 34px rgba(35, 35, 31, 0.22);
 }
 
 .client-auth-visual-copy {
@@ -5061,10 +5051,6 @@ body {
   .client-auth-visual {
     min-height: 210px;
     padding: 1rem;
-  }
-
-  .client-auth-visual-logo {
-    width: 86px;
   }
 
   .client-auth-visual-copy {

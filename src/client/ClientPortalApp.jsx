@@ -260,7 +260,6 @@ function ClientAuthLayout({ children }) {
     <main className="client-login-content">
       <section className="client-auth-layout" aria-label="Acceso al portal de clientes">
         <aside className="client-auth-visual">
-          <img className="client-auth-visual-logo" src={logoMarkUrl} alt="Denise Catalan" />
           <div className="client-auth-visual-copy">
             <p>Portal privado</p>
             <h2>Propiedades, busquedas y archivos en un solo lugar.</h2>
