@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import logoMark from "../../ISO GRAFITO.png";
+import AppNavbar from "../components/AppNavbar";
+import { clientNavbarItems } from "../components/AppNavbarConfig";
 import {
   fetchClientPortalDashboard,
   getClientPortalSession,
@@ -62,6 +64,27 @@ const emptySearchForm = {
   preferences: "",
   mustHaves: ""
 };
+
+const uploadTargetOptions = [
+  {
+    value: "profile",
+    label: "Perfil",
+    description: "DNI, constancias y documentacion personal.",
+    visual: "profile"
+  },
+  {
+    value: "property_submission",
+    label: "Propiedad",
+    description: "Fotos, planos, escrituras o datos del inmueble.",
+    visual: "property"
+  },
+  {
+    value: "search_request",
+    label: "Busqueda",
+    description: "Referencias, requisitos y archivos de respaldo.",
+    visual: "search"
+  }
+];
 
 const portalNav = [
   { id: "panel", label: "Panel", path: "/clientes" },
@@ -201,90 +224,70 @@ function FileList({ files }) {
   );
 }
 
+function UploadTargetVisual({ type }) {
+  return (
+    <span className={`client-upload-target-visual client-upload-target-visual--${type}`} aria-hidden="true">
+      {type === "profile" ? (
+        <svg viewBox="0 0 72 56" focusable="false">
+          <rect x="11" y="10" width="50" height="36" rx="8" />
+          <circle cx="28" cy="26" r="6" />
+          <path d="M18.5 39c1.8-6 5.4-9 9.5-9s7.7 3 9.5 9" />
+          <path d="M42 22h10" />
+          <path d="M42 30h8" />
+          <path d="M42 38h6" />
+        </svg>
+      ) : null}
+      {type === "property" ? (
+        <svg viewBox="0 0 72 56" focusable="false">
+          <path d="M14 31 36 13l22 18" />
+          <path d="M20 28v18h32V28" />
+          <path d="M30 46V34h12v12" />
+          <path d="M49 20v-7h7v13" />
+          <path d="M13 46h46" />
+        </svg>
+      ) : null}
+      {type === "search" ? (
+        <svg viewBox="0 0 72 56" focusable="false">
+          <path d="M18 14v31l13-5 13 5 10-4V10L44 14l-13-5-13 5Z" />
+          <path d="M31 9v31" />
+          <path d="M44 14v31" />
+          <circle cx="42" cy="27" r="7" />
+          <path d="m47 32 7 7" />
+        </svg>
+      ) : null}
+    </span>
+  );
+}
+
 function ClientPortalNavbar({ session, activeView, authMode, onAuthMode, onNavigate, onSignOut }) {
   const isAuthenticated = Boolean(session?.user);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  function closeMobileMenu() {
-    setIsMobileMenuOpen(false);
-  }
+  function handleItemSelect(item) {
+    if (item.action === "login" || item.action === "signup") {
+      onAuthMode(item.action);
+      return;
+    }
 
-  function handleAuthMode(mode) {
-    onAuthMode(mode);
-    closeMobileMenu();
-  }
+    if (item.action === "signout") {
+      onSignOut();
+      return;
+    }
 
-  function handleNavigate(path, viewId) {
-    onNavigate(path, viewId);
-    closeMobileMenu();
-  }
-
-  function handleSignOutClick() {
-    onSignOut();
-    closeMobileMenu();
+    if (item.path) {
+      onNavigate(item.path, item.viewId);
+    }
   }
 
   return (
-    <nav className={`client-portal-navbar ${isMobileMenuOpen ? "is-menu-open" : ""}`} aria-label="Navegacion del portal de clientes">
-      <a href="/" className="client-nav-brand" aria-label="Volver al sitio principal">
-        <img src={logoMarkUrl} alt="Denise Catalan" />
-        <span>Portal de clientes</span>
-      </a>
-
-      <button
-        type="button"
-        className="client-nav-menu-button"
-        aria-controls="client-nav-actions"
-        aria-expanded={isMobileMenuOpen}
-        aria-label={isMobileMenuOpen ? "Cerrar menu" : "Abrir menu"}
-        onClick={() => setIsMobileMenuOpen((current) => !current)}
-      >
-        <span />
-        <span />
-        <span />
-      </button>
-
-      <div className="client-nav-actions" id="client-nav-actions">
-        {isAuthenticated ? (
-          <>
-            <button
-              type="button"
-              className={`client-nav-link ${activeView === "panel" ? "is-active" : ""}`}
-              onClick={() => handleNavigate("/clientes", "panel")}
-            >
-              Panel
-            </button>
-            <button
-              type="button"
-              className={`client-nav-link ${activeView === "perfil" ? "is-active" : ""}`}
-              onClick={() => handleNavigate("/clientes/perfil", "perfil")}
-            >
-              Perfil
-            </button>
-            <button type="button" className="client-nav-link client-nav-link--ghost" onClick={handleSignOutClick}>
-              Salir
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              type="button"
-              className={`client-nav-link ${authMode === "login" ? "is-active" : ""}`}
-              onClick={() => handleAuthMode("login")}
-            >
-              Ingresar
-            </button>
-            <button
-              type="button"
-              className={`client-nav-link client-nav-link--primary ${authMode === "signup" ? "is-active" : ""}`}
-              onClick={() => handleAuthMode("signup")}
-            >
-              Crear cuenta
-            </button>
-          </>
-        )}
-      </div>
-    </nav>
+    <AppNavbar
+      ariaLabel="Navegacion del portal de clientes"
+      brandHref="/"
+      brandLabel="Portal de clientes"
+      logoAlt="Denise Catalan"
+      logoUrl={logoMarkUrl}
+      items={clientNavbarItems({ isAuthenticated, activeView, authMode })}
+      onItemSelect={handleItemSelect}
+    />
   );
 }
 
@@ -573,6 +576,7 @@ export default function ClientPortalApp() {
   }
 
   async function submitFile(event) {
+    const uploadForm = event.currentTarget;
     event.preventDefault();
     setSaving("file");
     setError("");
@@ -587,7 +591,7 @@ export default function ClientPortalApp() {
       });
       setFiles((current) => [uploaded, ...current]);
       setUploadFile(null);
-      event.currentTarget.reset();
+      uploadForm.reset();
       setNotice("Archivo cargado en privado.");
     } catch (saveError) {
       setError(saveError.message || "No se pudo cargar el archivo.");
@@ -1005,14 +1009,30 @@ export default function ClientPortalApp() {
                   <p>Bucket privado</p>
                   <h2>Subir archivo</h2>
                 </div>
-                <label>
-                  Asociar a
-                  <select value={uploadTarget} onChange={(event) => setUploadTarget(event.target.value)}>
-                    <option value="profile">Perfil</option>
-                    <option value="property_submission">Propiedad</option>
-                    <option value="search_request">Busqueda</option>
-                  </select>
-                </label>
+                <fieldset className="client-upload-targets">
+                  <legend>Asociar archivo a</legend>
+                  <div className="client-upload-target-grid">
+                    {uploadTargetOptions.map((option) => {
+                      const isSelected = uploadTarget === option.value;
+
+                      return (
+                        <button
+                          type="button"
+                          key={option.value}
+                          className={`client-upload-target-card ${isSelected ? "is-selected" : ""}`}
+                          aria-pressed={isSelected}
+                          onClick={() => setUploadTarget(option.value)}
+                        >
+                          <UploadTargetVisual type={option.visual} />
+                          <span className="client-upload-target-copy">
+                            <strong>{option.label}</strong>
+                            <small>{option.description}</small>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </fieldset>
                 <label>
                   Archivo
                   <input type="file" onChange={(event) => setUploadFile(event.target.files?.[0] || null)} required />

@@ -26,6 +26,24 @@ export const CATEGORY_META = {
   }
 };
 
+export const ADMIN_PROPERTY_TYPE_TABS = [
+  {
+    id: "venta",
+    label: "Venta",
+    categories: ["venta", "vendido", "proceso"]
+  },
+  {
+    id: "alquiler_turistico",
+    label: CATEGORY_META.alquiler_turistico.label,
+    categories: ["alquiler_turistico"]
+  },
+  {
+    id: "alquiler_permanente",
+    label: CATEGORY_META.alquiler_permanente.label,
+    categories: ["alquiler_permanente"]
+  }
+];
+
 const legacyCategoryMarkerColors = {
   "#a86f7a": "venta",
   "#8a6a4f": "alquiler_turistico",
@@ -198,6 +216,25 @@ export function filterPropertiesBySearch(properties, query) {
   if (!tokens.length) return properties;
 
   return properties.filter((property) => propertyMatchesSearch(property, query));
+}
+
+function adminPropertyTypeTab(typeId) {
+  return ADMIN_PROPERTY_TYPE_TABS.find((tab) => tab.id === typeId) || ADMIN_PROPERTY_TYPE_TABS[0];
+}
+
+export function filterAdminPropertiesByType(properties, typeId) {
+  const tab = adminPropertyTypeTab(typeId);
+  const categories = new Set(tab.categories);
+
+  return properties.filter((property) => categories.has(property.category));
+}
+
+export function getAdminPropertyTypeTabs(properties) {
+  return ADMIN_PROPERTY_TYPE_TABS.map((tab) => ({
+    id: tab.id,
+    label: tab.label,
+    count: filterAdminPropertiesByType(properties, tab.id).length
+  }));
 }
 
 const publicPropertyCategories = new Set(Object.keys(CATEGORY_META));

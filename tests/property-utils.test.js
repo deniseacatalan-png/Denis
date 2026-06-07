@@ -3,9 +3,11 @@ import { readFileSync } from "node:fs";
 import { describe, it } from "vitest";
 
 import {
+  filterAdminPropertiesByType,
   CATEGORY_META,
   filterPropertiesBySearch,
   findPropertyByPublicPath,
+  getAdminPropertyTypeTabs,
   getPublicSelectedPropertyId,
   getVisiblePublicProperties,
   normalizeDatabaseProperty,
@@ -94,6 +96,45 @@ describe("property helpers", () => {
     const properties = [{ id: "1" }, { id: "2" }];
 
     assert.equal(filterPropertiesBySearch(properties, "   "), properties);
+  });
+
+  it("exposes the three admin property type tabs with counts", () => {
+    const properties = [
+      { id: "sale", category: "venta" },
+      { id: "sold", category: "vendido" },
+      { id: "process", category: "proceso" },
+      { id: "tourist", category: "alquiler_turistico" },
+      { id: "permanent", category: "alquiler_permanente" }
+    ];
+
+    assert.deepEqual(getAdminPropertyTypeTabs(properties), [
+      { id: "venta", label: "Venta", count: 3 },
+      { id: "alquiler_turistico", label: "Alquiler turistico", count: 1 },
+      { id: "alquiler_permanente", label: "Alquiler permanente", count: 1 }
+    ]);
+  });
+
+  it("filters admin properties by the selected property type tab", () => {
+    const properties = [
+      { id: "sale", category: "venta" },
+      { id: "sold", category: "vendido" },
+      { id: "process", category: "proceso" },
+      { id: "tourist", category: "alquiler_turistico" },
+      { id: "permanent", category: "alquiler_permanente" }
+    ];
+
+    assert.deepEqual(
+      filterAdminPropertiesByType(properties, "venta").map((property) => property.id),
+      ["sale", "sold", "process"]
+    );
+    assert.deepEqual(
+      filterAdminPropertiesByType(properties, "alquiler_turistico").map((property) => property.id),
+      ["tourist"]
+    );
+    assert.deepEqual(
+      filterAdminPropertiesByType(properties, "alquiler_permanente").map((property) => property.id),
+      ["permanent"]
+    );
   });
 
   it("chooses the first public property by inventory display order", () => {

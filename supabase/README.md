@@ -37,6 +37,33 @@ You can also paste `seed.sql` into the Supabase SQL editor after running the mig
 
 The admin panel is available at `/admin`. The login form accepts the username you created above and the password from the command.
 
+## Cuentas de prueba
+
+Estas credenciales son solo para desarrollo, testing y pruebas del sistema. No usarlas como credenciales reales de produccion.
+
+| Rol | Ruta | Usuario / email para login | Password de test | Perfil creado |
+| --- | --- | --- | --- | --- |
+| Admin | `/admin` | `admin` | `TestAdmin2026!` | `admin_profiles` |
+| Vendedor | `/vendedor` | `vendedor` | `TestVendedor2026!` | `seller_profiles` |
+| Cliente portal | `/clientes` | `cliente.test@denise-catalan.local` | `TestCliente2026!` | `client_portal_profiles` + fixtures |
+
+Para recrear o actualizar estas cuentas:
+
+```bash
+npm run test:accounts
+```
+
+El comando requiere `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` y `DIRECT_URL` o `DATABASE_URL`. Es idempotente: si las cuentas ya existen, actualiza password, confirma email y reactiva los perfiles.
+
+El cliente portal queda con datos visibles para testear `/clientes`: una propiedad enviada en revision y una busqueda guardada contactada.
+
+El login interno convierte usuarios sin `@` a emails sinteticos de Supabase:
+
+- Admin: `admin@admin.denise-catalan.local`
+- Vendedor: `vendedor@vendedor.denise-catalan.local`
+
+El cliente entra directamente con su email.
+
 ## Portal interno de vendedores
 
 El portal de vendedores esta disponible en `/vendedor`. Los vendedores se crean desde `/admin`, en el panel "Vendedores".

@@ -156,6 +156,26 @@ describe("client portal helpers", () => {
     assert.match(robotsSource, /"\/clientes"/);
   });
 
+  it("captures the upload form before async work resets it", () => {
+    const source = readFileSync("src/client/ClientPortalApp.jsx", "utf8");
+    const submitFileHandler = source.match(/async function submitFile\(event\) \{([\s\S]*?)\n  \}/)?.[1] || "";
+
+    assert.match(submitFileHandler, /const\s+\w+\s*=\s*event\.currentTarget;[\s\S]*await uploadClientPortalFile/);
+    assert.doesNotMatch(submitFileHandler, /event\.currentTarget\.reset\(\)/);
+  });
+
+  it("uses three visual upload target cards instead of a select", () => {
+    const source = readFileSync("src/client/ClientPortalApp.jsx", "utf8");
+
+    assert.match(source, /const uploadTargetOptions = \[/);
+    assert.match(source, /value: "profile"/);
+    assert.match(source, /value: "property_submission"/);
+    assert.match(source, /value: "search_request"/);
+    assert.match(source, /className="client-upload-target-grid"/);
+    assert.match(source, /className=\{`client-upload-target-card/);
+    assert.doesNotMatch(source, /<select value=\{uploadTarget\}/);
+  });
+
   it("normalizes email/password auth payloads and reset redirects", () => {
     const previousWindow = global.window;
     global.window = { location: { origin: "https://www.denisecatalanbienesraices.com.ar" } };

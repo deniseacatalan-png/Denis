@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DocumentsPanel, NotesPanel } from "../components/ActivityPanels";
+import AppNavbar from "../components/AppNavbar";
+import { sellerNavbarItems } from "../components/AppNavbarConfig";
 import {
   activityAuthorFromProfile,
   createClientDocument,
@@ -22,6 +24,7 @@ import {
   signInSeller,
   signOutSeller
 } from "../utils/supabase/sellers";
+import { getSellerClientIdFromPathname, SELLER_HOME_PATH, sellerClientPath } from "./routing";
 import logoMark from "../../ISO GRAFITO.png";
 
 function assetUrl(asset) {
@@ -85,6 +88,87 @@ function formatClientDate(value) {
     month: "2-digit",
     year: "numeric"
   }).format(new Date(value));
+}
+
+function getInitialSellerClientId() {
+  if (typeof window === "undefined") return "";
+  return getSellerClientIdFromPathname(window.location.pathname);
+}
+
+function navigateSellerPath(path, options = {}) {
+  if (typeof window === "undefined") return;
+  const method = options.replace ? "replaceState" : "pushState";
+  if (window.location.pathname === path) return;
+  window.history[method]({}, "", path);
+}
+
+function detailValue(value) {
+  return value || "Sin cargar";
+}
+
+function ClientDetailField({ label, value, className = "" }) {
+  return (
+    <div className={className}>
+      <span>{label}</span>
+      <strong>{detailValue(value)}</strong>
+    </div>
+  );
+}
+
+function ClientDetailView({ client, internalProfile, session, activityAuthor, onEdit, onNewClient }) {
+  const contact = [client.phone, client.email].filter(Boolean).join(" · ");
+
+  return (
+    <section className="seller-contact-editor" aria-label="Detalle del cliente">
+      <div className="admin-editor-title">
+        <div>
+          <p>Cliente</p>
+          <h2>{client.fullName || "Sin nombre"}</h2>
+        </div>
+        {internalProfile ? (
+          <span className="seller-profile-chip">
+            {internalProfile.role === "admin" ? "Admin" : "Vendedor"}
+          </span>
+        ) : null}
+      </div>
+
+      <div className="admin-editor-actions">
+        <button type="button" className="wa-btn" onClick={onEdit}>
+          Editar cliente
+        </button>
+        <button type="button" className="map-btn" onClick={onNewClient}>
+          Nuevo cliente
+        </button>
+      </div>
+
+      <div className="admin-detail-grid seller-client-detail-grid">
+        <ClientDetailField label="Contacto" value={contact} />
+        <ClientDetailField label="Lado del cliente" value={clientSideLabel(client)} />
+        <ClientDetailField label="Operación" value={operationLabels[client.operation] || client.operation} />
+        <ClientDetailField label="Estado" value={statusLabels[client.status] || client.status} />
+        <ClientDetailField label="Zona" value={client.zone} />
+        <ClientDetailField label="Presupuesto" value={client.budget} />
+        <ClientDetailField label="Ambientes" value={client.rooms} />
+        <ClientDetailField label="Última actualización" value={formatClientDate(client.updatedAt || client.createdAt)} />
+        <ClientDetailField label="Notas" value={client.notes} className="admin-field-wide" />
+      </div>
+
+      <NotesPanel
+        entityId={client.id}
+        author={activityAuthor}
+        fetchNotes={fetchClientNotes}
+        createNote={createClientNote}
+      />
+      <DocumentsPanel
+        entityType="client"
+        entityId={client.id}
+        accessToken={session?.access_token || ""}
+        author={activityAuthor}
+        fetchDocuments={fetchClientDocuments}
+        createDocument={createClientDocument}
+      />
+    </section>
+  );
 }
 
 function LoginPanel({ onLogin }) {
@@ -151,7 +235,8 @@ function SellerApp() {
   const [session, setSession] = useState(undefined);
   const [internalProfile, setInternalProfile] = useState(null);
   const [clients, setClients] = useState([]);
-  const [selectedClientId, setSelectedClientId] = useState("");
+  const [selectedClientId, setSelectedClientId] = useState(getInitialSellerClientId);
+  const [editorMode, setEditorMode] = useState(() => (getInitialSellerClientId() ? "view" : "edit"));
   const [form, setForm] = useState(emptyClientForm);
   const [filters, setFilters] = useState({ operation: "", status: "" });
   const [isLoading, setIsLoading] = useState(false);
@@ -174,6 +259,27 @@ function SellerApp() {
   }, [selectedClientId]);
 
   useEffect(() => {
+    const syncSelectedClientFromRoute = () => {
+      const routedClientId = getInitialSellerClientId();
+      setSelectedClientId(routedClientId);
+      setEditorMode(routedClientId ? "view" : "edit");
+      setMessage("");
+      setError("");
+
+      if (!routedClientId) {
+        setForm(emptyClientForm);
+      }
+    };
+
+    syncSelectedClientFromRoute();
+    window.addEventListener("popstate", syncSelectedClientFromRoute);
+
+    return () => {
+      window.removeEventListener("popstate", syncSelectedClientFromRoute);
+    };
+  }, []);
+
+  useEffect(() => {
     let active = true;
 
     getCurrentSession().then(({ data }) => {
@@ -191,9 +297,12 @@ function SellerApp() {
   }, []);
 
   useEffect(() => {
-    if (!selectedClient) return;
+    if (!selectedClient) {
+      if (selectedClientId) setForm(emptyClientForm);
+      return;
+    }
     setForm(clientToForm(selectedClient));
-  }, [selectedClient]);
+  }, [selectedClient, selectedClientId]);
 
   useEffect(() => {
     let active = true;
@@ -243,14 +352,11 @@ function SellerApp() {
     try {
       const data = await fetchClients(filters);
       const currentSelectedClientId = selectedClientIdRef.current;
-      const nextSelectedClientId = data.some((client) => client.id === currentSelectedClientId)
-        ? currentSelectedClientId
-        : data[0]?.id || "";
 
       setClients(data);
-      setSelectedClientId(nextSelectedClientId);
+      setSelectedClientId(currentSelectedClientId);
 
-      if (!nextSelectedClientId) {
+      if (!currentSelectedClientId) {
         setForm(emptyClientForm);
       }
     } catch (loadError) {
@@ -279,8 +385,34 @@ function SellerApp() {
   };
 
   const startNewClient = () => {
+    navigateSellerPath(SELLER_HOME_PATH);
     setSelectedClientId("");
+    setEditorMode("edit");
     setForm(emptyClientForm);
+    setMessage("");
+    setError("");
+  };
+
+  const handleSellerNavbarItemSelect = (item) => {
+    if (item.action === "signout") {
+      signOutSeller();
+      return;
+    }
+
+    if (item.path === SELLER_HOME_PATH) {
+      navigateSellerPath(SELLER_HOME_PATH);
+      setSelectedClientId("");
+      setEditorMode("edit");
+      setForm(emptyClientForm);
+      setMessage("");
+      setError("");
+    }
+  };
+
+  const openClientDetail = (clientId) => {
+    navigateSellerPath(sellerClientPath(clientId));
+    setSelectedClientId(clientId);
+    setEditorMode("view");
     setMessage("");
     setError("");
   };
@@ -301,7 +433,9 @@ function SellerApp() {
       const savedClient = await saveClient(form, session.user.id);
       setMessage("Cliente guardado.");
       await loadClients();
+      navigateSellerPath(sellerClientPath(savedClient.id), { replace: true });
       setSelectedClientId(savedClient.id);
+      setEditorMode("view");
       setForm(clientToForm(savedClient));
     } catch (saveError) {
       setError(saveError.message);
@@ -326,6 +460,14 @@ function SellerApp() {
 
   return (
     <main className="admin-shell seller-shell">
+      <AppNavbar
+        ariaLabel="Navegacion del portal de vendedores"
+        brandLabel="Portal vendedores"
+        logoUrl={logoMarkUrl}
+        onBrandClick={() => handleSellerNavbarItemSelect({ path: SELLER_HOME_PATH })}
+        items={sellerNavbarItems({ isClientDetail: Boolean(selectedClientId) })}
+        onItemSelect={handleSellerNavbarItemSelect}
+      />
       <header className="admin-header">
         <div>
           <p>Denise Catalán</p>
@@ -334,9 +476,6 @@ function SellerApp() {
         <div className="admin-header-actions">
           <button type="button" className="map-btn" onClick={loadClients} disabled={!internalProfile || isLoading}>
             Actualizar
-          </button>
-          <button type="button" className="map-btn" onClick={signOutSeller}>
-            Cerrar sesión
           </button>
         </div>
       </header>
@@ -385,7 +524,7 @@ function SellerApp() {
                 type="button"
                 key={client.id}
                 className={`seller-contact-row ${client.id === selectedClientId ? "active" : ""}`}
-                onClick={() => setSelectedClientId(client.id)}
+                onClick={() => openClientDetail(client.id)}
               >
                 <span>{client.fullName}</span>
                 <small>
@@ -404,6 +543,35 @@ function SellerApp() {
           </div>
         </aside>
 
+        {selectedClientId && !selectedClient ? (
+          <section className="seller-contact-editor" aria-label="Cliente no encontrado">
+            <div className="admin-editor-title">
+              <div>
+                <p>Cliente</p>
+                <h2>{isLoading ? "Cargando cliente..." : "Cliente no encontrado"}</h2>
+              </div>
+            </div>
+            <p className="seller-empty-state">
+              {isLoading ? "Buscando los datos del cliente." : "No se encontró un cliente con ese ID en el listado actual."}
+            </p>
+            {!isLoading ? (
+              <div className="admin-editor-actions">
+                <button type="button" className="map-btn" onClick={startNewClient}>
+                  Volver a clientes
+                </button>
+              </div>
+            ) : null}
+          </section>
+        ) : form.id && editorMode === "view" ? (
+          <ClientDetailView
+            client={selectedClient}
+            internalProfile={internalProfile}
+            session={session}
+            activityAuthor={activityAuthor}
+            onEdit={() => setEditorMode("edit")}
+            onNewClient={startNewClient}
+          />
+        ) : (
         <form className="seller-contact-editor" onSubmit={handleSave}>
           <div className="admin-editor-title">
             <div>
@@ -510,6 +678,7 @@ function SellerApp() {
             </>
           ) : null}
         </form>
+        )}
       </section>
     </main>
   );

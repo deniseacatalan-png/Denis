@@ -5,7 +5,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import { DocumentsPanel, NotesPanel } from "../components/ActivityPanels";
-import { CATEGORY_META, filterPropertiesBySearch, slugify } from "../utils/properties";
+import AppNavbar from "../components/AppNavbar";
+import { adminNavbarItems } from "../components/AppNavbarConfig";
+import {
+  CATEGORY_META,
+  filterAdminPropertiesByType,
+  filterPropertiesBySearch,
+  getAdminPropertyTypeTabs,
+  slugify
+} from "../utils/properties";
 import {
   activityAuthorFromProfile,
   createClientDocument,
@@ -74,13 +82,6 @@ const emptySellerForm = {
   password: "",
   isActive: true
 };
-
-const adminNavItems = [
-  { label: "Resumen", path: "/admin", match: "dashboard" },
-  { label: "Propiedades", path: "/admin/propiedades", match: "properties" },
-  { label: "Clientes", path: "/admin/clientes", match: "clients" },
-  { label: "Vendedores", path: "/admin/vendedores", match: "sellers" }
-];
 
 const operationLabels = {
   comprar: "Comprar",
@@ -813,6 +814,7 @@ function AdminApp() {
   const [sellerForm, setSellerForm] = useState(emptySellerForm);
   const [clientForm, setClientForm] = useState(emptyClientForm);
   const [clientFilters, setClientFilters] = useState({ operation: "", status: "", createdBy: "" });
+  const [propertyTypeTab, setPropertyTypeTab] = useState("venta");
   const [propertySearchQuery, setPropertySearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
@@ -846,8 +848,16 @@ function AdminApp() {
     return properties.find((property) => property.id === route.id || property.databaseId === route.id) || null;
   }, [properties, route.id, route.section]);
   const filteredProperties = useMemo(
-    () => filterPropertiesBySearch(properties, propertySearchQuery),
-    [properties, propertySearchQuery]
+    () => filterPropertiesBySearch(filterAdminPropertiesByType(properties, propertyTypeTab), propertySearchQuery),
+    [properties, propertySearchQuery, propertyTypeTab]
+  );
+  const propertyTypeTabs = useMemo(
+    () => getAdminPropertyTypeTabs(properties),
+    [properties]
+  );
+  const activePropertyTypeProperties = useMemo(
+    () => filterAdminPropertiesByType(properties, propertyTypeTab),
+    [properties, propertyTypeTab]
   );
   const routedSeller = useMemo(() => {
     if (route.section !== "sellers" || !route.id) return null;
@@ -868,6 +878,17 @@ function AdminApp() {
   const navigateAdmin = (path) => {
     window.history.pushState({}, "", path);
     setRoute(parseAdminRoute(path));
+  };
+
+  const handleAdminNavbarItemSelect = (item) => {
+    if (item.action === "signout") {
+      signOutAdmin();
+      return;
+    }
+
+    if (item.path) {
+      navigateAdmin(item.path);
+    }
   };
 
   useEffect(() => {
@@ -1543,6 +1564,8 @@ function AdminApp() {
 
   const renderPropertiesList = () => {
     const hasPropertySearch = propertySearchQuery.trim().length > 0;
+    const activePropertyTypeLabel =
+      propertyTypeTabs.find((tab) => tab.id === propertyTypeTab)?.label || "propiedades";
 
     return (
       <section className="admin-sellers-panel" aria-labelledby="admin-properties-title">
@@ -1554,6 +1577,22 @@ function AdminApp() {
           <button type="button" className="wa-btn" onClick={handleCreateProperty}>
             Nueva
           </button>
+        </div>
+
+        <div className="admin-property-tabs" role="tablist" aria-label="Tipos de propiedades">
+          {propertyTypeTabs.map((tab) => (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab.id === propertyTypeTab}
+              className={tab.id === propertyTypeTab ? "is-active" : ""}
+              key={tab.id}
+              onClick={() => setPropertyTypeTab(tab.id)}
+            >
+              <span>{tab.label}</span>
+              <small>{tab.count}</small>
+            </button>
+          ))}
         </div>
 
         <div className="admin-property-search">
@@ -1570,8 +1609,8 @@ function AdminApp() {
           <div className="admin-property-search-meta">
             <span>
               {hasPropertySearch
-                ? `${filteredProperties.length} de ${properties.length} resultados`
-                : `${properties.length} propiedades cargadas`}
+                ? `${filteredProperties.length} de ${activePropertyTypeProperties.length} resultados en ${activePropertyTypeLabel}`
+                : `${activePropertyTypeProperties.length} de ${properties.length} propiedades en ${activePropertyTypeLabel}`}
             </span>
             {hasPropertySearch ? (
               <button type="button" className="map-btn" onClick={() => setPropertySearchQuery("")}>
@@ -1642,7 +1681,10 @@ function AdminApp() {
           {!properties.length && hasLoadedProperties ? (
             <p className="seller-empty-state">No hay propiedades cargadas.</p>
           ) : null}
-          {properties.length && !filteredProperties.length && hasLoadedProperties ? (
+          {properties.length && !activePropertyTypeProperties.length && hasLoadedProperties ? (
+            <p className="seller-empty-state">No hay propiedades en {activePropertyTypeLabel}.</p>
+          ) : null}
+          {activePropertyTypeProperties.length && !filteredProperties.length && hasLoadedProperties ? (
             <p className="seller-empty-state">No encontramos propiedades para esa busqueda.</p>
           ) : null}
         </div>
@@ -2614,37 +2656,20 @@ function AdminApp() {
 
   return (
     <main className="admin-shell">
+      <AppNavbar
+        ariaLabel="Navegacion de administracion"
+        brandLabel="Administrador"
+        logoUrl={logoMarkUrl}
+        onBrandClick={() => navigateAdmin("/admin")}
+        items={adminNavbarItems({ activeSection: route.section })}
+        onItemSelect={handleAdminNavbarItemSelect}
+      />
       <header className="admin-header">
         <div>
           <p>Denise Catalán</p>
           <h1>Administrador de propiedades</h1>
         </div>
-        <div className="admin-header-actions">
-          <a href="/vendedor" className="map-btn">
-            Portal vendedor
-          </a>
-          <a href="/" className="map-btn">
-            Ver web
-          </a>
-          <button type="button" className="map-btn" onClick={signOutAdmin}>
-            Cerrar sesión
-          </button>
-        </div>
       </header>
-
-      <nav className="admin-navbar" aria-label="Administracion">
-        {adminNavItems.map((item) => (
-          <button
-            type="button"
-            key={item.path}
-            className={route.section === item.match ? "active" : ""}
-            aria-current={route.section === item.match ? "page" : undefined}
-            onClick={() => navigateAdmin(item.path)}
-          >
-            {item.label}
-          </button>
-        ))}
-      </nav>
 
       {renderAdminContent()}
     </main>

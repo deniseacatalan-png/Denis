@@ -190,7 +190,7 @@
   color: var(--fg-2);
 }
 
-:where(.admin-shell, .seller-shell) :is(.admin-detail-grid > div, .admin-location-picker, .admin-segmented-control, .admin-location-results button, .seller-empty-state, .admin-property-search) {
+:where(.admin-shell, .seller-shell) :is(.admin-detail-grid > div, .admin-location-picker, .admin-segmented-control, .admin-location-results button, .seller-empty-state, .admin-property-search, .admin-property-tabs) {
   color: var(--fg-1);
   background: rgba(239, 225, 195, 0.34);
   border-color: rgba(77, 54, 97, 0.12);
@@ -208,6 +208,21 @@
 
 :where(.admin-shell, .seller-shell) .admin-segmented-control button {
   color: var(--brand);
+}
+
+:where(.admin-shell, .seller-shell) .admin-property-tabs button {
+  color: var(--brand);
+  border-color: rgba(77, 54, 97, 0.12);
+  background: rgba(255, 250, 244, 0.68);
+}
+
+:where(.admin-shell, .seller-shell) .admin-property-tabs button:hover,
+:where(.admin-shell, .seller-shell) .admin-property-tabs button:focus-visible,
+:where(.admin-shell, .seller-shell) .admin-property-tabs button.is-active {
+  color: var(--blanco-calido);
+  border-color: rgba(216, 191, 143, 0.76);
+  background: var(--button-gradient);
+  box-shadow: var(--shadow-soft);
 }
 
 :where(.admin-shell, .seller-shell) .seller-status-pill,

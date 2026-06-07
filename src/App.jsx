@@ -15,6 +15,8 @@ import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import logoMark from "../ISO GRAFITO.png";
+import AppNavbar from "./components/AppNavbar";
+import { publicNavbarItems } from "./components/AppNavbarConfig";
 import Slider from "./components/Slider";
 import {
   CATEGORY_META,
@@ -319,79 +321,6 @@ function ServiceOptionVisual({ icon }) {
   );
 }
 
-function PublicSiteNavbar({
-  logoUrl,
-  onOpenService,
-  onNavigateHome,
-  isPropertyRoute = false
-}) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  function closeMenu() {
-    setIsMenuOpen(false);
-  }
-
-  function handleNavigateHome() {
-    onNavigateHome();
-    closeMenu();
-  }
-
-  function handleOpenService() {
-    onOpenService();
-    closeMenu();
-  }
-
-  return (
-    <header className="site-navbar">
-      <nav className={`site-nav ${isMenuOpen ? "is-menu-open" : ""}`} aria-label="Navegación principal">
-        <button
-          type="button"
-          className="site-nav-brand"
-          onClick={handleNavigateHome}
-          aria-label="Ir al inicio"
-        >
-          <img src={logoUrl} alt="Logo Denise Catalán" />
-          <span>Denise Catalán</span>
-        </button>
-        <button
-          type="button"
-          className="site-nav-menu-button"
-          aria-controls="site-nav-links"
-          aria-expanded={isMenuOpen}
-          aria-label={isMenuOpen ? "Cerrar menu" : "Abrir menu"}
-          onClick={() => setIsMenuOpen((current) => !current)}
-        >
-          <span />
-          <span />
-          <span />
-        </button>
-        <div className="site-nav-links" id="site-nav-links">
-          {isPropertyRoute ? (
-            <button type="button" className="site-nav-link" onClick={handleNavigateHome}>
-              Inicio
-            </button>
-          ) : (
-            <>
-              <a href="#inicio" className="site-nav-link" onClick={closeMenu}>
-                Inicio
-              </a>
-              <a href="#propiedades" className="site-nav-link" onClick={closeMenu}>
-                Propiedades
-              </a>
-            </>
-          )}
-          <a href="/clientes" className="site-nav-link" onClick={closeMenu}>
-            Portal clientes
-          </a>
-          <button type="button" className="site-nav-cta" onClick={handleOpenService}>
-            Solicitar servicio
-          </button>
-        </div>
-      </nav>
-    </header>
-  );
-}
-
 function MapPropertyPreview({ property, isPinned, displayedPrice, onPreviewClick }) {
   return (
     <article
@@ -587,6 +516,16 @@ function PublicApp({ initialProperties = [] }) {
     }
     setCurrentPathname(path);
     window.scrollTo({ left: 0, top: 0, behavior: "auto" });
+  };
+
+  const handlePublicNavbarItemSelect = (item) => {
+    if (item.action === "navigateHome") {
+      navigateToPath("/");
+    }
+
+    if (item.action === "openService") {
+      setIsServiceModalOpen(true);
+    }
   };
 
   const openPropertyPage = (property) => {
@@ -911,11 +850,11 @@ function PublicApp({ initialProperties = [] }) {
   if (isPropertyRoute) {
     return (
       <div className="page-shell property-page-shell">
-        <PublicSiteNavbar
+        <AppNavbar
           logoUrl={logoMarkUrl}
-          onNavigateHome={() => navigateToPath("/")}
-          onOpenService={() => setIsServiceModalOpen(true)}
-          isPropertyRoute
+          onBrandClick={() => navigateToPath("/")}
+          items={publicNavbarItems({ isPropertyRoute: true })}
+          onItemSelect={handlePublicNavbarItemSelect}
         />
 
         <main className="property-page-main">
@@ -1027,10 +966,11 @@ function PublicApp({ initialProperties = [] }) {
 
   return (
     <div className="page-shell">
-      <PublicSiteNavbar
+      <AppNavbar
         logoUrl={logoMarkUrl}
-        onNavigateHome={() => navigateToPath("/")}
-        onOpenService={() => setIsServiceModalOpen(true)}
+        onBrandClick={() => navigateToPath("/")}
+        items={publicNavbarItems()}
+        onItemSelect={handlePublicNavbarItemSelect}
       />
       <header className="hero" id="inicio">
         <div className="hero-layout">
