@@ -82,6 +82,17 @@ describe("app navbar configuration", () => {
       sellerNavbarItems({ isClientDetail: true }).map((item) => [item.id, item.label, Boolean(item.active), item.variant || "link"]),
       [
         ["clients", "Clientes", true, "link"],
+        ["properties", "Propiedades", false, "link"],
+        ["publicSite", "Ver web", false, "link"],
+        ["signout", "Cerrar sesión", false, "cta"]
+      ]
+    );
+
+    assert.deepEqual(
+      sellerNavbarItems({ activeSection: "properties" }).map((item) => [item.id, item.label, Boolean(item.active), item.variant || "link"]),
+      [
+        ["clients", "Clientes", false, "link"],
+        ["properties", "Propiedades", true, "link"],
         ["publicSite", "Ver web", false, "link"],
         ["signout", "Cerrar sesión", false, "cta"]
       ]

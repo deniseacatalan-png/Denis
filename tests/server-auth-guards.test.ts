@@ -5,6 +5,7 @@ import {
   assertAdminProfile,
   resolveInternalProfileForUser
 } from "../src/server/auth/guards.ts";
+import { assertCanSavePropertyForInternalProfile } from "../src/server/properties";
 
 function createProfilePrisma({
   adminProfile = null,
@@ -91,10 +92,35 @@ describe("server auth guards", () => {
             username: "lucas",
             email: "lucas@example.com",
             fullName: "Lucas",
-            isActive: true
+            isActive: true,
+            createdBy: "",
+            createdAt: "",
+            updatedAt: ""
           }
         }),
       /permiso para administrar/
+    );
+  });
+
+  it("lets sellers create properties but not update existing ones", () => {
+    const sellerProfile = {
+      role: "seller" as const,
+      profile: {
+        id: "seller-1",
+        username: "lucas",
+        email: "lucas@example.com",
+        fullName: "Lucas",
+        isActive: true,
+        createdBy: "",
+        createdAt: "",
+        updatedAt: ""
+      }
+    };
+
+    assert.doesNotThrow(() => assertCanSavePropertyForInternalProfile(sellerProfile, { title: "Casa Centro" }));
+    assert.throws(
+      () => assertCanSavePropertyForInternalProfile(sellerProfile, { databaseId: "property-1", title: "Casa Centro" }),
+      /solo pueden agregar propiedades nuevas/
     );
   });
 });

@@ -1,5 +1,7 @@
 import { getPrisma } from "./prisma";
+import { AuthRouteError } from "./http-errors";
 import { propertyToViewModel, type PropertyViewModel } from "./view-models";
+import type { InternalProfile } from "./view-models";
 import { slugify } from "../utils/properties.js";
 
 const propertyInclude = {
@@ -12,6 +14,18 @@ const propertyInclude = {
 
 function textValue(value: unknown) {
   return String(value || "").trim();
+}
+
+function propertyIdFromValues(values: any) {
+  return textValue(values?.databaseId || values?.id);
+}
+
+export function assertCanSavePropertyForInternalProfile(internalProfile: InternalProfile, values: any) {
+  if (internalProfile.role === "admin") return;
+
+  if (propertyIdFromValues(values)) {
+    throw new AuthRouteError("Los vendedores solo pueden agregar propiedades nuevas.", 403);
+  }
 }
 
 function propertyDataFromValues(values: any) {
@@ -98,7 +112,7 @@ export async function getPublishedPropertyBySlug(slug: string): Promise<Property
 
 export async function saveAdminProperty(values: any) {
   const data = propertyDataFromValues(values);
-  const propertyId = textValue(values.databaseId || values.id);
+  const propertyId = propertyIdFromValues(values);
   const prisma = getPrisma();
 
   const savedId = await prisma.$transaction(async (tx: any) => {

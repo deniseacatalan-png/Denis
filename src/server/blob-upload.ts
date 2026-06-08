@@ -93,7 +93,7 @@ async function authorizeUpload(pathname: string, clientPayload?: string | null) 
   const clientId = internalUser.payload.clientId || null;
 
   if (uploadType === "property-image") {
-    if (internalUser.role !== "admin") {
+    if (!["admin", "seller"].includes(internalUser.role)) {
       throw new Error("El usuario no tiene permiso para subir imagenes.");
     }
 
