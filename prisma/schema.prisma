@@ -78,7 +78,7 @@ model Client {
   phone           String           @default("")
   email           String           @default("")
   isOwner         Boolean          @default(false) @map("is_owner")
-  operation       String           @default("alquilar")
+  operation       String           @default("comprador")
   zone            String           @default("")
   budget          String           @default("")
   rooms           String           @default("")

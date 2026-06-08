@@ -15,6 +15,15 @@ function isoDate(value: DateLike) {
   return value instanceof Date ? value.toISOString() : String(value);
 }
 
+function normalizeClientOperation(value: unknown, isOwner = false) {
+  const operation = String(value || "");
+  if (["comprador", "vendedor", "locador", "inquilino"].includes(operation)) return operation;
+  if (operation === "comprar") return isOwner ? "vendedor" : "comprador";
+  if (operation === "alquilar" || operation === "temporada") return isOwner ? "locador" : "inquilino";
+
+  return isOwner ? "vendedor" : "comprador";
+}
+
 function categoryMarkerColor(category: string) {
   return CATEGORY_META[category as keyof typeof CATEGORY_META]?.mapColor || CATEGORY_META.venta.mapColor;
 }
@@ -243,6 +252,9 @@ export function clientToViewModel(row: any): ClientViewModel {
   const propertyAssignments = [...(row.propertyAssignments || row.client_property_assignments || [])]
     .map(clientPropertyAssignmentToViewModel)
     .sort((first, second) => second.updatedAt.localeCompare(first.updatedAt));
+  const rowIsOwner = Boolean(row.isOwner ?? row.is_owner);
+  const operation = normalizeClientOperation(row.operation, rowIsOwner);
+  const isOwner = operation === "vendedor" || operation === "locador";
 
   return {
     id: row.id,
@@ -251,8 +263,8 @@ export function clientToViewModel(row: any): ClientViewModel {
     fullName: row.fullName || row.full_name || "",
     phone: row.phone || "",
     email: row.email || "",
-    isOwner: Boolean(row.isOwner ?? row.is_owner),
-    operation: row.operation || "alquilar",
+    isOwner: Boolean(isOwner),
+    operation,
     zone: row.zone || "",
     budget: row.budget || "",
     rooms: row.rooms || "",

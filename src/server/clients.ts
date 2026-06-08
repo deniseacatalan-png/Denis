@@ -6,7 +6,8 @@ import {
   type ClientViewModel
 } from "./view-models";
 
-export const CLIENT_OPERATIONS = ["comprar", "alquilar", "temporada"];
+export const CLIENT_OPERATIONS = ["comprador", "vendedor", "locador", "inquilino"];
+export const DEFAULT_CLIENT_OPERATION = "comprador";
 export const CLIENT_STATUSES = ["nuevo", "contactado", "visitando", "cerrado", "pausado"];
 export const CLIENT_PROPERTY_RELATIONSHIPS = ["propietario", "comprador", "interesado", "inquilino"];
 
@@ -25,6 +26,19 @@ function textValue(value: unknown) {
   return String(value || "").trim();
 }
 
+function isOwnerClientOperation(operation: string) {
+  return operation === "vendedor" || operation === "locador";
+}
+
+function normalizeClientOperation(value: unknown, isOwner = false) {
+  const operation = String(value || "");
+  if (CLIENT_OPERATIONS.includes(operation)) return operation;
+  if (operation === "comprar") return isOwner ? "vendedor" : "comprador";
+  if (operation === "alquilar" || operation === "temporada") return isOwner ? "locador" : "inquilino";
+
+  return isOwner ? "vendedor" : DEFAULT_CLIENT_OPERATION;
+}
+
 function clientDataFromValues(values: any, userId: string) {
   const fullName = textValue(values.fullName);
 
@@ -32,14 +46,14 @@ function clientDataFromValues(values: any, userId: string) {
     throw new Error("El nombre del cliente es obligatorio.");
   }
 
-  const operation = CLIENT_OPERATIONS.includes(values.operation) ? values.operation : "alquilar";
+  const operation = normalizeClientOperation(values.operation, Boolean(values.isOwner));
   const status = CLIENT_STATUSES.includes(values.status) ? values.status : "nuevo";
 
   return {
     fullName,
     phone: textValue(values.phone),
     email: textValue(values.email).toLowerCase(),
-    isOwner: Boolean(values.isOwner),
+    isOwner: isOwnerClientOperation(operation),
     operation,
     zone: textValue(values.zone),
     budget: textValue(values.budget),

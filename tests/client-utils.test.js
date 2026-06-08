@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "vitest";
 
 import {
+  CLIENT_OPERATION_LABELS,
   CLIENT_OPERATIONS,
   CLIENT_PROPERTY_RELATIONSHIPS,
   CLIENT_STATUSES,
@@ -13,7 +14,13 @@ import {
 
 describe("client supabase helpers", () => {
   it("exposes the supported client operation and status values", () => {
-    assert.deepEqual(CLIENT_OPERATIONS, ["comprar", "alquilar", "temporada"]);
+    assert.deepEqual(CLIENT_OPERATIONS, ["comprador", "vendedor", "locador", "inquilino"]);
+    assert.deepEqual(CLIENT_OPERATION_LABELS, {
+      comprador: "Comprador",
+      vendedor: "Vendedor",
+      locador: "Locador",
+      inquilino: "Inquilino"
+    });
     assert.deepEqual(CLIENT_STATUSES, ["nuevo", "contactado", "visitando", "cerrado", "pausado"]);
     assert.deepEqual(CLIENT_PROPERTY_RELATIONSHIPS, ["propietario", "comprador", "interesado", "inquilino"]);
   });
@@ -27,7 +34,7 @@ describe("client supabase helpers", () => {
       phone: "2944000000",
       email: "juan@example.com",
       is_owner: true,
-      operation: "comprar",
+      operation: "vendedor",
       zone: "Centro",
       budget: "USD 180.000",
       rooms: "3 ambientes",
@@ -63,7 +70,7 @@ describe("client supabase helpers", () => {
       phone: "2944000000",
       email: "juan@example.com",
       isOwner: true,
-      operation: "comprar",
+      operation: "vendedor",
       zone: "Centro",
       budget: "USD 180.000",
       rooms: "3 ambientes",
@@ -160,7 +167,7 @@ describe("client supabase helpers", () => {
         fullName: "  Maria Lopez  ",
         phone: "  +54 2944 111111  ",
         email: "  MARIA@EXAMPLE.COM  ",
-        isOwner: true,
+        isOwner: false,
         operation: "invalid",
         zone: "  Vega  ",
         budget: "  $900.000  ",
@@ -175,8 +182,8 @@ describe("client supabase helpers", () => {
       full_name: "Maria Lopez",
       phone: "+54 2944 111111",
       email: "maria@example.com",
-      is_owner: true,
-      operation: "alquilar",
+      is_owner: false,
+      operation: "comprador",
       zone: "Vega",
       budget: "$900.000",
       rooms: "2 dorm.",
@@ -186,16 +193,52 @@ describe("client supabase helpers", () => {
     });
   });
 
-  it("preserves temporada as a supported client operation", () => {
-    const payload = clientToDatabasePayload(
+  it("derives owner side from the selected client operation", () => {
+    assert.deepEqual(
+      clientToDatabasePayload(
+        {
+          fullName: "Cliente vendedor",
+          operation: "vendedor"
+        },
+        "seller-1"
+      ),
+      {
+        full_name: "Cliente vendedor",
+        phone: "",
+        email: "",
+        is_owner: true,
+        operation: "vendedor",
+        zone: "",
+        budget: "",
+        rooms: "",
+        status: "nuevo",
+        notes: "",
+        updated_by: "seller-1"
+      }
+    );
+
+    const legacyTenantPayload = clientToDatabasePayload(
       {
         fullName: "Cliente temporada",
-        operation: "temporada"
+        operation: "temporada",
+        isOwner: false
       },
       "seller-1"
     );
 
-    assert.equal(payload.operation, "temporada");
+    const legacyOwnerPayload = clientToDatabasePayload(
+      {
+        fullName: "Cliente locador",
+        operation: "temporada",
+        isOwner: true
+      },
+      "seller-1"
+    );
+
+    assert.equal(legacyTenantPayload.operation, "inquilino");
+    assert.equal(legacyTenantPayload.is_owner, false);
+    assert.equal(legacyOwnerPayload.operation, "locador");
+    assert.equal(legacyOwnerPayload.is_owner, true);
   });
 
   it("requires a client name before saving", () => {

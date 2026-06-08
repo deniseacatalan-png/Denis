@@ -1,8 +1,28 @@
 import { fetchJsonWithAuth } from "./api.js";
 
-export const CLIENT_OPERATIONS = ["comprar", "alquilar", "temporada"];
+export const CLIENT_OPERATIONS = ["comprador", "vendedor", "locador", "inquilino"];
+export const DEFAULT_CLIENT_OPERATION = "comprador";
+export const CLIENT_OPERATION_LABELS = {
+  comprador: "Comprador",
+  vendedor: "Vendedor",
+  locador: "Locador",
+  inquilino: "Inquilino"
+};
 export const CLIENT_STATUSES = ["nuevo", "contactado", "visitando", "cerrado", "pausado"];
 export const CLIENT_PROPERTY_RELATIONSHIPS = ["propietario", "comprador", "interesado", "inquilino"];
+
+export function isOwnerClientOperation(operation) {
+  return operation === "vendedor" || operation === "locador";
+}
+
+export function normalizeClientOperation(value, isOwner = false) {
+  const operation = String(value || "");
+  if (CLIENT_OPERATIONS.includes(operation)) return operation;
+  if (operation === "comprar") return isOwner ? "vendedor" : "comprador";
+  if (operation === "alquilar" || operation === "temporada") return isOwner ? "locador" : "inquilino";
+
+  return isOwner ? "vendedor" : DEFAULT_CLIENT_OPERATION;
+}
 
 function textValue(value) {
   return String(value || "").trim();
@@ -36,6 +56,8 @@ export function normalizeClientPropertyAssignment(row = {}) {
 }
 
 export function normalizeClient(row) {
+  const operation = normalizeClientOperation(row.operation, Boolean(row.is_owner));
+
   return {
     id: row.id,
     createdBy: row.created_by || "",
@@ -43,8 +65,8 @@ export function normalizeClient(row) {
     fullName: row.full_name || "",
     phone: row.phone || "",
     email: row.email || "",
-    isOwner: Boolean(row.is_owner),
-    operation: row.operation || "alquilar",
+    isOwner: isOwnerClientOperation(operation),
+    operation,
     zone: row.zone || "",
     budget: row.budget || "",
     rooms: row.rooms || "",
@@ -65,14 +87,14 @@ export function clientToDatabasePayload(values, userId) {
     throw new Error("El nombre del cliente es obligatorio.");
   }
 
-  const operation = CLIENT_OPERATIONS.includes(values.operation) ? values.operation : "alquilar";
+  const operation = normalizeClientOperation(values.operation, Boolean(values.isOwner));
   const status = CLIENT_STATUSES.includes(values.status) ? values.status : "nuevo";
 
   return {
     full_name: fullName,
     phone: textValue(values.phone),
     email: textValue(values.email).toLowerCase(),
-    is_owner: Boolean(values.isOwner),
+    is_owner: isOwnerClientOperation(operation),
     operation,
     zone: textValue(values.zone),
     budget: textValue(values.budget),

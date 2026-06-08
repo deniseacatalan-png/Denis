@@ -7,6 +7,7 @@ import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "re
 import { DocumentsPanel, NotesPanel } from "../components/ActivityPanels";
 import AppNavbar from "../components/AppNavbar";
 import { adminNavbarItems } from "../components/AppNavbarConfig";
+import ClientOperationCards from "../components/ClientOperationCards";
 import ClientPropertyAssignmentsPanel, {
   emptyClientPropertyAssignmentForm
 } from "../components/ClientPropertyAssignmentsPanel";
@@ -39,6 +40,7 @@ import {
   updateAdminPropertyOrder
 } from "../utils/supabase/properties";
 import {
+  CLIENT_OPERATION_LABELS as operationLabels,
   CLIENT_OPERATIONS,
   CLIENT_STATUSES,
   deleteClientPropertyAssignment,
@@ -88,12 +90,6 @@ const emptySellerForm = {
   isActive: true
 };
 
-const operationLabels = {
-  comprar: "Comprar",
-  alquilar: "Alquilar",
-  temporada: "Temporada"
-};
-
 const statusLabels = {
   nuevo: "Nuevo",
   contactado: "Contactado",
@@ -102,17 +98,13 @@ const statusLabels = {
   pausado: "Pausado"
 };
 
-function clientSideLabel(client) {
-  return client?.isOwner ? "Propietario" : "Busca comprar/alquilar";
-}
-
 const emptyClientForm = {
   id: "",
   fullName: "",
   phone: "",
   email: "",
   isOwner: false,
-  operation: "alquilar",
+  operation: "comprador",
   zone: "",
   budget: "",
   rooms: "",
@@ -128,7 +120,7 @@ function clientToForm(client) {
     phone: client.phone || "",
     email: client.email || "",
     isOwner: Boolean(client.isOwner),
-    operation: CLIENT_OPERATIONS.includes(client.operation) ? client.operation : "alquilar",
+    operation: CLIENT_OPERATIONS.includes(client.operation) ? client.operation : "comprador",
     zone: client.zone || "",
     budget: client.budget || "",
     rooms: client.rooms || "",
@@ -2164,7 +2156,6 @@ function AdminApp() {
               <small>
                 {client.zone || "Sin zona"} - {formatAdminDate(client.updatedAt || client.createdAt)}
               </small>
-              <small>Lado: {clientSideLabel(client)}</small>
               <small>Creado por: {getInternalUserLabel(client.createdBy)}</small>
             </div>
             <span className={`seller-status-pill seller-status-pill--${client.status}`}>
@@ -2223,12 +2214,8 @@ function AdminApp() {
           <input readOnly value={client.email || "Sin email"} />
         </label>
         <label>
-          Operacion
+          Tipo de cliente
           <input readOnly value={operationLabels[client.operation] || client.operation || "Sin operacion"} />
-        </label>
-        <label>
-          Lado del cliente
-          <input readOnly value={clientSideLabel(client)} />
         </label>
         <label>
           Zona
@@ -2334,26 +2321,10 @@ function AdminApp() {
             onChange={(event) => updateClientField("email", event.target.value)}
           />
         </label>
-        <label>
-          Operacion
-          <select value={clientForm.operation} onChange={(event) => updateClientField("operation", event.target.value)}>
-            {CLIENT_OPERATIONS.map((operation) => (
-              <option value={operation} key={operation}>
-                {operationLabels[operation]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Lado del cliente
-          <select
-            value={clientForm.isOwner ? "owner" : "seeker"}
-            onChange={(event) => updateClientField("isOwner", event.target.value === "owner")}
-          >
-            <option value="seeker">Busca comprar/alquilar</option>
-            <option value="owner">Propietario</option>
-          </select>
-        </label>
+        <ClientOperationCards
+          value={clientForm.operation}
+          onChange={(operation) => updateClientField("operation", operation)}
+        />
         <label>
           Zona
           <input value={clientForm.zone} onChange={(event) => updateClientField("zone", event.target.value)} />

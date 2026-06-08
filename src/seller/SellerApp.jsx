@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { DocumentsPanel, NotesPanel } from "../components/ActivityPanels";
 import AppNavbar from "../components/AppNavbar";
 import { sellerNavbarItems } from "../components/AppNavbarConfig";
+import ClientOperationCards from "../components/ClientOperationCards";
 import ClientPropertyAssignmentsPanel, {
   emptyClientPropertyAssignmentForm
 } from "../components/ClientPropertyAssignmentsPanel";
@@ -24,6 +25,7 @@ import {
   fetchClientNotes
 } from "../utils/supabase/activity";
 import {
+  CLIENT_OPERATION_LABELS as operationLabels,
   CLIENT_OPERATIONS,
   CLIENT_STATUSES,
   deleteClientPropertyAssignment,
@@ -92,12 +94,6 @@ const mimeExtensions = {
   "image/webp": ".webp"
 };
 
-const operationLabels = {
-  comprar: "Comprar",
-  alquilar: "Alquilar",
-  temporada: "Temporada"
-};
-
 const statusLabels = {
   nuevo: "Nuevo",
   contactado: "Contactado",
@@ -106,17 +102,13 @@ const statusLabels = {
   pausado: "Pausado"
 };
 
-function clientSideLabel(client) {
-  return client?.isOwner ? "Propietario" : "Busca comprar/alquilar";
-}
-
 const emptyClientForm = {
   id: "",
   fullName: "",
   phone: "",
   email: "",
   isOwner: false,
-  operation: "alquilar",
+  operation: "comprador",
   zone: "",
   budget: "",
   rooms: "",
@@ -132,7 +124,7 @@ function clientToForm(client) {
     phone: client.phone || "",
     email: client.email || "",
     isOwner: Boolean(client.isOwner),
-    operation: CLIENT_OPERATIONS.includes(client.operation) ? client.operation : "alquilar",
+    operation: CLIENT_OPERATIONS.includes(client.operation) ? client.operation : "comprador",
     zone: client.zone || "",
     budget: client.budget || "",
     rooms: client.rooms || "",
@@ -311,8 +303,7 @@ function ClientDetailView({
 
       <div className="admin-detail-grid seller-client-detail-grid">
         <ClientDetailField label="Contacto" value={contact} />
-        <ClientDetailField label="Lado del cliente" value={clientSideLabel(client)} />
-        <ClientDetailField label="Operación" value={operationLabels[client.operation] || client.operation} />
+        <ClientDetailField label="Tipo de cliente" value={operationLabels[client.operation] || client.operation} />
         <ClientDetailField label="Estado" value={statusLabels[client.status] || client.status} />
         <ClientDetailField label="Zona" value={client.zone} />
         <ClientDetailField label="Presupuesto" value={client.budget} />
@@ -1457,7 +1448,6 @@ function SellerApp() {
                     {statusLabels[client.status] || client.status}
                   </span>
                 </small>
-                <small>{clientSideLabel(client)}</small>
                 <small>{client.zone || "Sin zona"} · {formatClientDate(client.updatedAt || client.createdAt)}</small>
               </button>
             ))}
@@ -1533,26 +1523,10 @@ function SellerApp() {
               Email
               <input type="email" value={form.email} onChange={(event) => updateForm("email", event.target.value)} />
             </label>
-            <label>
-              Operación
-              <select value={form.operation} onChange={(event) => updateForm("operation", event.target.value)}>
-                {CLIENT_OPERATIONS.map((operation) => (
-                  <option value={operation} key={operation}>
-                    {operationLabels[operation]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Lado del cliente
-              <select
-                value={form.isOwner ? "owner" : "seeker"}
-                onChange={(event) => updateForm("isOwner", event.target.value === "owner")}
-              >
-                <option value="seeker">Busca comprar/alquilar</option>
-                <option value="owner">Propietario</option>
-              </select>
-            </label>
+            <ClientOperationCards
+              value={form.operation}
+              onChange={(operation) => updateForm("operation", operation)}
+            />
             <label>
               Zona
               <input value={form.zone} onChange={(event) => updateForm("zone", event.target.value)} />
