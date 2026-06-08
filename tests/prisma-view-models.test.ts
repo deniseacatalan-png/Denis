@@ -28,6 +28,8 @@ describe("Prisma view model mappers", () => {
       rawDescription: "Ficha",
       isPublished: true,
       displayOrder: 4,
+      createdAt: new Date("2026-06-01T10:00:00.000Z"),
+      updatedAt: new Date("2026-06-02T10:00:00.000Z"),
       propertyImages: [
         { id: "image-2", url: "/second.jpg", alt: "Casa", sortOrder: 2 },
         { id: "image-1", url: "/first.jpg", alt: "Casa", sortOrder: 1 }
@@ -53,6 +55,8 @@ describe("Prisma view model mappers", () => {
       rawDescription: "Ficha",
       isPublished: true,
       displayOrder: 4,
+      createdAt: "2026-06-01T10:00:00.000Z",
+      updatedAt: "2026-06-02T10:00:00.000Z",
       images: ["/first.jpg", "/second.jpg"]
     });
   });
@@ -74,7 +78,29 @@ describe("Prisma view model mappers", () => {
         status: "visitando",
         notes: "Quiere vista",
         createdAt: new Date("2026-06-01T10:00:00.000Z"),
-        updatedAt: new Date("2026-06-02T10:00:00.000Z")
+        updatedAt: new Date("2026-06-02T10:00:00.000Z"),
+        propertyAssignments: [
+          {
+            id: "assignment-1",
+            clientId: "client-1",
+            propertyId: "property-1",
+            relationship: "propietario",
+            notes: "Duena actual",
+            createdBy: "seller-1",
+            updatedBy: "admin-1",
+            createdAt: new Date("2026-06-01T11:00:00.000Z"),
+            updatedAt: new Date("2026-06-02T11:00:00.000Z"),
+            property: {
+              id: "property-1",
+              title: "Casa Centro",
+              slug: "casa-centro",
+              location: "Centro",
+              price: "USD 200.000",
+              category: "venta",
+              isPublished: true
+            }
+          }
+        ]
       }),
       {
         id: "client-1",
@@ -91,7 +117,29 @@ describe("Prisma view model mappers", () => {
         status: "visitando",
         notes: "Quiere vista",
         createdAt: "2026-06-01T10:00:00.000Z",
-        updatedAt: "2026-06-02T10:00:00.000Z"
+        updatedAt: "2026-06-02T10:00:00.000Z",
+        propertyAssignments: [
+          {
+            id: "assignment-1",
+            clientId: "client-1",
+            propertyId: "property-1",
+            relationship: "propietario",
+            notes: "Duena actual",
+            createdBy: "seller-1",
+            updatedBy: "admin-1",
+            createdAt: "2026-06-01T11:00:00.000Z",
+            updatedAt: "2026-06-02T11:00:00.000Z",
+            property: {
+              id: "property-1",
+              title: "Casa Centro",
+              slug: "casa-centro",
+              location: "Centro",
+              price: "USD 200.000",
+              category: "venta",
+              isPublished: true
+            }
+          }
+        ]
       }
     );
 

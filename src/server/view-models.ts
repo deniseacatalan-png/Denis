@@ -46,6 +46,8 @@ export type PropertyViewModel = {
   rawDescription: string;
   isPublished: boolean;
   displayOrder: number;
+  createdAt: string;
+  updatedAt: string;
   images: string[];
 };
 
@@ -65,6 +67,28 @@ export type ClientViewModel = {
   notes: string;
   createdAt: string;
   updatedAt: string;
+  propertyAssignments: ClientPropertyAssignmentViewModel[];
+};
+
+export type ClientPropertyAssignmentViewModel = {
+  id: string;
+  clientId: string;
+  propertyId: string;
+  relationship: string;
+  notes: string;
+  createdBy: string;
+  updatedBy: string;
+  createdAt: string;
+  updatedAt: string;
+  property: {
+    id: string;
+    title: string;
+    slug: string;
+    location: string;
+    price: string;
+    category: string;
+    isPublished: boolean;
+  } | null;
 };
 
 export type SellerProfileViewModel = {
@@ -209,11 +233,17 @@ export function propertyToViewModel(row: any): PropertyViewModel {
     rawDescription: row.rawDescription || row.raw_description || "",
     isPublished: Boolean(row.isPublished ?? row.is_published),
     displayOrder: Number(row.displayOrder ?? row.display_order ?? 0),
+    createdAt: isoDate(row.createdAt || row.created_at),
+    updatedAt: isoDate(row.updatedAt || row.updated_at),
     images
   };
 }
 
 export function clientToViewModel(row: any): ClientViewModel {
+  const propertyAssignments = [...(row.propertyAssignments || row.client_property_assignments || [])]
+    .map(clientPropertyAssignmentToViewModel)
+    .sort((first, second) => second.updatedAt.localeCompare(first.updatedAt));
+
   return {
     id: row.id,
     createdBy: row.createdBy || row.created_by || "",
@@ -229,7 +259,35 @@ export function clientToViewModel(row: any): ClientViewModel {
     status: row.status || "nuevo",
     notes: row.notes || "",
     createdAt: isoDate(row.createdAt || row.created_at),
-    updatedAt: isoDate(row.updatedAt || row.updated_at)
+    updatedAt: isoDate(row.updatedAt || row.updated_at),
+    propertyAssignments
+  };
+}
+
+export function clientPropertyAssignmentToViewModel(row: any): ClientPropertyAssignmentViewModel {
+  const property = row.property || null;
+
+  return {
+    id: row.id || "",
+    clientId: row.clientId || row.client_id || "",
+    propertyId: row.propertyId || row.property_id || "",
+    relationship: row.relationship || "interesado",
+    notes: row.notes || "",
+    createdBy: row.createdBy || row.created_by || "",
+    updatedBy: row.updatedBy || row.updated_by || "",
+    createdAt: isoDate(row.createdAt || row.created_at),
+    updatedAt: isoDate(row.updatedAt || row.updated_at),
+    property: property
+      ? {
+          id: property.id || "",
+          title: property.title || "",
+          slug: property.slug || "",
+          location: property.location || "",
+          price: property.price || "Consultar",
+          category: property.category || "venta",
+          isPublished: Boolean(property.isPublished ?? property.is_published)
+        }
+      : null
   };
 }
 

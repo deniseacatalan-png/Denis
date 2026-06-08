@@ -2,9 +2,37 @@ import { fetchJsonWithAuth } from "./api.js";
 
 export const CLIENT_OPERATIONS = ["comprar", "alquilar", "temporada"];
 export const CLIENT_STATUSES = ["nuevo", "contactado", "visitando", "cerrado", "pausado"];
+export const CLIENT_PROPERTY_RELATIONSHIPS = ["propietario", "comprador", "interesado", "inquilino"];
 
 function textValue(value) {
   return String(value || "").trim();
+}
+
+export function normalizeClientPropertyAssignment(row = {}) {
+  const property = row.property || null;
+
+  return {
+    id: row.id || "",
+    clientId: row.client_id || row.clientId || "",
+    propertyId: row.property_id || row.propertyId || "",
+    relationship: row.relationship || "interesado",
+    notes: row.notes || "",
+    createdBy: row.created_by || row.createdBy || "",
+    updatedBy: row.updated_by || row.updatedBy || "",
+    createdAt: row.created_at || row.createdAt || "",
+    updatedAt: row.updated_at || row.updatedAt || "",
+    property: property
+      ? {
+          id: property.id || "",
+          title: property.title || "",
+          slug: property.slug || "",
+          location: property.location || "",
+          price: property.price || "Consultar",
+          category: property.category || "venta",
+          isPublished: Boolean(property.is_published ?? property.isPublished)
+        }
+      : null
+  };
 }
 
 export function normalizeClient(row) {
@@ -23,7 +51,10 @@ export function normalizeClient(row) {
     status: row.status || "nuevo",
     notes: row.notes || "",
     createdAt: row.created_at || "",
-    updatedAt: row.updated_at || ""
+    updatedAt: row.updated_at || "",
+    propertyAssignments: (row.client_property_assignments || row.propertyAssignments || []).map(
+      normalizeClientPropertyAssignment
+    )
   };
 }
 
@@ -80,4 +111,45 @@ export async function saveClient(values, userId) {
   });
 
   return payload.client;
+}
+
+export function clientPropertyAssignmentToPayload(values) {
+  const clientId = textValue(values.clientId);
+  const propertyId = textValue(values.propertyId);
+  const relationship = CLIENT_PROPERTY_RELATIONSHIPS.includes(values.relationship)
+    ? values.relationship
+    : "interesado";
+
+  if (!clientId) {
+    throw new Error("Falta el cliente para asignar la propiedad.");
+  }
+
+  if (!propertyId) {
+    throw new Error("Selecciona una propiedad para asignar.");
+  }
+
+  return {
+    id: textValue(values.id),
+    clientId,
+    propertyId,
+    relationship,
+    notes: textValue(values.notes)
+  };
+}
+
+export async function saveClientPropertyAssignment(values) {
+  const assignment = clientPropertyAssignmentToPayload(values);
+  const payload = await fetchJsonWithAuth("/api/internal/client-property-assignments", {
+    method: "POST",
+    body: JSON.stringify({ assignment })
+  });
+
+  return payload.assignment;
+}
+
+export async function deleteClientPropertyAssignment(assignmentId) {
+  await fetchJsonWithAuth("/api/internal/client-property-assignments", {
+    method: "DELETE",
+    body: JSON.stringify({ assignmentId })
+  });
 }

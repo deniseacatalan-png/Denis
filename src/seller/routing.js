@@ -1,11 +1,43 @@
 export const SELLER_HOME_PATH = "/vendedor";
-export const SELLER_NEW_PROPERTY_PATH = "/vendedor/propiedades/nueva";
+export const SELLER_PROPERTIES_PATH = "/vendedor/propiedades";
+export const SELLER_NEW_PROPERTY_PATH = `${SELLER_PROPERTIES_PATH}/nueva`;
 
 export function getSellerRouteFromPathname(pathname = "") {
   if (/^\/vendedor\/propiedades\/nueva\/?$/.test(pathname)) {
     return {
       section: "properties",
-      clientId: ""
+      clientId: "",
+      propertyId: "",
+      propertyMode: "new"
+    };
+  }
+
+  const propertyEditMatch = pathname.match(/^\/vendedor\/propiedades\/([^/]+)\/editar\/?$/);
+  if (propertyEditMatch) {
+    return {
+      section: "properties",
+      clientId: "",
+      propertyId: decodeURIComponent(propertyEditMatch[1]),
+      propertyMode: "edit"
+    };
+  }
+
+  const propertyViewMatch = pathname.match(/^\/vendedor\/propiedades\/([^/]+)\/?$/);
+  if (propertyViewMatch) {
+    return {
+      section: "properties",
+      clientId: "",
+      propertyId: decodeURIComponent(propertyViewMatch[1]),
+      propertyMode: "view"
+    };
+  }
+
+  if (/^\/vendedor\/propiedades\/?$/.test(pathname)) {
+    return {
+      section: "properties",
+      clientId: "",
+      propertyId: "",
+      propertyMode: "list"
     };
   }
 
@@ -13,7 +45,9 @@ export function getSellerRouteFromPathname(pathname = "") {
 
   return {
     section: "clients",
-    clientId
+    clientId,
+    propertyId: "",
+    propertyMode: "list"
   };
 }
 
@@ -24,4 +58,12 @@ export function getSellerClientIdFromPathname(pathname = "") {
 
 export function sellerClientPath(clientId) {
   return `${SELLER_HOME_PATH}/cliente/${encodeURIComponent(String(clientId || ""))}`;
+}
+
+export function sellerPropertyPath(propertyId) {
+  return `${SELLER_PROPERTIES_PATH}/${encodeURIComponent(String(propertyId || ""))}`;
+}
+
+export function sellerPropertyEditPath(propertyId) {
+  return `${sellerPropertyPath(propertyId)}/editar`;
 }

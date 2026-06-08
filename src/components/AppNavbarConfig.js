@@ -39,7 +39,7 @@ export function adminNavbarItems({ activeSection = "dashboard" } = {}) {
 export function sellerNavbarItems({ activeSection = "clients", isClientDetail = false } = {}) {
   return [
     { id: "clients", label: "Clientes", path: "/vendedor", active: activeSection === "clients" || Boolean(isClientDetail) },
-    { id: "properties", label: "Propiedades", path: "/vendedor/propiedades/nueva", active: activeSection === "properties" },
+    { id: "properties", label: "Propiedades", path: "/vendedor/propiedades", active: activeSection === "properties" },
     { id: "publicSite", label: "Ver web", href: "/" },
     { id: "signout", label: "Cerrar sesión", action: "signout", variant: "cta" }
   ];

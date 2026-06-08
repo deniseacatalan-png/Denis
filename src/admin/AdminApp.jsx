@@ -7,6 +7,9 @@ import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "re
 import { DocumentsPanel, NotesPanel } from "../components/ActivityPanels";
 import AppNavbar from "../components/AppNavbar";
 import { adminNavbarItems } from "../components/AppNavbarConfig";
+import ClientPropertyAssignmentsPanel, {
+  emptyClientPropertyAssignmentForm
+} from "../components/ClientPropertyAssignmentsPanel";
 import {
   CATEGORY_META,
   filterAdminPropertiesByType,
@@ -38,8 +41,10 @@ import {
 import {
   CLIENT_OPERATIONS,
   CLIENT_STATUSES,
+  deleteClientPropertyAssignment,
   fetchClients,
-  saveClient
+  saveClient,
+  saveClientPropertyAssignment
 } from "../utils/supabase/clients";
 import {
   createSellerFromAdmin,
@@ -112,7 +117,8 @@ const emptyClientForm = {
   budget: "",
   rooms: "",
   status: "nuevo",
-  notes: ""
+  notes: "",
+  propertyAssignments: []
 };
 
 function clientToForm(client) {
@@ -127,7 +133,8 @@ function clientToForm(client) {
     budget: client.budget || "",
     rooms: client.rooms || "",
     status: CLIENT_STATUSES.includes(client.status) ? client.status : "nuevo",
-    notes: client.notes || ""
+    notes: client.notes || "",
+    propertyAssignments: client.propertyAssignments || []
   };
 }
 
@@ -813,6 +820,7 @@ function AdminApp() {
   const [form, setForm] = useState(emptyPropertyForm);
   const [sellerForm, setSellerForm] = useState(emptySellerForm);
   const [clientForm, setClientForm] = useState(emptyClientForm);
+  const [clientPropertyAssignmentForm, setClientPropertyAssignmentForm] = useState(emptyClientPropertyAssignmentForm);
   const [clientFilters, setClientFilters] = useState({ operation: "", status: "", createdBy: "" });
   const [propertyTypeTab, setPropertyTypeTab] = useState("venta");
   const [propertySearchQuery, setPropertySearchQuery] = useState("");
@@ -820,6 +828,7 @@ function AdminApp() {
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [isSavingOrder, setIsSavingOrder] = useState(false);
   const [isSavingClient, setIsSavingClient] = useState(false);
+  const [isSavingClientPropertyAssignment, setIsSavingClientPropertyAssignment] = useState(false);
   const [isSavingSeller, setIsSavingSeller] = useState(false);
   const [draggingPropertyId, setDraggingPropertyId] = useState("");
   const [dropTargetPropertyId, setDropTargetPropertyId] = useState("");
@@ -1134,6 +1143,7 @@ function AdminApp() {
       if (syncedClientRouteRef.current !== routeKey) {
         syncedClientRouteRef.current = routeKey;
         setClientForm(emptyClientForm);
+        setClientPropertyAssignmentForm(emptyClientPropertyAssignmentForm);
         setClientMessage("");
         setClientError("");
       }
@@ -1145,6 +1155,7 @@ function AdminApp() {
       if (client && syncedClientRouteRef.current !== routeKey) {
         syncedClientRouteRef.current = routeKey;
         setClientForm(clientToForm(client));
+        setClientPropertyAssignmentForm(emptyClientPropertyAssignmentForm);
         setClientMessage("");
         setClientError("");
       }
@@ -1197,6 +1208,7 @@ function AdminApp() {
 
   const handleCreateClient = () => {
     setClientForm(emptyClientForm);
+    setClientPropertyAssignmentForm(emptyClientPropertyAssignmentForm);
     setClientError("");
     setClientMessage("");
     navigateAdmin("/admin/clientes/nuevo");
@@ -1327,6 +1339,83 @@ function AdminApp() {
       setClientError(saveError.message);
     } finally {
       setIsSavingClient(false);
+    }
+  };
+
+  const updateClientPropertyAssignmentField = (field, value) => {
+    setClientPropertyAssignmentForm((current) => ({
+      ...current,
+      [field]: value
+    }));
+  };
+
+  const refreshClientsAfterPropertyAssignment = async () => {
+    const refreshResults = await Promise.all([loadAllClients(), loadClients()]);
+    return refreshResults.find((result) => result && !result.ok);
+  };
+
+  const handleClientPropertyAssign = async (event, clientId) => {
+    event.preventDefault();
+
+    if (!clientId) {
+      setClientError("Guarda el cliente antes de asignarle una propiedad.");
+      return;
+    }
+
+    setIsSavingClientPropertyAssignment(true);
+    setClientMessage("");
+    setClientError("");
+
+    try {
+      const savedAssignment = await saveClientPropertyAssignment({
+        ...clientPropertyAssignmentForm,
+        clientId
+      });
+      setClientForm((current) =>
+        current.id === clientId
+          ? {
+              ...current,
+              propertyAssignments: [savedAssignment, ...(current.propertyAssignments || [])]
+            }
+          : current
+      );
+      setClientPropertyAssignmentForm(emptyClientPropertyAssignmentForm);
+      setClientMessage("Propiedad asignada al cliente.");
+      const refreshError = await refreshClientsAfterPropertyAssignment();
+
+      if (refreshError) {
+        setClientError(`Propiedad asignada, pero no pude actualizar la lista: ${refreshError.message}`);
+      }
+    } catch (assignmentError) {
+      setClientError(assignmentError.message);
+    } finally {
+      setIsSavingClientPropertyAssignment(false);
+    }
+  };
+
+  const handleClientPropertyAssignmentDelete = async (assignmentId) => {
+    if (!assignmentId) return;
+
+    setIsSavingClientPropertyAssignment(true);
+    setClientMessage("");
+    setClientError("");
+
+    try {
+      await deleteClientPropertyAssignment(assignmentId);
+      setClientForm((current) => ({
+        ...current,
+        propertyAssignments: (current.propertyAssignments || []).filter((assignment) => assignment.id !== assignmentId)
+      }));
+      setClientMessage("Propiedad quitada del cliente.");
+      const refreshError = await refreshClientsAfterPropertyAssignment();
+
+      if (refreshError) {
+        setClientError(`Propiedad quitada, pero no pude actualizar la lista: ${refreshError.message}`);
+      }
+    } catch (assignmentError) {
+      setClientError(assignmentError.message);
+    } finally {
+      setIsSavingClientPropertyAssignment(false);
     }
   };
 
@@ -2179,6 +2268,17 @@ function AdminApp() {
         </label>
       </div>
 
+      <ClientPropertyAssignmentsPanel
+        assignments={client.propertyAssignments || []}
+        properties={properties}
+        form={clientPropertyAssignmentForm}
+        isSaving={isSavingClientPropertyAssignment}
+        isLoadingProperties={isLoading && !hasLoadedProperties}
+        onAssign={(event) => handleClientPropertyAssign(event, client.id)}
+        onDelete={handleClientPropertyAssignmentDelete}
+        onFormChange={updateClientPropertyAssignmentField}
+      />
+
       <NotesPanel
         entityId={client.id}
         author={activityAuthor}
@@ -2281,6 +2381,19 @@ function AdminApp() {
           <textarea rows="7" value={clientForm.notes} onChange={(event) => updateClientField("notes", event.target.value)} />
         </label>
       </div>
+
+      {clientForm.id ? (
+        <ClientPropertyAssignmentsPanel
+          assignments={clientForm.propertyAssignments || []}
+          properties={properties}
+          form={clientPropertyAssignmentForm}
+          isSaving={isSavingClientPropertyAssignment}
+          isLoadingProperties={isLoading && !hasLoadedProperties}
+          onAssign={(event) => handleClientPropertyAssign(event, clientForm.id)}
+          onDelete={handleClientPropertyAssignmentDelete}
+          onFormChange={updateClientPropertyAssignmentField}
+        />
+      ) : null}
 
       <div className="admin-editor-actions">
         <button type="submit" className="wa-btn" disabled={isSavingClient}>

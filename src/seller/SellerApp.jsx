@@ -5,6 +5,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { DocumentsPanel, NotesPanel } from "../components/ActivityPanels";
 import AppNavbar from "../components/AppNavbar";
 import { sellerNavbarItems } from "../components/AppNavbarConfig";
+import ClientPropertyAssignmentsPanel, {
+  emptyClientPropertyAssignmentForm
+} from "../components/ClientPropertyAssignmentsPanel";
 import {
   CATEGORY_META,
   propertyPublicPath,
@@ -20,8 +23,10 @@ import {
 import {
   CLIENT_OPERATIONS,
   CLIENT_STATUSES,
+  deleteClientPropertyAssignment,
   fetchClients,
-  saveClient
+  saveClient,
+  saveClientPropertyAssignment
 } from "../utils/supabase/clients";
 import {
   fetchInternalProfile,
@@ -30,13 +35,16 @@ import {
   signInSeller,
   signOutSeller
 } from "../utils/supabase/sellers";
-import { saveSellerProperty } from "../utils/supabase/properties";
+import { fetchInternalProperties, saveSellerProperty } from "../utils/supabase/properties";
 import {
   getSellerClientIdFromPathname,
   getSellerRouteFromPathname,
   SELLER_HOME_PATH,
+  SELLER_PROPERTIES_PATH,
   SELLER_NEW_PROPERTY_PATH,
-  sellerClientPath
+  sellerClientPath,
+  sellerPropertyEditPath,
+  sellerPropertyPath
 } from "./routing";
 import logoMark from "../../ISO GRAFITO.png";
 
@@ -66,6 +74,7 @@ const emptyPropertyForm = {
   rawDescription: "",
   descriptionHtml: "",
   isPublished: true,
+  displayOrder: 0,
   images: []
 };
 
@@ -109,7 +118,8 @@ const emptyClientForm = {
   budget: "",
   rooms: "",
   status: "nuevo",
-  notes: ""
+  notes: "",
+  propertyAssignments: []
 };
 
 function clientToForm(client) {
@@ -124,7 +134,8 @@ function clientToForm(client) {
     budget: client.budget || "",
     rooms: client.rooms || "",
     status: CLIENT_STATUSES.includes(client.status) ? client.status : "nuevo",
-    notes: client.notes || ""
+    notes: client.notes || "",
+    propertyAssignments: client.propertyAssignments || []
   };
 }
 
@@ -160,6 +171,25 @@ function textToParagraphHtml(text) {
     .join("");
 }
 
+function htmlToPlainText(html) {
+  if (!html) return "";
+
+  if (typeof window !== "undefined" && typeof window.DOMParser !== "undefined") {
+    const doc = new window.DOMParser().parseFromString(html, "text/html");
+    return (doc.body.innerText || doc.body.textContent || "")
+      .replace(/\n{3,}/g, "\n\n")
+      .replace(/[ \t]{2,}/g, " ")
+      .trim();
+  }
+
+  return html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 function colorValue(value, fallback = CATEGORY_META.venta.mapColor) {
   return /^#[0-9a-f]{6}$/i.test(value || "") ? value : fallback;
 }
@@ -185,6 +215,37 @@ function getInitialSellerClientId() {
   return getSellerClientIdFromPathname(window.location.pathname);
 }
 
+function getInitialSellerPropertyId() {
+  return getInitialSellerRoute().propertyId;
+}
+
+function getInitialSellerPropertyMode() {
+  return getInitialSellerRoute().propertyMode;
+}
+
+function propertyToForm(property) {
+  const rawDescription = property.rawDescription || htmlToPlainText(property.descriptionHtml);
+
+  return {
+    databaseId: property.databaseId || property.id || "",
+    title: property.title || "",
+    slug: property.slug || slugify(property.title),
+    location: property.location || "",
+    price: property.price || "Consultar",
+    area: property.area || "Superficie a confirmar",
+    category: property.category || "venta",
+    latitude: String(property.latitude ?? property.coords?.[0] ?? defaultPropertyCoords.latitude),
+    longitude: String(property.longitude ?? property.coords?.[1] ?? defaultPropertyCoords.longitude),
+    markerColor: property.markerColor || CATEGORY_META[property.category]?.mapColor || CATEGORY_META.venta.mapColor,
+    summary: property.summary || "",
+    rawDescription,
+    descriptionHtml: property.descriptionHtml || textToParagraphHtml(rawDescription),
+    isPublished: Boolean(property.isPublished),
+    displayOrder: property.displayOrder || 0,
+    images: property.images || []
+  };
+}
+
 function navigateSellerPath(path, options = {}) {
   if (typeof window === "undefined") return;
   const method = options.replace ? "replaceState" : "pushState";
@@ -205,7 +266,21 @@ function ClientDetailField({ label, value, className = "" }) {
   );
 }
 
-function ClientDetailView({ client, internalProfile, session, activityAuthor, onEdit, onNewClient }) {
+function ClientDetailView({
+  client,
+  internalProfile,
+  session,
+  activityAuthor,
+  propertyAssignmentForm,
+  properties,
+  isSavingPropertyAssignment,
+  isLoadingProperties,
+  onPropertyAssign,
+  onPropertyAssignmentDelete,
+  onPropertyAssignmentFormChange,
+  onEdit,
+  onNewClient
+}) {
   const contact = [client.phone, client.email].filter(Boolean).join(" · ");
 
   return (
@@ -242,6 +317,17 @@ function ClientDetailView({ client, internalProfile, session, activityAuthor, on
         <ClientDetailField label="Última actualización" value={formatClientDate(client.updatedAt || client.createdAt)} />
         <ClientDetailField label="Notas" value={client.notes} className="admin-field-wide" />
       </div>
+
+      <ClientPropertyAssignmentsPanel
+        assignments={client.propertyAssignments || []}
+        properties={properties}
+        form={propertyAssignmentForm}
+        isSaving={isSavingPropertyAssignment}
+        isLoadingProperties={isLoadingProperties}
+        onAssign={(event) => onPropertyAssign(event, client.id)}
+        onDelete={onPropertyAssignmentDelete}
+        onFormChange={onPropertyAssignmentFormChange}
+      />
 
       <NotesPanel
         entityId={client.id}
@@ -325,15 +411,21 @@ function SellerApp() {
   const [session, setSession] = useState(undefined);
   const [internalProfile, setInternalProfile] = useState(null);
   const [clients, setClients] = useState([]);
+  const [properties, setProperties] = useState([]);
   const [activeSection, setActiveSection] = useState(getInitialSellerSection);
   const [selectedClientId, setSelectedClientId] = useState(getInitialSellerClientId);
+  const [selectedPropertyId, setSelectedPropertyId] = useState(getInitialSellerPropertyId);
+  const [propertyMode, setPropertyMode] = useState(getInitialSellerPropertyMode);
   const [editorMode, setEditorMode] = useState(() => (getInitialSellerClientId() ? "view" : "edit"));
   const [form, setForm] = useState(emptyClientForm);
   const [propertyForm, setPropertyForm] = useState(emptyPropertyForm);
+  const [propertyAssignmentForm, setPropertyAssignmentForm] = useState(emptyClientPropertyAssignmentForm);
   const [filters, setFilters] = useState({ operation: "", status: "" });
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingProperties, setIsLoadingProperties] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSavingProperty, setIsSavingProperty] = useState(false);
+  const [isSavingPropertyAssignment, setIsSavingPropertyAssignment] = useState(false);
   const [isUploadingPropertyImages, setIsUploadingPropertyImages] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -345,6 +437,12 @@ function SellerApp() {
   const selectedClient = useMemo(
     () => clients.find((client) => client.id === selectedClientId) || null,
     [clients, selectedClientId]
+  );
+  const selectedProperty = useMemo(
+    () =>
+      properties.find((property) => property.id === selectedPropertyId || property.databaseId === selectedPropertyId) ||
+      null,
+    [properties, selectedPropertyId]
   );
   const activityAuthor = useMemo(() => {
     if (!session?.user?.id) return null;
@@ -362,12 +460,20 @@ function SellerApp() {
 
       setActiveSection(sellerRoute.section);
       setSelectedClientId(routedClientId);
+      setSelectedPropertyId(sellerRoute.propertyId);
+      setPropertyMode(sellerRoute.propertyMode);
       setEditorMode(routedClientId ? "view" : "edit");
       setMessage("");
       setError("");
+      setPropertyMessage("");
+      setPropertyError("");
 
       if (sellerRoute.section === "clients" && !routedClientId) {
         setForm(emptyClientForm);
+      }
+
+      if (sellerRoute.section === "properties" && sellerRoute.propertyMode === "new") {
+        setPropertyForm(emptyPropertyForm);
       }
     };
 
@@ -402,6 +508,7 @@ function SellerApp() {
       return;
     }
     setForm(clientToForm(selectedClient));
+    setPropertyAssignmentForm(emptyClientPropertyAssignmentForm);
   }, [selectedClient, selectedClientId]);
 
   useEffect(() => {
@@ -411,6 +518,7 @@ function SellerApp() {
       if (!session?.user?.id) {
         setInternalProfile(null);
         setClients([]);
+        setProperties([]);
         return;
       }
 
@@ -424,6 +532,7 @@ function SellerApp() {
         if (!profile) {
           setInternalProfile(null);
           setClients([]);
+          setProperties([]);
           setError("Tu usuario no esta activo para acceder al portal interno.");
           return;
         }
@@ -470,6 +579,30 @@ function SellerApp() {
     loadClients();
   }, [internalProfile, filters.operation, filters.status]);
 
+  const loadProperties = async () => {
+    if (!internalProfile) return;
+
+    setIsLoadingProperties(true);
+
+    try {
+      const data = await fetchInternalProperties();
+      setProperties(data);
+    } catch (loadError) {
+      setError(loadError.message);
+    } finally {
+      setIsLoadingProperties(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProperties();
+  }, [internalProfile]);
+
+  useEffect(() => {
+    if (activeSection !== "properties" || propertyMode !== "edit" || !selectedProperty) return;
+    setPropertyForm(propertyToForm(selectedProperty));
+  }, [activeSection, propertyMode, selectedProperty]);
+
   const updateForm = (field, value) => {
     setForm((current) => ({
       ...current,
@@ -513,6 +646,7 @@ function SellerApp() {
     setSelectedClientId("");
     setEditorMode("edit");
     setForm(emptyClientForm);
+    setPropertyAssignmentForm(emptyClientPropertyAssignmentForm);
     setMessage("");
     setError("");
   };
@@ -521,6 +655,8 @@ function SellerApp() {
     navigateSellerPath(SELLER_NEW_PROPERTY_PATH);
     setActiveSection("properties");
     setSelectedClientId("");
+    setSelectedPropertyId("");
+    setPropertyMode("new");
     setEditorMode("edit");
     setMessage("");
     setError("");
@@ -529,8 +665,42 @@ function SellerApp() {
     setSavedPropertyPath("");
 
     if (resetForm) {
-      setPropertyForm({ ...emptyPropertyForm });
+      setPropertyForm({ ...emptyPropertyForm, displayOrder: properties.length });
     }
+  };
+
+  const openPropertiesList = () => {
+    navigateSellerPath(SELLER_PROPERTIES_PATH);
+    setActiveSection("properties");
+    setSelectedClientId("");
+    setSelectedPropertyId("");
+    setPropertyMode("list");
+    setMessage("");
+    setError("");
+    setPropertyMessage("");
+    setPropertyError("");
+  };
+
+  const openPropertyView = (propertyId) => {
+    navigateSellerPath(sellerPropertyPath(propertyId));
+    setActiveSection("properties");
+    setSelectedClientId("");
+    setSelectedPropertyId(propertyId);
+    setPropertyMode("view");
+    setPropertyMessage("");
+    setPropertyError("");
+  };
+
+  const openPropertyEdit = (property) => {
+    const propertyId = property.databaseId || property.id;
+    setPropertyForm(propertyToForm(property));
+    navigateSellerPath(sellerPropertyEditPath(propertyId));
+    setActiveSection("properties");
+    setSelectedClientId("");
+    setSelectedPropertyId(propertyId);
+    setPropertyMode("edit");
+    setPropertyMessage("");
+    setPropertyError("");
   };
 
   const handleSellerNavbarItemSelect = (item) => {
@@ -539,8 +709,8 @@ function SellerApp() {
       return;
     }
 
-    if (item.path === SELLER_NEW_PROPERTY_PATH) {
-      startNewProperty({ resetForm: false });
+    if (item.path === SELLER_PROPERTIES_PATH) {
+      openPropertiesList();
       return;
     }
 
@@ -560,8 +730,89 @@ function SellerApp() {
     setActiveSection("clients");
     setSelectedClientId(clientId);
     setEditorMode("view");
+    setPropertyAssignmentForm(emptyClientPropertyAssignmentForm);
     setMessage("");
     setError("");
+  };
+
+  const updatePropertyAssignmentField = (field, value) => {
+    setPropertyAssignmentForm((current) => ({
+      ...current,
+      [field]: value
+    }));
+  };
+
+  const handleClientPropertyAssign = async (event, clientId) => {
+    event.preventDefault();
+
+    if (!clientId) {
+      setError("Guarda el cliente antes de asignarle una propiedad.");
+      return;
+    }
+
+    setIsSavingPropertyAssignment(true);
+    setMessage("");
+    setError("");
+
+    try {
+      const savedAssignment = await saveClientPropertyAssignment({
+        ...propertyAssignmentForm,
+        clientId
+      });
+      setClients((currentClients) =>
+        currentClients.map((client) =>
+          client.id === clientId
+            ? {
+                ...client,
+                propertyAssignments: [savedAssignment, ...(client.propertyAssignments || [])]
+              }
+            : client
+        )
+      );
+      setForm((current) =>
+        current.id === clientId
+          ? {
+              ...current,
+              propertyAssignments: [savedAssignment, ...(current.propertyAssignments || [])]
+            }
+          : current
+      );
+      setPropertyAssignmentForm(emptyClientPropertyAssignmentForm);
+      setMessage("Propiedad asignada al cliente.");
+      await loadClients();
+    } catch (assignmentError) {
+      setError(assignmentError.message);
+    } finally {
+      setIsSavingPropertyAssignment(false);
+    }
+  };
+
+  const handleClientPropertyAssignmentDelete = async (assignmentId) => {
+    if (!assignmentId) return;
+
+    setIsSavingPropertyAssignment(true);
+    setMessage("");
+    setError("");
+
+    try {
+      await deleteClientPropertyAssignment(assignmentId);
+      setClients((currentClients) =>
+        currentClients.map((client) => ({
+          ...client,
+          propertyAssignments: (client.propertyAssignments || []).filter((assignment) => assignment.id !== assignmentId)
+        }))
+      );
+      setForm((current) => ({
+        ...current,
+        propertyAssignments: (current.propertyAssignments || []).filter((assignment) => assignment.id !== assignmentId)
+      }));
+      setMessage("Propiedad quitada del cliente.");
+      await loadClients();
+    } catch (assignmentError) {
+      setError(assignmentError.message);
+    } finally {
+      setIsSavingPropertyAssignment(false);
+    }
   };
 
   const handlePropertyImageUpload = async (event) => {
@@ -606,7 +857,7 @@ function SellerApp() {
           clientPayload: JSON.stringify({
             accessToken: session.access_token,
             uploadType: "property-image",
-            propertyId: null
+            propertyId: propertyForm.databaseId || null
           })
         });
 
@@ -652,18 +903,23 @@ function SellerApp() {
     try {
       const payload = {
         ...propertyForm,
-        databaseId: "",
-        id: "",
         markerColor:
           propertyForm.markerColor ||
           CATEGORY_META[propertyForm.category]?.mapColor ||
           CATEGORY_META.venta.mapColor,
         descriptionHtml: propertyForm.descriptionHtml || textToParagraphHtml(propertyForm.rawDescription)
       };
-      await saveSellerProperty(payload);
+      const propertyId = await saveSellerProperty(payload);
       setPropertyMessage("Propiedad guardada.");
       setSavedPropertyPath(propertyPublicPath(payload));
-      setPropertyForm({ ...emptyPropertyForm });
+      await loadProperties();
+      setSelectedPropertyId(propertyId);
+      setPropertyMode("view");
+      navigateSellerPath(sellerPropertyPath(propertyId), { replace: true });
+
+      if (!payload.databaseId && !payload.id) {
+        setPropertyForm({ ...emptyPropertyForm, displayOrder: properties.length + 1 });
+      }
     } catch (saveError) {
       setPropertyError(saveError.message);
     } finally {
@@ -698,18 +954,141 @@ function SellerApp() {
     }
   };
 
+  const getPropertyCategoryLabel = (property) =>
+    CATEGORY_META[property.category]?.label || property.category || "Sin categoria";
+
+  const renderPropertiesList = () => (
+    <section className="admin-sellers-panel" aria-labelledby="seller-properties-title">
+      <div className="admin-sellers-header">
+        <div>
+          <p>Inventario</p>
+          <h2 id="seller-properties-title">Propiedades</h2>
+        </div>
+        <div className="admin-header-actions">
+          <button type="button" className="map-btn" onClick={loadProperties} disabled={!internalProfile || isLoadingProperties}>
+            Actualizar
+          </button>
+          <button type="button" className="wa-btn" onClick={() => startNewProperty()}>
+            Nueva propiedad
+          </button>
+        </div>
+      </div>
+
+      {propertyMessage ? <p className="admin-success">{propertyMessage}</p> : null}
+      {propertyError ? <p className="admin-error">{propertyError}</p> : null}
+      {isLoadingProperties && !properties.length ? <p className="admin-sidebar-note">Cargando propiedades...</p> : null}
+
+      <div className="admin-property-list">
+        {properties.map((property) => (
+          <article className="admin-property-row" key={property.id}>
+            <span>{property.title || "Sin titulo"}</span>
+            <small>
+              <span>{getPropertyCategoryLabel(property)}</span>
+              <span>{property.location || "Sin ubicacion"}</span>
+              <span>{property.price || "Consultar"}</span>
+              <span className={`admin-publish-chip ${property.isPublished ? "is-published" : "is-hidden"}`}>
+                {property.isPublished ? "Publicada" : "Oculta"}
+              </span>
+              <button type="button" className="map-btn" onClick={() => openPropertyView(property.databaseId || property.id)}>
+                Ver
+              </button>
+              <button type="button" className="map-btn" onClick={() => openPropertyEdit(property)}>
+                Editar
+              </button>
+            </small>
+          </article>
+        ))}
+        {!isLoadingProperties && !properties.length ? (
+          <p className="seller-empty-state">No hay propiedades cargadas.</p>
+        ) : null}
+      </div>
+    </section>
+  );
+
+  const renderPropertyNotFound = () => (
+    <section className="admin-panel">
+      <h2>Propiedad no encontrada</h2>
+      <p className="seller-empty-state">No encontramos esa propiedad en el inventario.</p>
+      <button type="button" className="wa-btn" onClick={openPropertiesList}>
+        Volver a propiedades
+      </button>
+    </section>
+  );
+
+  const renderPropertyView = (property) => (
+    <section className="seller-contact-editor" aria-labelledby="seller-property-view-title">
+      <div className="admin-editor-title">
+        <div>
+          <p>{getPropertyCategoryLabel(property)}</p>
+          <h2 id="seller-property-view-title">{property.title || "Sin titulo"}</h2>
+        </div>
+        <div className="admin-header-actions">
+          <button type="button" className="map-btn" onClick={openPropertiesList}>
+            Volver
+          </button>
+          <button type="button" className="wa-btn" onClick={() => openPropertyEdit(property)}>
+            Editar
+          </button>
+        </div>
+      </div>
+
+      {propertyMessage ? <p className="admin-success">{propertyMessage}</p> : null}
+      {propertyError ? <p className="admin-error">{propertyError}</p> : null}
+
+      <div className="admin-detail-grid seller-client-detail-grid">
+        <ClientDetailField label="Valor" value={property.price || "Consultar"} />
+        <ClientDetailField label="Superficie" value={property.area || "Superficie a confirmar"} />
+        <ClientDetailField label="Ubicacion" value={property.location} />
+        <ClientDetailField label="Estado" value={property.isPublished ? "Publicada" : "Oculta"} />
+        <ClientDetailField label="Resumen" value={property.summary} className="admin-field-wide" />
+      </div>
+
+      <section className="admin-description-widget">
+        <div className="admin-widget-header">
+          <h3>Ficha tecnica</h3>
+        </div>
+        <div
+          className="admin-preview-pane rich-text"
+          dangerouslySetInnerHTML={{
+            __html: property.descriptionHtml || "<p>Sin ficha tecnica cargada.</p>"
+          }}
+        />
+      </section>
+
+      <section className="admin-images-field">
+        <div className="admin-images-header">
+          <span>{property.images.length ? `${property.images.length} imagenes cargadas` : "Sin imagenes cargadas"}</span>
+        </div>
+        {property.images.length ? (
+          <div className="admin-image-grid">
+            {property.images.map((url, index) => (
+              <div className="admin-image-preview" key={`${url}-${index}`}>
+                <img src={url} alt={`Imagen ${index + 1} de ${property.title || "propiedad"}`} />
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </section>
+    </section>
+  );
+
   const renderPropertyEditor = () => (
     <form className="seller-contact-editor" onSubmit={handlePropertySave}>
       <div className="admin-editor-title">
         <div>
-          <p>Nueva propiedad</p>
+          <p>{propertyForm.databaseId ? "Editar propiedad" : "Nueva propiedad"}</p>
           <h2>{propertyForm.title || "Sin titulo"}</h2>
         </div>
-        {internalProfile ? (
-          <span className="seller-profile-chip">
-            {internalProfile.role === "admin" ? "Admin" : "Vendedor"}
-          </span>
-        ) : null}
+        <div className="admin-header-actions">
+          <button type="button" className="map-btn" onClick={openPropertiesList}>
+            Volver
+          </button>
+          {internalProfile ? (
+            <span className="seller-profile-chip">
+              {internalProfile.role === "admin" ? "Admin" : "Vendedor"}
+            </span>
+          ) : null}
+        </div>
       </div>
 
       {propertyMessage ? (
@@ -873,6 +1252,31 @@ function SellerApp() {
     </form>
   );
 
+  const renderPropertiesSection = () => {
+    if (propertyMode === "list") return renderPropertiesList();
+
+    if (propertyMode === "new") return renderPropertyEditor();
+
+    if (!selectedPropertyId) return renderPropertyNotFound();
+
+    if (!selectedProperty) {
+      if (isLoadingProperties) {
+        return (
+          <section className="admin-panel">
+            <h2>Cargando propiedad...</h2>
+            <p className="seller-empty-state">Buscando los datos de la propiedad.</p>
+          </section>
+        );
+      }
+
+      return renderPropertyNotFound();
+    }
+
+    if (propertyMode === "edit") return renderPropertyEditor();
+
+    return renderPropertyView(selectedProperty);
+  };
+
   if (session === undefined) {
     return (
       <main className="admin-shell admin-shell--login seller-shell">
@@ -900,13 +1304,18 @@ function SellerApp() {
       <header className="admin-header">
         <div>
           <p>Denise Catalán</p>
-          <h1>{activeSection === "properties" ? "Alta de propiedad" : "Portal de vendedores"}</h1>
+          <h1>{activeSection === "properties" ? "Propiedades" : "Portal de vendedores"}</h1>
         </div>
         <div className="admin-header-actions">
           {activeSection === "properties" ? (
-            <button type="button" className="map-btn" onClick={startNewClient}>
-              Clientes
-            </button>
+            <>
+              <button type="button" className="map-btn" onClick={startNewClient}>
+                Clientes
+              </button>
+              <button type="button" className="wa-btn" onClick={() => startNewProperty()}>
+                Nueva propiedad
+              </button>
+            </>
           ) : (
             <>
               <button type="button" className="map-btn" onClick={loadClients} disabled={!internalProfile || isLoading}>
@@ -926,7 +1335,7 @@ function SellerApp() {
       ) : null}
 
       {activeSection === "properties" ? (
-        renderPropertyEditor()
+        renderPropertiesSection()
       ) : (
       <section className="seller-layout">
         <aside className="seller-contact-list">
@@ -1013,6 +1422,13 @@ function SellerApp() {
             internalProfile={internalProfile}
             session={session}
             activityAuthor={activityAuthor}
+            propertyAssignmentForm={propertyAssignmentForm}
+            properties={properties}
+            isSavingPropertyAssignment={isSavingPropertyAssignment}
+            isLoadingProperties={isLoadingProperties}
+            onPropertyAssign={handleClientPropertyAssign}
+            onPropertyAssignmentDelete={handleClientPropertyAssignmentDelete}
+            onPropertyAssignmentFormChange={updatePropertyAssignmentField}
             onEdit={() => setEditorMode("edit")}
             onNewClient={startNewClient}
           />
@@ -1094,6 +1510,19 @@ function SellerApp() {
               <textarea rows="7" value={form.notes} onChange={(event) => updateForm("notes", event.target.value)} />
             </label>
           </div>
+
+          {form.id ? (
+            <ClientPropertyAssignmentsPanel
+              assignments={form.propertyAssignments || []}
+              properties={properties}
+              form={propertyAssignmentForm}
+              isSaving={isSavingPropertyAssignment}
+              isLoadingProperties={isLoadingProperties}
+              onAssign={(event) => handleClientPropertyAssign(event, form.id)}
+              onDelete={handleClientPropertyAssignmentDelete}
+              onFormChange={updatePropertyAssignmentField}
+            />
+          ) : null}
 
           <div className="admin-editor-actions">
             <button type="submit" className="wa-btn" disabled={!internalProfile || isSaving}>

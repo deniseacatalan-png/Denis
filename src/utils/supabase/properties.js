@@ -38,6 +38,11 @@ export async function fetchAdminProperties() {
   return payload.properties || [];
 }
 
+export async function fetchInternalProperties() {
+  const payload = await fetchJsonWithAuth("/api/internal/properties");
+  return payload.properties || [];
+}
+
 export async function saveInternalProperty(values) {
   const payload = await fetchJsonWithAuth("/api/admin/properties", {
     method: "POST",

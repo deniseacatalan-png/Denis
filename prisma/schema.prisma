@@ -40,6 +40,7 @@ model Property {
   propertyNotes   PropertyNote[]
   propertyDocs    PropertyDocument[]
   portalSubmissions ClientPropertySubmission[]
+  clientAssignments ClientPropertyAssignment[]
 
   @@map("properties")
 }
@@ -87,8 +88,26 @@ model Client {
   updatedAt       DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
   clientNotes     ClientNote[]
   clientDocuments ClientDocument[]
+  propertyAssignments ClientPropertyAssignment[]
 
   @@map("clients")
+}
+
+model ClientPropertyAssignment {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clientId     String   @map("client_id") @db.Uuid
+  propertyId   String   @map("property_id") @db.Uuid
+  relationship String
+  notes        String   @default("")
+  createdBy    String   @map("created_by") @db.Uuid
+  updatedBy    String?  @map("updated_by") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  client       Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  property     Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, propertyId, relationship], map: "client_property_assignments_unique_role_idx")
+  @@map("client_property_assignments")
 }
 
 model PropertyNote {

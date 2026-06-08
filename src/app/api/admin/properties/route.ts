@@ -1,7 +1,6 @@
 import { jsonError, readJsonBody } from "@/server/api-response";
 import { requireActiveSellerOrAdmin, requireAdmin } from "@/server/auth/guards";
 import {
-  assertCanSavePropertyForInternalProfile,
   deleteAdminProperty,
   listAdminProperties,
   saveAdminProperty
@@ -21,10 +20,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { internalProfile } = await requireActiveSellerOrAdmin(request);
+    await requireActiveSellerOrAdmin(request);
     const body = await readJsonBody(request);
     const property = body.property || body;
-    assertCanSavePropertyForInternalProfile(internalProfile, property);
     const propertyId = await saveAdminProperty(property);
     return Response.json({ propertyId });
   } catch (error) {
