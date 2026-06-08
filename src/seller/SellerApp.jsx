@@ -10,6 +10,9 @@ import ClientPropertyAssignmentsPanel, {
 } from "../components/ClientPropertyAssignmentsPanel";
 import {
   CATEGORY_META,
+  filterAdminPropertiesByType,
+  filterPropertiesBySearch,
+  getAdminPropertyTypeTabs,
   propertyPublicPath,
   slugify
 } from "../utils/properties";
@@ -421,6 +424,8 @@ function SellerApp() {
   const [propertyForm, setPropertyForm] = useState(emptyPropertyForm);
   const [propertyAssignmentForm, setPropertyAssignmentForm] = useState(emptyClientPropertyAssignmentForm);
   const [filters, setFilters] = useState({ operation: "", status: "" });
+  const [propertyTypeTab, setPropertyTypeTab] = useState("venta");
+  const [propertySearchQuery, setPropertySearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingProperties, setIsLoadingProperties] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -443,6 +448,18 @@ function SellerApp() {
       properties.find((property) => property.id === selectedPropertyId || property.databaseId === selectedPropertyId) ||
       null,
     [properties, selectedPropertyId]
+  );
+  const filteredProperties = useMemo(
+    () => filterPropertiesBySearch(filterAdminPropertiesByType(properties, propertyTypeTab), propertySearchQuery),
+    [properties, propertySearchQuery, propertyTypeTab]
+  );
+  const propertyTypeTabs = useMemo(
+    () => getAdminPropertyTypeTabs(properties),
+    [properties]
+  );
+  const activePropertyTypeProperties = useMemo(
+    () => filterAdminPropertiesByType(properties, propertyTypeTab),
+    [properties, propertyTypeTab]
   );
   const activityAuthor = useMemo(() => {
     if (!session?.user?.id) return null;
@@ -957,53 +974,106 @@ function SellerApp() {
   const getPropertyCategoryLabel = (property) =>
     CATEGORY_META[property.category]?.label || property.category || "Sin categoria";
 
-  const renderPropertiesList = () => (
-    <section className="admin-sellers-panel" aria-labelledby="seller-properties-title">
-      <div className="admin-sellers-header">
-        <div>
-          <p>Inventario</p>
-          <h2 id="seller-properties-title">Propiedades</h2>
-        </div>
-        <div className="admin-header-actions">
-          <button type="button" className="map-btn" onClick={loadProperties} disabled={!internalProfile || isLoadingProperties}>
-            Actualizar
-          </button>
-          <button type="button" className="wa-btn" onClick={() => startNewProperty()}>
-            Nueva propiedad
-          </button>
-        </div>
-      </div>
+  const renderPropertiesList = () => {
+    const hasPropertySearch = propertySearchQuery.trim().length > 0;
+    const activePropertyTypeLabel =
+      propertyTypeTabs.find((tab) => tab.id === propertyTypeTab)?.label || "propiedades";
 
-      {propertyMessage ? <p className="admin-success">{propertyMessage}</p> : null}
-      {propertyError ? <p className="admin-error">{propertyError}</p> : null}
-      {isLoadingProperties && !properties.length ? <p className="admin-sidebar-note">Cargando propiedades...</p> : null}
+    return (
+      <section className="admin-sellers-panel" aria-labelledby="seller-properties-title">
+        <div className="admin-sellers-header">
+          <div>
+            <p>Inventario</p>
+            <h2 id="seller-properties-title">Propiedades</h2>
+          </div>
+          <div className="admin-header-actions">
+            <button type="button" className="map-btn" onClick={loadProperties} disabled={!internalProfile || isLoadingProperties}>
+              Actualizar
+            </button>
+            <button type="button" className="wa-btn" onClick={() => startNewProperty()}>
+              Nueva propiedad
+            </button>
+          </div>
+        </div>
 
-      <div className="admin-property-list">
-        {properties.map((property) => (
-          <article className="admin-property-row" key={property.id}>
-            <span>{property.title || "Sin titulo"}</span>
-            <small>
-              <span>{getPropertyCategoryLabel(property)}</span>
-              <span>{property.location || "Sin ubicacion"}</span>
-              <span>{property.price || "Consultar"}</span>
-              <span className={`admin-publish-chip ${property.isPublished ? "is-published" : "is-hidden"}`}>
-                {property.isPublished ? "Publicada" : "Oculta"}
-              </span>
-              <button type="button" className="map-btn" onClick={() => openPropertyView(property.databaseId || property.id)}>
-                Ver
+        <div className="admin-property-tabs" role="tablist" aria-label="Tipos de propiedades">
+          {propertyTypeTabs.map((tab) => (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab.id === propertyTypeTab}
+              className={tab.id === propertyTypeTab ? "is-active" : ""}
+              key={tab.id}
+              onClick={() => setPropertyTypeTab(tab.id)}
+            >
+              <span>{tab.label}</span>
+              <small>{tab.count}</small>
+            </button>
+          ))}
+        </div>
+
+        <div className="admin-property-search">
+          <label>
+            <span>Buscar propiedades</span>
+            <input
+              type="search"
+              value={propertySearchQuery}
+              onChange={(event) => setPropertySearchQuery(event.target.value)}
+              placeholder="Titulo, ubicacion, precio, estado, descripcion..."
+              autoComplete="off"
+            />
+          </label>
+          <div className="admin-property-search-meta">
+            <span>
+              {hasPropertySearch
+                ? `${filteredProperties.length} de ${activePropertyTypeProperties.length} resultados en ${activePropertyTypeLabel}`
+                : `${activePropertyTypeProperties.length} de ${properties.length} propiedades en ${activePropertyTypeLabel}`}
+            </span>
+            {hasPropertySearch ? (
+              <button type="button" className="map-btn" onClick={() => setPropertySearchQuery("")}>
+                Limpiar
               </button>
-              <button type="button" className="map-btn" onClick={() => openPropertyEdit(property)}>
-                Editar
-              </button>
-            </small>
-          </article>
-        ))}
-        {!isLoadingProperties && !properties.length ? (
-          <p className="seller-empty-state">No hay propiedades cargadas.</p>
-        ) : null}
-      </div>
-    </section>
-  );
+            ) : null}
+          </div>
+        </div>
+
+        {propertyMessage ? <p className="admin-success">{propertyMessage}</p> : null}
+        {propertyError ? <p className="admin-error">{propertyError}</p> : null}
+        {isLoadingProperties && !properties.length ? <p className="admin-sidebar-note">Cargando propiedades...</p> : null}
+
+        <div className="admin-property-list">
+          {filteredProperties.map((property) => (
+            <article className="admin-property-row" key={property.id}>
+              <span>{property.title || "Sin titulo"}</span>
+              <small>
+                <span>{getPropertyCategoryLabel(property)}</span>
+                <span>{property.location || "Sin ubicacion"}</span>
+                <span>{property.price || "Consultar"}</span>
+                <span className={`admin-publish-chip ${property.isPublished ? "is-published" : "is-hidden"}`}>
+                  {property.isPublished ? "Publicada" : "Oculta"}
+                </span>
+                <button type="button" className="map-btn" onClick={() => openPropertyView(property.databaseId || property.id)}>
+                  Ver
+                </button>
+                <button type="button" className="map-btn" onClick={() => openPropertyEdit(property)}>
+                  Editar
+                </button>
+              </small>
+            </article>
+          ))}
+          {!isLoadingProperties && !properties.length ? (
+            <p className="seller-empty-state">No hay propiedades cargadas.</p>
+          ) : null}
+          {properties.length && !activePropertyTypeProperties.length ? (
+            <p className="seller-empty-state">No hay propiedades en {activePropertyTypeLabel}.</p>
+          ) : null}
+          {activePropertyTypeProperties.length && !filteredProperties.length ? (
+            <p className="seller-empty-state">No encontramos propiedades para esa busqueda.</p>
+          ) : null}
+        </div>
+      </section>
+    );
+  };
 
   const renderPropertyNotFound = () => (
     <section className="admin-panel">
