@@ -846,6 +846,7 @@ function AdminApp() {
   const [searchRequestError, setSearchRequestError] = useState("");
   const [searchRequestMessage, setSearchRequestMessage] = useState("");
   const [isSavingSearchRequest, setIsSavingSearchRequest] = useState(false);
+  const [showClientPropertyAssignmentForm, setShowClientPropertyAssignmentForm] = useState(false);
   const [hasLoadedProperties, setHasLoadedProperties] = useState(false);
   const [hasLoadedAllClients, setHasLoadedAllClients] = useState(false);
   const [hasLoadedSellers, setHasLoadedSellers] = useState(false);
@@ -1199,6 +1200,7 @@ function AdminApp() {
         syncedClientRouteRef.current = routeKey;
         setClientForm(emptyClientForm);
         setClientPropertyAssignmentForm(emptyClientPropertyAssignmentForm);
+        setShowClientPropertyAssignmentForm(false);
         setClientMessage("");
         setClientError("");
       }
@@ -1211,6 +1213,7 @@ function AdminApp() {
         syncedClientRouteRef.current = routeKey;
         setClientForm(clientToForm(client));
         setClientPropertyAssignmentForm(emptyClientPropertyAssignmentForm);
+        setShowClientPropertyAssignmentForm(false);
         setClientMessage("");
         setClientError("");
       }
@@ -2318,16 +2321,37 @@ function AdminApp() {
         </label>
       </div>
 
-      <ClientPropertyAssignmentsPanel
-        assignments={client.propertyAssignments || []}
-        properties={properties}
-        form={clientPropertyAssignmentForm}
-        isSaving={isSavingClientPropertyAssignment}
-        isLoadingProperties={isLoading && !hasLoadedProperties}
-        onAssign={(event) => handleClientPropertyAssign(event, client.id)}
-        onDelete={handleClientPropertyAssignmentDelete}
-        onFormChange={updateClientPropertyAssignmentField}
-      />
+      {!showClientPropertyAssignmentForm ? (
+        <button
+          type="button"
+          className="wa-btn"
+          style={{ marginBottom: "1rem" }}
+          onClick={() => setShowClientPropertyAssignmentForm(true)}
+        >
+          Agregar propiedad
+        </button>
+      ) : (
+        <>
+          <ClientPropertyAssignmentsPanel
+            assignments={client.propertyAssignments || []}
+            properties={properties}
+            form={clientPropertyAssignmentForm}
+            isSaving={isSavingClientPropertyAssignment}
+            isLoadingProperties={isLoading && !hasLoadedProperties}
+            onAssign={(event) => handleClientPropertyAssign(event, client.id)}
+            onDelete={handleClientPropertyAssignmentDelete}
+            onFormChange={updateClientPropertyAssignmentField}
+          />
+          <button
+            type="button"
+            className="map-btn"
+            style={{ marginTop: "1rem" }}
+            onClick={() => setShowClientPropertyAssignmentForm(false)}
+          >
+            Cancelar
+          </button>
+        </>
+      )}
 
       <NotesPanel
         entityId={client.id}
@@ -2417,16 +2441,37 @@ function AdminApp() {
       </div>
 
       {clientForm.id ? (
-        <ClientPropertyAssignmentsPanel
-          assignments={clientForm.propertyAssignments || []}
-          properties={properties}
-          form={clientPropertyAssignmentForm}
-          isSaving={isSavingClientPropertyAssignment}
-          isLoadingProperties={isLoading && !hasLoadedProperties}
-          onAssign={(event) => handleClientPropertyAssign(event, clientForm.id)}
-          onDelete={handleClientPropertyAssignmentDelete}
-          onFormChange={updateClientPropertyAssignmentField}
-        />
+        !showClientPropertyAssignmentForm ? (
+          <button
+            type="button"
+            className="wa-btn"
+            style={{ marginBottom: "1rem" }}
+            onClick={() => setShowClientPropertyAssignmentForm(true)}
+          >
+            Agregar propiedad
+          </button>
+        ) : (
+          <>
+            <ClientPropertyAssignmentsPanel
+              assignments={clientForm.propertyAssignments || []}
+              properties={properties}
+              form={clientPropertyAssignmentForm}
+              isSaving={isSavingClientPropertyAssignment}
+              isLoadingProperties={isLoading && !hasLoadedProperties}
+              onAssign={(event) => handleClientPropertyAssign(event, clientForm.id)}
+              onDelete={handleClientPropertyAssignmentDelete}
+              onFormChange={updateClientPropertyAssignmentField}
+            />
+            <button
+              type="button"
+              className="map-btn"
+              style={{ marginTop: "1rem" }}
+              onClick={() => setShowClientPropertyAssignmentForm(false)}
+            >
+              Cancelar
+            </button>
+          </>
+        )
       ) : null}
 
       <div className="admin-editor-actions">
