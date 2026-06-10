@@ -2344,6 +2344,10 @@ body {
   padding-right: 0.25rem;
 }
 
+.admin-sellers-panel .seller-contact-rows {
+  max-height: calc(100vh - 380px);
+}
+
 .seller-contact-row {
   width: 100%;
   display: grid;

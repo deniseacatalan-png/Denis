@@ -281,7 +281,8 @@ function ClientDetailView({
   onPropertyAssignmentDelete,
   onPropertyAssignmentFormChange,
   onEdit,
-  onNewClient
+  onNewClient,
+  onBackToList
 }) {
   const contact = [client.phone, client.email].filter(Boolean).join(" · ");
 
@@ -300,6 +301,9 @@ function ClientDetailView({
       </div>
 
       <div className="admin-editor-actions">
+        <button type="button" className="map-btn" onClick={onBackToList}>
+          Volver
+        </button>
         <button type="button" className="wa-btn" onClick={onEdit}>
           Editar cliente
         </button>
@@ -723,6 +727,17 @@ function SellerApp() {
     setError("");
   };
 
+  const backToClientList = () => {
+    navigateSellerPath(SELLER_HOME_PATH);
+    setActiveSection("clients");
+    setSelectedClientId("");
+    setEditorMode("idle");
+    setForm(emptyClientForm);
+    setPropertyAssignmentForm(emptyClientPropertyAssignmentForm);
+    setMessage("");
+    setError("");
+  };
+
   const startNewProperty = ({ resetForm = true } = {}) => {
     navigateSellerPath(SELLER_NEW_PROPERTY_PATH);
     setActiveSection("properties");
@@ -795,13 +810,7 @@ function SellerApp() {
     }
 
     if (item.path === SELLER_HOME_PATH) {
-      navigateSellerPath(SELLER_HOME_PATH);
-      setActiveSection("clients");
-      setSelectedClientId("");
-      setEditorMode("edit");
-      setForm(emptyClientForm);
-      setMessage("");
-      setError("");
+      backToClientList();
     }
   };
 
@@ -1677,130 +1686,123 @@ function SellerApp() {
         renderPropertiesSection()
       ) : activeSection === "searchRequests" ? (
         renderSearchRequestsSection()
-      ) : (
-      <section className="seller-layout">
-        <aside className="seller-contact-list">
-          <div className="admin-sidebar-header">
-            <h2>Clientes</h2>
+      ) : editorMode === "idle" ? (
+      <section className="admin-sellers-panel" aria-labelledby="seller-clients-title">
+        <div className="admin-sellers-header">
+          <div>
+            <p>Listado</p>
+            <h2 id="seller-clients-title">Clientes</h2>
+          </div>
+          <div className="admin-header-actions">
+            <button type="button" className="map-btn" onClick={loadClients} disabled={!internalProfile || isLoading}>
+              Actualizar
+            </button>
             <button type="button" className="wa-btn" onClick={startNewClient}>
-              Nuevo
+              Nuevo cliente
             </button>
           </div>
+        </div>
 
-          <div className="seller-filters">
-            <label>
-              Operación
-              <select value={filters.operation} onChange={(event) => updateFilter("operation", event.target.value)}>
-                <option value="">Todas</option>
-                {CLIENT_OPERATIONS.map((operation) => (
-                  <option value={operation} key={operation}>
-                    {operationLabels[operation]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Estado
-              <select value={filters.status} onChange={(event) => updateFilter("status", event.target.value)}>
-                <option value="">Todos</option>
-                {CLIENT_STATUSES.map((status) => (
-                  <option value={status} key={status}>
-                    {statusLabels[status]}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
+        <div className="seller-filters">
+          <label>
+            Operación
+            <select value={filters.operation} onChange={(event) => updateFilter("operation", event.target.value)}>
+              <option value="">Todas</option>
+              {CLIENT_OPERATIONS.map((operation) => (
+                <option value={operation} key={operation}>
+                  {operationLabels[operation]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Estado
+            <select value={filters.status} onChange={(event) => updateFilter("status", event.target.value)}>
+              <option value="">Todos</option>
+              {CLIENT_STATUSES.map((status) => (
+                <option value={status} key={status}>
+                  {statusLabels[status]}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
 
-          {isLoading && !clients.length ? <p className="admin-sidebar-note">Cargando clientes...</p> : null}
-          <div className="seller-contact-rows">
-            {clients.map((client) => (
-              <button
-                type="button"
-                key={client.id}
-                className={`seller-contact-row ${client.id === selectedClientId ? "active" : ""}`}
-                onClick={() => openClientDetail(client.id)}
-              >
-                <span>{client.fullName}</span>
-                <small>
-                  {operationLabels[client.operation] || client.operation}
-                  <span className={`seller-status-pill seller-status-pill--${client.status}`}>
-                    {statusLabels[client.status] || client.status}
-                  </span>
-                </small>
-                <small>{client.zone || "Sin zona"} · {formatClientDate(client.updatedAt || client.createdAt)}</small>
-              </button>
-            ))}
-            {!isLoading && !clients.length ? (
-              <p className="seller-empty-state">No hay clientes para estos filtros.</p>
-            ) : null}
-          </div>
-        </aside>
-
-        {selectedClientId && !selectedClient ? (
-          <section className="seller-contact-editor" aria-label="Cliente no encontrado">
-            <div className="admin-editor-title">
-              <div>
-                <p>Cliente</p>
-                <h2>{isLoading ? "Cargando cliente..." : "Cliente no encontrado"}</h2>
-              </div>
+        {isLoading && !clients.length ? <p className="admin-sidebar-note">Cargando clientes...</p> : null}
+        <div className="seller-contact-rows">
+          {clients.map((client) => (
+            <button
+              type="button"
+              key={client.id}
+              className={`seller-contact-row ${client.id === selectedClientId ? "active" : ""}`}
+              onClick={() => openClientDetail(client.id)}
+            >
+              <span>{client.fullName}</span>
+              <small>
+                {operationLabels[client.operation] || client.operation}
+                <span className={`seller-status-pill seller-status-pill--${client.status}`}>
+                  {statusLabels[client.status] || client.status}
+                </span>
+              </small>
+              <small>{client.zone || "Sin zona"} · {formatClientDate(client.updatedAt || client.createdAt)}</small>
+            </button>
+          ))}
+          {!isLoading && !clients.length ? (
+            <p className="seller-empty-state">No hay clientes para estos filtros.</p>
+          ) : null}
+        </div>
+      </section>
+      ) : selectedClientId && !selectedClient ? (
+        <section className="seller-contact-editor" aria-label="Cliente no encontrado">
+          <div className="admin-editor-title">
+            <div>
+              <p>Cliente</p>
+              <h2>{isLoading ? "Cargando cliente..." : "Cliente no encontrado"}</h2>
             </div>
-            <p className="seller-empty-state">
-              {isLoading ? "Buscando los datos del cliente." : "No se encontró un cliente con ese ID en el listado actual."}
-            </p>
-            {!isLoading ? (
-              <div className="admin-editor-actions">
-                <button type="button" className="map-btn" onClick={startNewClient}>
-                  Volver a clientes
-                </button>
-              </div>
-            ) : null}
-          </section>
-        ) : form.id && editorMode === "view" ? (
-          <ClientDetailView
-            client={selectedClient}
-            internalProfile={internalProfile}
-            session={session}
-            activityAuthor={activityAuthor}
-            propertyAssignmentForm={propertyAssignmentForm}
-            properties={properties}
-            isSavingPropertyAssignment={isSavingPropertyAssignment}
-            isLoadingProperties={isLoadingProperties}
-            onPropertyAssign={handleClientPropertyAssign}
-            onPropertyAssignmentDelete={handleClientPropertyAssignmentDelete}
-            onPropertyAssignmentFormChange={updatePropertyAssignmentField}
-            onEdit={() => setEditorMode("edit")}
-            onNewClient={startNewClient}
-          />
-        ) : editorMode === "idle" ? (
-          <section className="seller-contact-editor" aria-label="Seleccionar o crear cliente">
-            <div className="admin-editor-title">
-              <div>
-                <p>Clientes</p>
-                <h2>Seleccioná un cliente</h2>
-              </div>
-            </div>
-            <p className="seller-empty-state" style={{ marginTop: "1.5rem" }}>
-              Elegí un cliente del listado o creá uno nuevo.
-            </p>
-            <div className="admin-editor-actions" style={{ marginTop: "1.5rem" }}>
-              <button type="button" className="wa-btn" onClick={startNewClient}>
-                Crear cliente
+            <div className="admin-header-actions">
+              <button type="button" className="map-btn" onClick={backToClientList}>
+                Volver a clientes
               </button>
             </div>
-          </section>
-        ) : (
+          </div>
+          <p className="seller-empty-state">
+            {isLoading ? "Buscando los datos del cliente." : "No se encontró un cliente con ese ID en el listado actual."}
+          </p>
+        </section>
+      ) : form.id && editorMode === "view" ? (
+        <ClientDetailView
+          client={selectedClient}
+          internalProfile={internalProfile}
+          session={session}
+          activityAuthor={activityAuthor}
+          propertyAssignmentForm={propertyAssignmentForm}
+          properties={properties}
+          isSavingPropertyAssignment={isSavingPropertyAssignment}
+          isLoadingProperties={isLoadingProperties}
+          onPropertyAssign={handleClientPropertyAssign}
+          onPropertyAssignmentDelete={handleClientPropertyAssignmentDelete}
+          onPropertyAssignmentFormChange={updatePropertyAssignmentField}
+          onEdit={() => setEditorMode("edit")}
+          onNewClient={startNewClient}
+          onBackToList={backToClientList}
+        />
+      ) : (
         <form className="seller-contact-editor" onSubmit={handleSave}>
           <div className="admin-editor-title">
             <div>
               <p>{form.id ? "Editar cliente" : "Nuevo cliente"}</p>
               <h2>{form.fullName || "Sin nombre"}</h2>
             </div>
-            {internalProfile ? (
-              <span className="seller-profile-chip">
-                {internalProfile.role === "admin" ? "Admin" : "Vendedor"}
-              </span>
-            ) : null}
+            <div className="admin-header-actions">
+              <button type="button" className="map-btn" onClick={backToClientList}>
+                Volver
+              </button>
+              {internalProfile ? (
+                <span className="seller-profile-chip">
+                  {internalProfile.role === "admin" ? "Admin" : "Vendedor"}
+                </span>
+              ) : null}
+            </div>
           </div>
 
           <div className="admin-grid">
@@ -1892,8 +1894,8 @@ function SellerApp() {
             <button type="submit" className="wa-btn" disabled={!internalProfile || isSaving}>
               {isSaving ? "Guardando..." : "Guardar cliente"}
             </button>
-            <button type="button" className="map-btn" onClick={startNewClient}>
-              Limpiar
+            <button type="button" className="map-btn" onClick={backToClientList}>
+              Cancelar
             </button>
           </div>
 
@@ -1916,8 +1918,6 @@ function SellerApp() {
             </>
           ) : null}
         </form>
-        )}
-      </section>
       )}
     </main>
   );
