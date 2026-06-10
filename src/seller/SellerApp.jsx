@@ -439,6 +439,7 @@ function SellerApp() {
   const [searchRequestError, setSearchRequestError] = useState("");
   const [searchRequestMessage, setSearchRequestMessage] = useState("");
   const [isSavingSearchRequest, setIsSavingSearchRequest] = useState(false);
+  const [selectedSearchRequestId, setSelectedSearchRequestId] = useState("");
   const [savedPropertyPath, setSavedPropertyPath] = useState("");
   const selectedClientIdRef = useRef(selectedClientId);
 
@@ -482,6 +483,7 @@ function SellerApp() {
       setSelectedClientId(routedClientId);
       setSelectedPropertyId(sellerRoute.propertyId);
       setPropertyMode(sellerRoute.propertyMode);
+      setSelectedSearchRequestId(sellerRoute.searchRequestId || "");
       setEditorMode(routedClientId ? "view" : "edit");
       setMessage("");
       setError("");
@@ -786,6 +788,7 @@ function SellerApp() {
       navigateSellerPath(SELLER_SEARCH_REQUESTS_PATH);
       setActiveSection("searchRequests");
       setSelectedClientId("");
+      setSelectedSearchRequestId("");
       return;
     }
 
@@ -1448,6 +1451,7 @@ function SellerApp() {
                 onClick={() => {
                   navigateSellerPath(`${SELLER_SEARCH_REQUESTS_PATH}/${sr.id}`);
                   setActiveSection("searchRequests");
+                  setSelectedSearchRequestId(sr.id);
                 }}
               >
                 Ver
@@ -1474,6 +1478,7 @@ function SellerApp() {
             onClick={() => {
               navigateSellerPath(SELLER_SEARCH_REQUESTS_PATH);
               setActiveSection("searchRequests");
+              setSelectedSearchRequestId("");
             }}
           >
             Volver
@@ -1564,12 +1569,9 @@ function SellerApp() {
   );
 
   const renderSearchRequestsSection = () => {
-    const route = getSellerRouteFromPathname(window.location.pathname);
-    const searchRequestId = route.searchRequestId || "";
+    if (!selectedSearchRequestId) return renderSearchRequestsList();
 
-    if (!searchRequestId) return renderSearchRequestsList();
-
-    const sr = searchRequests.find((item) => item.id === searchRequestId);
+    const sr = searchRequests.find((item) => item.id === selectedSearchRequestId);
     if (!sr) {
       return (
         <section className="admin-panel">
@@ -1580,6 +1582,7 @@ function SellerApp() {
             onClick={() => {
               navigateSellerPath(SELLER_SEARCH_REQUESTS_PATH);
               setActiveSection("searchRequests");
+              setSelectedSearchRequestId("");
             }}
           >
             Volver a búsquedas
