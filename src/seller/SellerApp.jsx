@@ -1659,14 +1659,9 @@ function SellerApp() {
               </button>
             </>
           ) : (
-            <>
-              <button type="button" className="map-btn" onClick={loadClients} disabled={!internalProfile || isLoading}>
-                Actualizar
-              </button>
-              <button type="button" className="wa-btn" onClick={() => startNewProperty()}>
-                Nueva propiedad
-              </button>
-            </>
+            <button type="button" className="map-btn" onClick={loadClients} disabled={!internalProfile || isLoading}>
+              Actualizar
+            </button>
           )}
         </div>
       </header>
