@@ -417,7 +417,7 @@ function SellerApp() {
   const [selectedClientId, setSelectedClientId] = useState(getInitialSellerClientId);
   const [selectedPropertyId, setSelectedPropertyId] = useState(getInitialSellerPropertyId);
   const [propertyMode, setPropertyMode] = useState(getInitialSellerPropertyMode);
-  const [editorMode, setEditorMode] = useState(() => (getInitialSellerClientId() ? "view" : "edit"));
+  const [editorMode, setEditorMode] = useState(() => (getInitialSellerClientId() ? "view" : "idle"));
   const [form, setForm] = useState(emptyClientForm);
   const [propertyForm, setPropertyForm] = useState(emptyPropertyForm);
   const [propertyAssignmentForm, setPropertyAssignmentForm] = useState(emptyClientPropertyAssignmentForm);
@@ -485,7 +485,7 @@ function SellerApp() {
       setSelectedPropertyId(sellerRoute.propertyId);
       setPropertyMode(sellerRoute.propertyMode);
       setSelectedSearchRequestId(sellerRoute.searchRequestId || "");
-      setEditorMode(routedClientId ? "view" : "edit");
+      setEditorMode(routedClientId ? "view" : "idle");
       setMessage("");
       setError("");
       setPropertyMessage("");
@@ -1772,6 +1772,23 @@ function SellerApp() {
             onEdit={() => setEditorMode("edit")}
             onNewClient={startNewClient}
           />
+        ) : editorMode === "idle" ? (
+          <section className="seller-contact-editor" aria-label="Seleccionar o crear cliente">
+            <div className="admin-editor-title">
+              <div>
+                <p>Clientes</p>
+                <h2>Seleccioná un cliente</h2>
+              </div>
+            </div>
+            <p className="seller-empty-state" style={{ marginTop: "1.5rem" }}>
+              Elegí un cliente del listado o creá uno nuevo.
+            </p>
+            <div className="admin-editor-actions" style={{ marginTop: "1.5rem" }}>
+              <button type="button" className="wa-btn" onClick={startNewClient}>
+                Crear cliente
+              </button>
+            </div>
+          </section>
         ) : (
         <form className="seller-contact-editor" onSubmit={handleSave}>
           <div className="admin-editor-title">

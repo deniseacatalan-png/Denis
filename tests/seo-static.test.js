@@ -40,9 +40,24 @@ describe("Next SEO metadata", () => {
 
     assert.match(sitemapSource, /listPublishedProperties/);
     assert.match(sitemapSource, /propertyPublicPath/);
+    assert.match(sitemapSource, /lastModified/);
+    assert.match(sitemapSource, /property\.updatedAt/);
     assert.doesNotMatch(sitemapSource, /\/admin/);
     assert.doesNotMatch(sitemapSource, /\/vendedor/);
     assert.doesNotMatch(sitemapSource, /\/clientes/);
+  });
+
+  it("publishes an IndexNow key and submission script for participating search engines", () => {
+    const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
+    const indexNowSource = readFileSync("scripts/lib/indexnow.mjs", "utf8");
+    const keyMatch = indexNowSource.match(/INDEXNOW_KEY = "([a-f0-9]{64})"/);
+
+    assert.ok(keyMatch, "Expected a 64-character hexadecimal IndexNow key.");
+    assert.equal(existsSync(`public/${keyMatch[1]}.txt`), true);
+    assert.equal(readFileSync(`public/${keyMatch[1]}.txt`, "utf8").trim(), keyMatch[1]);
+    assert.equal(packageJson.scripts["seo:indexnow"], "node scripts/submit-indexnow.mjs");
+    assert.match(indexNowSource, /https:\/\/api\.indexnow\.org\/indexnow/);
+    assert.match(indexNowSource, /keyLocation/);
   });
 
   it("public property pages are first-class App Router routes", () => {
