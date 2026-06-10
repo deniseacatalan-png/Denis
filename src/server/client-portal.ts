@@ -6,10 +6,12 @@ import {
   clientPortalProfileToViewModel,
   clientPropertySubmissionToViewModel,
   clientSearchRequestToViewModel,
+  searchRequestWithProfileToViewModel,
   type ClientPortalFileViewModel,
   type ClientPortalProfileViewModel,
   type ClientPropertySubmissionViewModel,
-  type ClientSearchRequestViewModel
+  type ClientSearchRequestViewModel,
+  type SearchRequestWithProfileViewModel
 } from "./view-models";
 import {
   createSupabaseRequestClient,
@@ -267,6 +269,51 @@ export async function createClientSearchRequest(values: any, userId: string): Pr
   });
 
   return clientSearchRequestToViewModel(row);
+}
+
+export async function listAllSearchRequests(filters: {
+  status?: string;
+  operation?: string;
+} = {}): Promise<SearchRequestWithProfileViewModel[]> {
+  const where: Record<string, string> = {};
+  if (filters.status) where.status = filters.status;
+  if (filters.operation) where.operation = filters.operation;
+
+  const rows = await getPrisma().clientSearchRequest.findMany({
+    where,
+    orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }]
+  });
+
+  const userIds = [...new Set(rows.map((r: any) => r.userId))];
+  const profiles = userIds.length
+    ? await getPrisma().clientPortalProfile.findMany({ where: { userId: { in: userIds } } })
+    : [];
+  const profileMap = new Map(profiles.map((p: any) => [p.userId, p]));
+
+  return rows.map((row: any) => {
+    const profile = profileMap.get(row.userId) || {};
+    return searchRequestWithProfileToViewModel({ ...row, clientPortalProfile: profile });
+  });
+}
+
+export async function updateSearchRequest(
+  id: string,
+  data: { status?: string; adminMessage?: string }
+): Promise<SearchRequestWithProfileViewModel> {
+  const update: Record<string, string> = {};
+  if (data.status !== undefined) update.status = data.status;
+  if (data.adminMessage !== undefined) update.adminMessage = data.adminMessage;
+
+  const row = await getPrisma().clientSearchRequest.update({
+    where: { id },
+    data: update
+  });
+
+  const profile = await getPrisma().clientPortalProfile.findUnique({
+    where: { userId: row.userId }
+  });
+
+  return searchRequestWithProfileToViewModel({ ...row, clientPortalProfile: profile || {} });
 }
 
 async function createClientFileSignedUrl(accessToken: string, storagePath: string) {

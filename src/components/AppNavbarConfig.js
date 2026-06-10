@@ -31,6 +31,7 @@ export function adminNavbarItems({ activeSection = "dashboard" } = {}) {
     { id: "dashboard", label: "Resumen", path: "/admin", active: activeSection === "dashboard" },
     { id: "properties", label: "Propiedades", path: "/admin/propiedades", active: activeSection === "properties" },
     { id: "clients", label: "Clientes", path: "/admin/clientes", active: activeSection === "clients" },
+    { id: "searchRequests", label: "Búsquedas", path: "/admin/busquedas", active: activeSection === "searchRequests" },
     { id: "sellers", label: "Vendedores", path: "/admin/vendedores", active: activeSection === "sellers" },
     { id: "signout", label: "Cerrar sesión", action: "signout", variant: "cta" }
   ];
@@ -39,6 +40,7 @@ export function adminNavbarItems({ activeSection = "dashboard" } = {}) {
 export function sellerNavbarItems({ activeSection = "clients", isClientDetail = false } = {}) {
   return [
     { id: "clients", label: "Clientes", path: "/vendedor", active: activeSection === "clients" || Boolean(isClientDetail) },
+    { id: "searchRequests", label: "Búsquedas", path: "/vendedor/busquedas", active: activeSection === "searchRequests" },
     { id: "properties", label: "Propiedades", path: "/vendedor/propiedades", active: activeSection === "properties" },
     { id: "publicSite", label: "Ver web", href: "/" },
     { id: "signout", label: "Cerrar sesión", action: "signout", variant: "cta" }

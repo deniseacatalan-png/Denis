@@ -394,6 +394,21 @@ export function clientPropertySubmissionToViewModel(row: any): ClientPropertySub
   };
 }
 
+export type SearchRequestWithProfileViewModel = ClientSearchRequestViewModel & {
+  userName: string;
+  userEmail: string;
+};
+
+export function searchRequestWithProfileToViewModel(row: any): SearchRequestWithProfileViewModel {
+  const profile = row.clientPortalProfile || row.profile || {};
+
+  return {
+    ...clientSearchRequestToViewModel(row),
+    userName: profile.fullName || profile.full_name || "",
+    userEmail: profile.email || ""
+  };
+}
+
 export function clientSearchRequestToViewModel(row: any): ClientSearchRequestViewModel {
   return {
     id: row.id || "",

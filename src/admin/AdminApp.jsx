@@ -45,8 +45,14 @@ import {
   CLIENT_STATUSES,
   deleteClientPropertyAssignment,
   fetchClients,
+  fetchSearchRequests,
   saveClient,
-  saveClientPropertyAssignment
+  saveClientPropertyAssignment,
+  SEARCH_REQUEST_STATUSES,
+  SEARCH_REQUEST_STATUS_LABELS,
+  SEARCH_REQUEST_OPERATION_LABELS,
+  SEARCH_REQUEST_OPERATIONS,
+  updateSearchRequest
 } from "../utils/supabase/clients";
 import {
   createSellerFromAdmin,
@@ -257,6 +263,10 @@ function parseAdminRoute(pathname = window.location.pathname) {
     }
     if (action && action !== "editar") return { section: "not-found", mode: "not-found", id: "" };
     return { section: "clients", mode: action === "editar" ? "edit" : id ? "view" : "list", id };
+  }
+  if (section === "busquedas") {
+    if (action || extra) return { section: "not-found", mode: "not-found", id: "" };
+    return { section: "searchRequests", mode: id ? "view" : "list", id };
   }
   if (section === "vendedores") {
     if (extra) return { section: "not-found", mode: "not-found", id: "" };
@@ -831,6 +841,11 @@ function AdminApp() {
   const [clientError, setClientError] = useState("");
   const [sellerMessage, setSellerMessage] = useState("");
   const [sellerError, setSellerError] = useState("");
+  const [searchRequests, setSearchRequests] = useState([]);
+  const [searchRequestFilters, setSearchRequestFilters] = useState({ status: "", operation: "" });
+  const [searchRequestError, setSearchRequestError] = useState("");
+  const [searchRequestMessage, setSearchRequestMessage] = useState("");
+  const [isSavingSearchRequest, setIsSavingSearchRequest] = useState(false);
   const [hasLoadedProperties, setHasLoadedProperties] = useState(false);
   const [hasLoadedAllClients, setHasLoadedAllClients] = useState(false);
   const [hasLoadedSellers, setHasLoadedSellers] = useState(false);
@@ -1029,6 +1044,54 @@ function AdminApp() {
   useEffect(() => {
     loadClients();
   }, [session, clientFilters.operation, clientFilters.status, clientFilters.createdBy]);
+
+  const loadSearchRequests = async () => {
+    if (!session) {
+      setSearchRequests([]);
+      return;
+    }
+    setSearchRequestError("");
+    try {
+      const data = await fetchSearchRequests(searchRequestFilters);
+      setSearchRequests(data);
+    } catch (loadError) {
+      setSearchRequestError(loadError.message);
+    }
+  };
+
+  useEffect(() => {
+    loadSearchRequests();
+  }, [session, searchRequestFilters.status, searchRequestFilters.operation]);
+
+  const handleSearchRequestStatusUpdate = async (id, status) => {
+    setIsSavingSearchRequest(true);
+    setSearchRequestError("");
+    try {
+      const updated = await updateSearchRequest(id, { status });
+      setSearchRequests((current) => current.map((sr) => (sr.id === id ? updated : sr)));
+      setSearchRequestMessage("Estado actualizado.");
+      setTimeout(() => setSearchRequestMessage(""), 3000);
+    } catch (saveError) {
+      setSearchRequestError(saveError.message);
+    } finally {
+      setIsSavingSearchRequest(false);
+    }
+  };
+
+  const handleSearchRequestMessageUpdate = async (id, adminMessage) => {
+    setIsSavingSearchRequest(true);
+    setSearchRequestError("");
+    try {
+      const updated = await updateSearchRequest(id, { adminMessage });
+      setSearchRequests((current) => current.map((sr) => (sr.id === id ? updated : sr)));
+      setSearchRequestMessage("Mensaje guardado.");
+      setTimeout(() => setSearchRequestMessage(""), 3000);
+    } catch (saveError) {
+      setSearchRequestError(saveError.message);
+    } finally {
+      setIsSavingSearchRequest(false);
+    }
+  };
 
   const updateField = (field, value) => {
     setForm((current) => ({
@@ -2696,6 +2759,195 @@ function AdminApp() {
     return renderClientNotFound();
   };
 
+  const renderSearchRequestsList = () => (
+    <section className="admin-sellers-panel" aria-labelledby="admin-search-requests-title">
+      <div className="admin-sellers-header">
+        <div>
+          <p>Portal de clientes</p>
+          <h2 id="admin-search-requests-title">Búsquedas</h2>
+        </div>
+      </div>
+
+      {searchRequestMessage ? <p className="admin-success">{searchRequestMessage}</p> : null}
+      {searchRequestError ? <p className="admin-error">{searchRequestError}</p> : null}
+
+      <div className="admin-grid">
+        <label>
+          Operación
+          <select
+            value={searchRequestFilters.operation}
+            onChange={(event) =>
+              setSearchRequestFilters((current) => ({ ...current, operation: event.target.value }))
+            }
+          >
+            <option value="">Todas</option>
+            {SEARCH_REQUEST_OPERATIONS.map((op) => (
+              <option value={op} key={op}>
+                {SEARCH_REQUEST_OPERATION_LABELS[op]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Estado
+          <select
+            value={searchRequestFilters.status}
+            onChange={(event) =>
+              setSearchRequestFilters((current) => ({ ...current, status: event.target.value }))
+            }
+          >
+            <option value="">Todos</option>
+            {SEARCH_REQUEST_STATUSES.map((s) => (
+              <option value={s} key={s}>
+                {SEARCH_REQUEST_STATUS_LABELS[s]}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="admin-table-list">
+        {searchRequests.map((sr) => (
+          <div className="admin-table-row" key={sr.id}>
+            <div>
+              <strong>{sr.userName || sr.userEmail || "Usuario sin perfil"}</strong>
+              <span>{SEARCH_REQUEST_OPERATION_LABELS[sr.operation] || sr.operation}</span>
+              <small>
+                {sr.zone || "Sin zona"} · {sr.budget || "Sin presupuesto"} · {sr.rooms || "Sin ambientes"}
+              </small>
+              <small>{formatAdminDate(sr.updatedAt || sr.createdAt)}</small>
+            </div>
+            <span className={`seller-status-pill seller-status-pill--${sr.status}`}>
+              {SEARCH_REQUEST_STATUS_LABELS[sr.status] || sr.status}
+            </span>
+            <div className="admin-header-actions">
+              <button type="button" className="map-btn" onClick={() => navigateAdmin(`/admin/busquedas/${sr.id}`)}>
+                Ver
+              </button>
+            </div>
+          </div>
+        ))}
+        {!searchRequests.length ? <p className="seller-empty-state">No hay busquedas para estos filtros.</p> : null}
+      </div>
+    </section>
+  );
+
+  const renderSearchRequestView = (sr) => (
+    <section className="admin-editor" aria-labelledby="admin-search-request-view-title">
+      <div className="admin-editor-title">
+        <div>
+          <p>Búsqueda de cliente</p>
+          <h2 id="admin-search-request-view-title">{sr.userName || sr.userEmail || "Usuario sin perfil"}</h2>
+        </div>
+        <div className="admin-header-actions">
+          <button type="button" className="map-btn" onClick={() => navigateAdmin("/admin/busquedas")}>
+            Volver
+          </button>
+        </div>
+      </div>
+
+      {searchRequestMessage ? <p className="admin-success">{searchRequestMessage}</p> : null}
+      {searchRequestError ? <p className="admin-error">{searchRequestError}</p> : null}
+
+      <div className="admin-grid">
+        <label>
+          Cliente
+          <input readOnly value={sr.userName || "Sin nombre"} />
+        </label>
+        <label>
+          Email
+          <input readOnly value={sr.userEmail || "Sin email"} />
+        </label>
+        <label>
+          Operación
+          <input readOnly value={SEARCH_REQUEST_OPERATION_LABELS[sr.operation] || sr.operation} />
+        </label>
+        <label>
+          Zona
+          <input readOnly value={sr.zone || "Sin zona"} />
+        </label>
+        <label>
+          Presupuesto
+          <input readOnly value={sr.budget || "Sin presupuesto"} />
+        </label>
+        <label>
+          Ambientes
+          <input readOnly value={sr.rooms || "Sin ambientes"} />
+        </label>
+        <label className="admin-field-wide">
+          Detalle de búsqueda
+          <textarea readOnly rows="4" value={sr.searchDetail || "Sin detalle"} />
+        </label>
+        <label className="admin-field-wide">
+          Preferencias
+          <textarea readOnly rows="3" value={sr.preferences || "Sin preferencias"} />
+        </label>
+        <label className="admin-field-wide">
+          No negociables
+          <textarea readOnly rows="2" value={sr.mustHaves || "Sin requisitos"} />
+        </label>
+        <label>
+          Fecha de creación
+          <input readOnly value={formatAdminDate(sr.createdAt)} />
+        </label>
+        <label>
+          Última actualización
+          <input readOnly value={formatAdminDate(sr.updatedAt)} />
+        </label>
+      </div>
+
+      <div className="admin-grid" style={{ marginTop: "1.5rem" }}>
+        <label>
+          Estado
+          <select
+            value={sr.status}
+            disabled={isSavingSearchRequest}
+            onChange={(event) => handleSearchRequestStatusUpdate(sr.id, event.target.value)}
+          >
+            {SEARCH_REQUEST_STATUSES.map((s) => (
+              <option value={s} key={s}>
+                {SEARCH_REQUEST_STATUS_LABELS[s]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="admin-field-wide">
+          Mensaje para el cliente
+          <textarea
+            rows="3"
+            defaultValue={sr.adminMessage || ""}
+            disabled={isSavingSearchRequest}
+            onBlur={(event) => {
+              if (event.target.value !== (sr.adminMessage || "")) {
+                handleSearchRequestMessageUpdate(sr.id, event.target.value);
+              }
+            }}
+          />
+        </label>
+      </div>
+    </section>
+  );
+
+  const renderSearchRequestsSection = () => {
+    if (route.mode === "list") return renderSearchRequestsList();
+
+    if (!route.id) return renderSearchRequestsList();
+
+    const sr = searchRequests.find((item) => item.id === route.id);
+    if (!sr) {
+      return (
+        <section className="admin-panel">
+          <p>No se encontró la búsqueda.</p>
+          <button type="button" className="wa-btn" onClick={() => navigateAdmin("/admin/busquedas")}>
+            Volver a búsquedas
+          </button>
+        </section>
+      );
+    }
+
+    return renderSearchRequestView(sr);
+  };
+
   const renderAdminContent = () => {
     if (route.section === "not-found") return <AdminNotFound navigateAdmin={navigateAdmin} />;
 
@@ -2718,6 +2970,8 @@ function AdminApp() {
     if (route.section === "properties") return renderPropertiesSection();
 
     if (route.section === "clients") return renderClientsSection();
+
+    if (route.section === "searchRequests") return renderSearchRequestsSection();
 
     if (route.section === "sellers") return renderSellersSection();
 
