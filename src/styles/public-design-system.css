@@ -250,7 +250,8 @@
   border-color: rgba(77, 54, 97, 0.14);
 }
 
-.page-shell .property-slide-card .status-pill {
+.page-shell .property-slide-card .status-pill,
+.page-shell .property-detail-hero-text .status-pill {
   color: var(--blanco-calido);
   border-color: rgba(255, 250, 244, 0.72);
   background: linear-gradient(135deg, rgba(35, 35, 31, 0.92), rgba(77, 54, 97, 0.82));
@@ -266,7 +267,8 @@
   background: rgba(176, 82, 140, 0.18);
 }
 
-.page-shell .property-slide-card .status-pill--venta {
+.page-shell .property-slide-card .status-pill--venta,
+.page-shell .property-detail-hero-text .status-pill--venta {
   color: var(--blanco-calido);
   background: linear-gradient(135deg, rgba(35, 35, 31, 0.94), rgba(141, 53, 104, 0.9));
 }
@@ -276,7 +278,8 @@
   background: rgba(142, 106, 150, 0.22);
 }
 
-.page-shell .property-slide-card .status-pill--alquiler_turistico {
+.page-shell .property-slide-card .status-pill--alquiler_turistico,
+.page-shell .property-detail-hero-text .status-pill--alquiler_turistico {
   color: var(--blanco-calido);
   background: linear-gradient(135deg, rgba(35, 35, 31, 0.94), rgba(94, 93, 65, 0.92));
 }
@@ -286,7 +289,8 @@
   background: rgba(110, 79, 130, 0.2);
 }
 
-.page-shell .property-slide-card .status-pill--alquiler_permanente {
+.page-shell .property-slide-card .status-pill--alquiler_permanente,
+.page-shell .property-detail-hero-text .status-pill--alquiler_permanente {
   color: var(--blanco-calido);
   background: linear-gradient(135deg, rgba(35, 35, 31, 0.94), rgba(77, 54, 97, 0.92));
 }

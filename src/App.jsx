@@ -21,6 +21,8 @@ import Slider from "./components/Slider";
 import {
   CATEGORY_META,
   findPropertyByPublicPath,
+  formatPrice,
+  formatPricePerM2,
   getPublicSelectedPropertyId,
   getVisiblePublicProperties,
   propertyShareData,
@@ -162,6 +164,135 @@ function filterMapPropertiesBySearch(properties, query) {
 
 function resolvePropertyCoverImage(property) {
   return property.images?.[0] || "";
+}
+
+function HeroSlider({ images = [], alt = "" }) {
+  const trackRef = useRef(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const total = images.length;
+
+  useEffect(() => {
+    setActiveIndex(0);
+    if (trackRef.current) trackRef.current.scrollLeft = 0;
+  }, [images]);
+
+  const handleScroll = () => {
+    const track = trackRef.current;
+    if (!track) return;
+    const next = Math.round(track.scrollLeft / Math.max(track.clientWidth, 1));
+    setActiveIndex(Math.min(Math.max(next, 0), total - 1));
+  };
+
+  const goTo = (index) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const clamped = Math.min(Math.max(index, 0), total - 1);
+    track.scrollTo({ left: track.clientWidth * clamped, behavior: "smooth" });
+  };
+
+  if (!total) return null;
+
+  return (
+    <div className="hero-slider">
+      <div className="hero-slider-track" ref={trackRef} onScroll={handleScroll}>
+        {images.map((src, index) => (
+          <img
+            key={src}
+            src={src}
+            alt={`${alt} — foto ${index + 1}`}
+            draggable={false}
+          />
+        ))}
+      </div>
+      {total > 1 ? (
+        <>
+          <button
+            type="button"
+            className="hero-slider-nav hero-slider-nav--prev"
+            onClick={() => goTo(activeIndex - 1)}
+            disabled={activeIndex === 0}
+            aria-label="Foto anterior"
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            className="hero-slider-nav hero-slider-nav--next"
+            onClick={() => goTo(activeIndex + 1)}
+            disabled={activeIndex >= total - 1}
+            aria-label="Foto siguiente"
+          >
+            ›
+          </button>
+          <div className="hero-slider-dots">
+            {images.map((src, index) => (
+              <button
+                key={src}
+                type="button"
+                className={`hero-slider-dot ${index === activeIndex ? "active" : ""}`}
+                onClick={() => goTo(index)}
+                aria-label={`Foto ${index + 1}`}
+              />
+            ))}
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function ImageLightbox({ images = [], initialIndex = 0, alt = "", onClose }) {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const total = images.length;
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") onClose();
+      if (event.key === "ArrowRight" && currentIndex < total - 1) setCurrentIndex(currentIndex + 1);
+      if (event.key === "ArrowLeft" && currentIndex > 0) setCurrentIndex(currentIndex - 1);
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [currentIndex, total, onClose]);
+
+  return (
+    <div className="lightbox-overlay" onClick={onClose}>
+      <div className="lightbox-content" onClick={(event) => event.stopPropagation()}>
+        <img src={images[currentIndex]} alt={`${alt} — foto ${currentIndex + 1}`} />
+        <div className="lightbox-counter">{currentIndex + 1} / {total}</div>
+        {total > 1 ? (
+          <>
+            <button
+              type="button"
+              className="lightbox-nav lightbox-nav--prev"
+              onClick={() => setCurrentIndex(currentIndex - 1)}
+              disabled={currentIndex === 0}
+              aria-label="Foto anterior"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              className="lightbox-nav lightbox-nav--next"
+              onClick={() => setCurrentIndex(currentIndex + 1)}
+              disabled={currentIndex >= total - 1}
+              aria-label="Foto siguiente"
+            >
+              ›
+            </button>
+          </>
+        ) : null}
+        <button type="button" className="lightbox-close" onClick={onClose} aria-label="Cerrar">
+          ✕
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function MapFocus({ coords }) {
@@ -388,6 +519,7 @@ function PublicApp({ initialProperties = [] }) {
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [currentPathname, setCurrentPathname] = useState(() => window.location.pathname);
   const [shareFeedback, setShareFeedback] = useState("");
+  const [lightboxIndex, setLightboxIndex] = useState(-1);
   const shareFeedbackTimerRef = useRef(0);
 
   useEffect(() => {
@@ -851,6 +983,20 @@ function PublicApp({ initialProperties = [] }) {
                 />
               </div>
             ) : null}
+            <div className="map-legend">
+              <div className="map-legend-item">
+                <span className="map-legend-dot" style={{ background: CATEGORY_META.venta.mapColor }} />
+                <span>Venta</span>
+              </div>
+              <div className="map-legend-item">
+                <span className="map-legend-dot" style={{ background: CATEGORY_META.alquiler_turistico.mapColor }} />
+                <span>Alq. turístico</span>
+              </div>
+              <div className="map-legend-item">
+                <span className="map-legend-dot" style={{ background: CATEGORY_META.alquiler_permanente.mapColor }} />
+                <span>Alq. permanente</span>
+              </div>
+            </div>
           </section>
         </main>
         {serviceModal}
@@ -874,14 +1020,13 @@ function PublicApp({ initialProperties = [] }) {
           ) : loadError ? (
             <p className="loading-state">{loadError}</p>
           ) : routedProperty ? (
+            <>
             <article className="property-page-detail">
               <div className="property-detail-hero property-page-hero">
-                {routedProperty.images?.length ? (
-                  <img
-                    src={resolvePropertyCoverImage(routedProperty)}
-                    alt={`Foto principal de ${routedProperty.title}`}
-                  />
-                ) : null}
+                <HeroSlider
+                  images={routedProperty.images || []}
+                  alt={routedProperty.title}
+                />
                 <div className="property-detail-hero-text">
                   <p className={`status-pill status-pill--${routedProperty.category}`}>
                     {CATEGORY_META[routedProperty.category]?.label || "En venta"}
@@ -916,10 +1061,15 @@ function PublicApp({ initialProperties = [] }) {
 
                 {routedProperty.images?.length ? (
                   <div className="property-gallery property-detail-gallery">
-                    {routedProperty.images.map((imageUrl) => (
-                      <a href={imageUrl} target="_blank" rel="noreferrer" key={imageUrl}>
+                    {routedProperty.images.map((imageUrl, index) => (
+                      <button
+                        type="button"
+                        className="gallery-photo-button"
+                        key={imageUrl}
+                        onClick={() => setLightboxIndex(index)}
+                      >
                         <img src={imageUrl} alt={`Foto de ${routedProperty.title}`} loading="lazy" />
-                      </a>
+                      </button>
                     ))}
                   </div>
                 ) : (
@@ -958,6 +1108,15 @@ function PublicApp({ initialProperties = [] }) {
                 </div>
               </div>
             </article>
+            {lightboxIndex >= 0 && routedProperty?.images?.length ? (
+              <ImageLightbox
+                images={routedProperty.images}
+                initialIndex={lightboxIndex}
+                alt={routedProperty.title}
+                onClose={() => setLightboxIndex(-1)}
+              />
+            ) : null}
+            </>
           ) : (
             <section className="property-page-empty">
               <p className="chip">Propiedad no encontrada</p>
@@ -1062,6 +1221,20 @@ function PublicApp({ initialProperties = [] }) {
                     />
                   </div>
                 ) : null}
+                <div className="map-legend">
+                  <div className="map-legend-item">
+                    <span className="map-legend-dot" style={{ background: CATEGORY_META.venta.mapColor }} />
+                    <span>Venta</span>
+                  </div>
+                  <div className="map-legend-item">
+                    <span className="map-legend-dot" style={{ background: CATEGORY_META.alquiler_turistico.mapColor }} />
+                    <span>Alq. turístico</span>
+                  </div>
+                  <div className="map-legend-item">
+                    <span className="map-legend-dot" style={{ background: CATEGORY_META.alquiler_permanente.mapColor }} />
+                    <span>Alq. permanente</span>
+                  </div>
+                </div>
               </div>
             </div>
           </section>

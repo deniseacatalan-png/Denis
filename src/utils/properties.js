@@ -1,18 +1,18 @@
 export const CATEGORY_META = {
   venta: {
     label: "En venta",
-    color: "#b0528c",
-    mapColor: "#b0528c"
+    color: "#8b5cf6",
+    mapColor: "#8b5cf6"
   },
   alquiler_turistico: {
     label: "Alquiler turistico",
-    color: "#8e6a96",
-    mapColor: "#8e6a96"
+    color: "#ef4444",
+    mapColor: "#ef4444"
   },
   alquiler_permanente: {
     label: "Alquiler permanente",
-    color: "#6e4f82",
-    mapColor: "#6e4f82"
+    color: "#eab308",
+    mapColor: "#eab308"
   },
   vendido: {
     label: "Vendido",
@@ -237,6 +237,38 @@ export function getAdminPropertyTypeTabs(properties) {
   }));
 }
 
+const CURRENCY_SYMBOLS = { USD: "U$S", ARS: "$", EUR: "€", UYU: "$U" };
+
+export const CURRENCY_OPTIONS = [
+  { value: "USD", label: "U$S (Dólar)" },
+  { value: "ARS", label: "$ (Peso argentino)" },
+  { value: "EUR", label: "€ (Euro)" },
+  { value: "UYU", label: "$U (Peso uruguayo)" }
+];
+
+export function formatPrice(priceAmount, currency) {
+  if (priceAmount == null) return null;
+  const symbol = CURRENCY_SYMBOLS[currency] || currency || "U$S";
+  return `${symbol} ${Number(priceAmount).toLocaleString("es-AR")}`;
+}
+
+function parseAreaM2(area) {
+  if (!area) return null;
+  const match = String(area).match(/([\d.,]+)\s*m/i);
+  if (!match) return null;
+  const value = Number(match[1].replace(/\./g, "").replace(",", "."));
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+export function formatPricePerM2(property) {
+  if (property.priceAmount == null) return null;
+  const m2 = parseAreaM2(property.area);
+  if (!m2) return null;
+  const perM2 = Math.round(property.priceAmount / m2);
+  const symbol = CURRENCY_SYMBOLS[property.currency] || property.currency || "U$S";
+  return `${symbol} ${perM2.toLocaleString("es-AR")}/m²`;
+}
+
 const publicPropertyCategories = new Set(Object.keys(CATEGORY_META));
 
 function displayOrderValue(property) {
@@ -290,6 +322,8 @@ export function normalizeDatabaseProperty(row) {
     descriptionHtml: row.description_html || "",
     summary: row.summary || "",
     rawDescription: row.raw_description || "",
+    priceAmount: row.price_amount != null ? Number(row.price_amount) : null,
+    currency: row.currency || "USD",
     isPublished: row.is_published,
     displayOrder: row.display_order || 0,
     images
@@ -311,6 +345,8 @@ export function propertyToDatabasePayload(values) {
     latitude: Number.isFinite(lat) ? lat : null,
     longitude: Number.isFinite(lng) ? lng : null,
     marker_color: normalizeMarkerColor(values.markerColor, values.category),
+    price_amount: values.priceAmount != null && values.priceAmount !== "" ? Number(values.priceAmount) : null,
+    currency: values.currency || "USD",
     summary: values.summary.trim(),
     description_html: values.descriptionHtml.trim(),
     raw_description: values.rawDescription.trim(),

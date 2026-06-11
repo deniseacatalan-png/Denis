@@ -11,6 +11,7 @@ import ClientPropertyAssignmentsPanel, {
 } from "../components/ClientPropertyAssignmentsPanel";
 import {
   CATEGORY_META,
+  CURRENCY_OPTIONS,
   filterAdminPropertiesByType,
   filterPropertiesBySearch,
   getAdminPropertyTypeTabs,
@@ -77,6 +78,8 @@ const emptyPropertyForm = {
   slug: "",
   location: "San Martin de los Andes, Neuquen",
   price: "Consultar",
+  priceAmount: "",
+  currency: "USD",
   area: "Superficie a confirmar",
   category: "venta",
   latitude: defaultPropertyCoords.latitude,
@@ -234,6 +237,8 @@ function propertyToForm(property) {
     slug: property.slug || slugify(property.title),
     location: property.location || "",
     price: property.price || "Consultar",
+    priceAmount: property.priceAmount != null ? String(property.priceAmount) : "",
+    currency: property.currency || "USD",
     area: property.area || "Superficie a confirmar",
     category: property.category || "venta",
     latitude: String(property.latitude ?? property.coords?.[0] ?? defaultPropertyCoords.latitude),
@@ -1179,6 +1184,8 @@ function SellerApp() {
 
       <div className="admin-detail-grid seller-client-detail-grid">
         <ClientDetailField label="Valor" value={property.price || "Consultar"} />
+        <ClientDetailField label="Precio" value={property.priceAmount != null ? property.priceAmount : "Sin cargar"} />
+        <ClientDetailField label="Moneda" value={property.currency || "USD"} />
         <ClientDetailField label="Superficie" value={property.area || "Superficie a confirmar"} />
         <ClientDetailField label="Ubicacion" value={property.location} />
         <ClientDetailField label="Estado" value={property.isPublished ? "Publicada" : "Oculta"} />
@@ -1276,8 +1283,20 @@ function SellerApp() {
           </select>
         </label>
         <label>
-          Valor
+          Valor (texto)
           <input value={propertyForm.price} onChange={(event) => updatePropertyField("price", event.target.value)} />
+        </label>
+        <label>
+          Precio
+          <input type="number" min="0" step="1" value={propertyForm.priceAmount} onChange={(event) => updatePropertyField("priceAmount", event.target.value)} placeholder="Ej: 120000" />
+        </label>
+        <label>
+          Moneda
+          <select value={propertyForm.currency} onChange={(event) => updatePropertyField("currency", event.target.value)}>
+            {CURRENCY_OPTIONS.map((opt) => (
+              <option value={opt.value} key={opt.value}>{opt.label}</option>
+            ))}
+          </select>
         </label>
         <label>
           Superficie

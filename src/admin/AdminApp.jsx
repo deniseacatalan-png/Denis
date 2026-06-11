@@ -13,6 +13,7 @@ import ClientPropertyAssignmentsPanel, {
 } from "../components/ClientPropertyAssignmentsPanel";
 import {
   CATEGORY_META,
+  CURRENCY_OPTIONS,
   filterAdminPropertiesByType,
   filterPropertiesBySearch,
   getAdminPropertyTypeTabs,
@@ -74,6 +75,8 @@ const emptyPropertyForm = {
   slug: "",
   location: "San Martin de los Andes, Neuquen",
   price: "Consultar",
+  priceAmount: "",
+  currency: "USD",
   area: "Superficie a confirmar",
   category: "venta",
   latitude: "-40.1573",
@@ -645,6 +648,8 @@ function propertyToForm(property) {
     slug: property.slug || slugify(property.title),
     location: property.location || "",
     price: property.price || "Consultar",
+    priceAmount: property.priceAmount != null ? String(property.priceAmount) : "",
+    currency: property.currency || "USD",
     area: property.area || "Superficie a confirmar",
     category: property.category || "venta",
     latitude: String(property.latitude ?? property.coords?.[0] ?? ""),
@@ -1865,6 +1870,14 @@ function AdminApp() {
           <input readOnly value={property.price || "Consultar"} />
         </label>
         <label>
+          Precio
+          <input readOnly value={property.priceAmount != null ? property.priceAmount : "Sin cargar"} />
+        </label>
+        <label>
+          Moneda
+          <input readOnly value={property.currency || "USD"} />
+        </label>
+        <label>
           Superficie
           <input readOnly value={property.area || "Superficie a confirmar"} />
         </label>
@@ -1976,8 +1989,20 @@ function AdminApp() {
           </select>
         </label>
         <label>
-          Valor
+          Valor (texto)
           <input value={form.price} onChange={(event) => updateField("price", event.target.value)} />
+        </label>
+        <label>
+          Precio
+          <input type="number" min="0" step="1" value={form.priceAmount} onChange={(event) => updateField("priceAmount", event.target.value)} placeholder="Ej: 120000" />
+        </label>
+        <label>
+          Moneda
+          <select value={form.currency} onChange={(event) => updateField("currency", event.target.value)}>
+            {CURRENCY_OPTIONS.map((opt) => (
+              <option value={opt.value} key={opt.value}>{opt.label}</option>
+            ))}
+          </select>
         </label>
         <label>
           Superficie
