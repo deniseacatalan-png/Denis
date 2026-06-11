@@ -1054,15 +1054,9 @@ function PublicApp({ initialProperties = [] }) {
                     <span>Superficie</span>
                     <strong>{routedProperty.area}</strong>
                   </div>
-                  {routedProperty.category === "venta" && formatPricePerM2(routedProperty) ? (
-                    <div>
-                      <span>Precio/m²</span>
-                      <strong>{formatPricePerM2(routedProperty)}</strong>
-                    </div>
-                  ) : null}
                   <div>
-                    <span>Geo</span>
-                    <strong>{formatCoords(routedProperty.coords)}</strong>
+                    <span>{routedProperty.category === "venta" && formatPricePerM2(routedProperty) ? "Precio/m²" : "Geo"}</span>
+                    <strong>{routedProperty.category === "venta" && formatPricePerM2(routedProperty) ? formatPricePerM2(routedProperty) : formatCoords(routedProperty.coords)}</strong>
                   </div>
                 </div>
 
