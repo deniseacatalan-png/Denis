@@ -36,6 +36,8 @@ function propertyDataFromValues(values: any) {
     slug: textValue(values.slug) || slugify(title),
     location: textValue(values.location),
     price: textValue(values.price) || "Consultar",
+    priceAmount: values.priceAmount != null && values.priceAmount !== "" ? Number(values.priceAmount) : null,
+    currency: textValue(values.currency) || "USD",
     area: textValue(values.area) || "Superficie a confirmar",
     category: textValue(values.category) || "venta",
     latitude: lat,

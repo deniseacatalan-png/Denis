@@ -44,6 +44,8 @@ export type PropertyViewModel = {
   slug: string;
   location: string;
   price: string;
+  priceAmount: number | null;
+  currency: string;
   area: string;
   category: string;
   markerColor: string;
@@ -231,6 +233,8 @@ export function propertyToViewModel(row: any): PropertyViewModel {
     slug: row.slug || "",
     location: row.location || "",
     price: row.price || "Consultar",
+    priceAmount: row.priceAmount != null ? Number(row.priceAmount) : (row.price_amount != null ? Number(row.price_amount) : null),
+    currency: row.currency || "USD",
     area: row.area || "Superficie a confirmar",
     category,
     markerColor: normalizeMarkerColor(row.markerColor ?? row.marker_color, category),

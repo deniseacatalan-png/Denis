@@ -24,6 +24,8 @@ model Property {
   slug            String             @unique
   location        String             @default("")
   price           String             @default("Consultar")
+  priceAmount     Int?               @map("price_amount")
+  currency        String             @default("USD")
   area            String             @default("Superficie a confirmar")
   category        String             @default("venta")
   latitude        Float?
