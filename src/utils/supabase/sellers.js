@@ -33,6 +33,30 @@ export async function signInSeller(username, password) {
   });
 }
 
+export const SELLER_REDIRECT_PATH = "/vendedor";
+
+export async function signInSellerWithRedirect(username, password) {
+  const supabase = createClient();
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: usernameToSellerEmail(username),
+    password
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  // If login is successful, check if user has seller role and redirect if needed
+  if (data.user && data.user.user_metadata && data.user.user_metadata.role === "seller") {
+    // Redirect to seller portal
+    if (typeof window !== "undefined") {
+      window.location.href = SELLER_REDIRECT_PATH;
+    }
+  }
+
+  return data;
+}
+
 export function getCurrentSession() {
   return createClient().auth.getSession();
 }
