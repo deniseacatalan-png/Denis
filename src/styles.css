@@ -586,6 +586,12 @@ body {
   font-size: 1rem;
 }
 
+.property-slide-price-m2 {
+  font-weight: 500;
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
 .property-slide-title {
   font-family: "Cormorant Garamond", serif;
   font-size: 3.45rem;

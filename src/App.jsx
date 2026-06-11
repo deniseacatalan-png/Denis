@@ -491,6 +491,12 @@ function MapPropertyPreview({ property, isPinned, displayedPrice, onPreviewClick
           <dt>Superficie</dt>
           <dd>{property.area}</dd>
         </div>
+        {property.category === "venta" && formatPricePerM2(property) ? (
+          <div>
+            <dt>Precio/m²</dt>
+            <dd>{formatPricePerM2(property)}</dd>
+          </div>
+        ) : null}
       </dl>
       <small>{isPinned ? "Click para ver la propiedad" : "Click para fijar la propiedad"}</small>
     </article>
@@ -622,8 +628,10 @@ function PublicApp({ initialProperties = [] }) {
     }
   }, [routedProperty, selectedId]);
 
-  const formatDisplayedPrice = (property) =>
-    property?.category === "proceso" ? "Sin valor" : property?.price || "Consultar";
+  const formatDisplayedPrice = (property) => {
+    if (property?.category === "proceso") return "Sin valor";
+    return formatPrice(property?.priceAmount, property?.currency) || property?.price || "Consultar";
+  };
 
   const getPropertyIntro = (property) =>
     property.summary || property.location || "Conoce todos los detalles de esta propiedad.";
@@ -1046,6 +1054,12 @@ function PublicApp({ initialProperties = [] }) {
                     <span>Superficie</span>
                     <strong>{routedProperty.area}</strong>
                   </div>
+                  {routedProperty.category === "venta" && formatPricePerM2(routedProperty) ? (
+                    <div>
+                      <span>Precio/m²</span>
+                      <strong>{formatPricePerM2(routedProperty)}</strong>
+                    </div>
+                  ) : null}
                   <div>
                     <span>Geo</span>
                     <strong>{formatCoords(routedProperty.coords)}</strong>
@@ -1297,7 +1311,12 @@ function PublicApp({ initialProperties = [] }) {
                             {CATEGORY_META[property.category]?.label || "En venta"}
                           </span>
                           <span className="property-slide-text">
-                            <span className="property-slide-kicker">{formatDisplayedPrice(property)}</span>
+                            <span className="property-slide-kicker">
+                              {formatDisplayedPrice(property)}
+                              {property.category === "venta" && formatPricePerM2(property) ? (
+                                <small className="property-slide-price-m2"> · {formatPricePerM2(property)}</small>
+                              ) : null}
+                            </span>
                             <span className="property-slide-title">{property.title}</span>
                             <span className="property-slide-intro">{getPropertyIntro(property)}</span>
                           </span>
