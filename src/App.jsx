@@ -145,7 +145,7 @@ function getVideoEmbedData(url) {
     if (hostname.endsWith("instagram.com")) {
       return {
         source: "Instagram Reels",
-        embedUrl: `${parsedUrl.origin}${parsedUrl.pathname.replace(/\/?$/, "/")}embed/`
+        embedUrl: parsedUrl.href
       };
     }
   } catch {
@@ -671,6 +671,32 @@ function PublicApp({ initialProperties = [] }) {
     }
   }, [routedProperty, selectedId]);
 
+  useEffect(() => {
+    const hasInstagramVideo = routedProperty?.videos?.some((videoUrl) => {
+      try {
+        return new URL(videoUrl).hostname.replace(/^www\./i, "").toLowerCase().endsWith("instagram.com");
+      } catch {
+        return false;
+      }
+    });
+
+    if (!hasInstagramVideo) return;
+
+    if (!document.querySelector('script[src="https://www.instagram.com/embed.js"]')) {
+      const script = document.createElement("script");
+      script.src = "https://www.instagram.com/embed.js";
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+    }
+
+    const timer = window.setTimeout(() => {
+      window.instgrm?.Embeds?.process?.();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [routedProperty?.videos, currentPathname]);
+
   const formatDisplayedPrice = (property) => {
     if (property?.category === "proceso") return "Sin valor";
     return formatPrice(property?.priceAmount, property?.currency) || property?.price || "Consultar";
@@ -1149,6 +1175,25 @@ function PublicApp({ initialProperties = [] }) {
                               <strong>{getVideoSourceLabel(videoUrl)}</strong>
                               <span>Ver video {index + 1}</span>
                             </a>
+                          );
+                        }
+
+                        if (embedData.source === "Instagram Reels") {
+                          return (
+                            <article
+                              key={`${videoUrl}-${index}`}
+                              className="property-detail-video-card property-detail-video-card--instagram"
+                            >
+                              <blockquote
+                                className="instagram-media"
+                                data-instgrm-permalink={embedData.embedUrl}
+                                data-instgrm-version="14"
+                              >
+                                <a href={videoUrl} target="_blank" rel="noreferrer">
+                                  Ver en Instagram
+                                </a>
+                              </blockquote>
+                            </article>
                           );
                         }
 
