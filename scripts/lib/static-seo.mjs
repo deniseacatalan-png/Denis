@@ -99,11 +99,15 @@ export function parsePriceText(value) {
   const numberMatch = text.match(/\d[\d.,]*/);
   if (!numberMatch) return null;
 
-  const currency = /(?:USD|U\$D|US\$|D[ÓO]LAR)/i.test(text)
+  const currency = /(?:USD|U\$D|U\$S|US\$|D[ÓO]LAR(?:ES)?)/i.test(text)
     ? "USD"
-    : /(?:ARS|AR\$|\$)/i.test(text)
-      ? "ARS"
-      : "";
+    : /(?:EUR|€|EUROS?)/i.test(text)
+      ? "EUR"
+      : /(?:UYU|U\$U|\$U)/i.test(text)
+        ? "UYU"
+        : /(?:ARS|AR\$|\$)/i.test(text)
+          ? "ARS"
+          : "";
   if (!currency) return null;
 
   let normalized = numberMatch[0];
@@ -124,7 +128,7 @@ export function parsePriceText(value) {
     normalized = decimalPart.length === 3 ? normalized.replace(/\./g, "") : normalized;
   }
 
-  const priceValue = Number(normalized);
+  const priceValue = Math.round(Number(normalized));
   if (!Number.isFinite(priceValue)) return null;
 
   return {

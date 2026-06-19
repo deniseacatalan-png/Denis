@@ -20,6 +20,7 @@
     "admin:create": "node scripts/create-admin.mjs",
     "test:accounts": "node scripts/create-test-accounts.mjs",
     "images:migrate:blob": "node scripts/migrate-images-to-vercel-blob.mjs",
+    "db:backfill:property-prices": "node scripts/backfill-property-prices.mjs",
     "e2e:blob-upload": "node scripts/e2e-blob-upload.mjs",
     "seo:indexnow": "node scripts/submit-indexnow.mjs"
   },

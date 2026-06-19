@@ -129,9 +129,25 @@ describe("static property SEO generation", () => {
       currency: "USD",
       value: 420000
     });
+    assert.deepEqual(parsePriceText("U$S 145.000"), {
+      currency: "USD",
+      value: 145000
+    });
     assert.deepEqual(parsePriceText("U$D 1.800.000"), {
       currency: "USD",
       value: 1800000
+    });
+    assert.deepEqual(parsePriceText("$ 480.000 / mes"), {
+      currency: "ARS",
+      value: 480000
+    });
+    assert.deepEqual(parsePriceText("€ 120.000"), {
+      currency: "EUR",
+      value: 120000
+    });
+    assert.deepEqual(parsePriceText("$U 35.000"), {
+      currency: "UYU",
+      value: 35000
     });
     assert.equal(parsePriceText("Consultar"), null);
   });

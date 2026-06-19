@@ -452,7 +452,7 @@ function ServiceOptionVisual({ icon }) {
 }
 
 function MapPropertyPreview({ property, isPinned, displayedPrice, onPreviewClick }) {
-  const pricePerM2 = formatPricePerM2(property);
+  const pricePerM2 = property.category === "venta" ? formatPricePerM2(property) : null;
 
   return (
     <article
@@ -615,7 +615,8 @@ function PublicApp({ initialProperties = [] }) {
     () => findPropertyByPublicPath(visibleProperties, currentPathname),
     [visibleProperties, currentPathname]
   );
-  const routedPropertyPricePerM2 = routedProperty ? formatPricePerM2(routedProperty) : null;
+  const routedPropertyPricePerM2 =
+    routedProperty && routedProperty.category === "venta" ? formatPricePerM2(routedProperty) : null;
   const selectedProperty =
     routedProperty || visibleProperties.find((property) => property.id === selectedId) || visibleProperties[0] || null;
   const activeMapPropertyId = pinnedPropertyId || hoveredPropertyId || selectedProperty?.id || "";
@@ -1038,7 +1039,7 @@ function PublicApp({ initialProperties = [] }) {
                   alt={routedProperty.title}
                 />
                 <div className="property-detail-hero-text">
-                  <p className={`status-pill status-pill--${routedProperty.category}`}>
+                  <p className="property-detail-category-label">
                     {CATEGORY_META[routedProperty.category]?.label || "En venta"}
                   </p>
                   <h1 id="property-detail-title">{routedProperty.title}</h1>
@@ -1308,7 +1309,7 @@ function PublicApp({ initialProperties = [] }) {
                           <span className="property-slide-text">
                             <span className="property-slide-kicker">
                               {formatDisplayedPrice(property)}
-                              {formatPricePerM2(property) ? (
+                              {property.category === "venta" && formatPricePerM2(property) ? (
                                 <small className="property-slide-price-m2"> · {formatPricePerM2(property)}</small>
                               ) : null}
                             </span>
