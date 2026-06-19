@@ -225,3 +225,12 @@ export async function updateClientPropertySubmission(id, data) {
 
   return payload.propertySubmission;
 }
+
+export async function reviewClientPropertySubmission(id, data) {
+  const payload = await fetchJsonWithAuth(`/api/internal/client-property-submissions/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data)
+  });
+
+  return payload.propertySubmission;
+}

@@ -18,6 +18,7 @@ import {
   getBearerToken,
   getSupabaseUserFromAccessToken
 } from "./auth/supabase";
+import { CATEGORY_META, slugify } from "../utils/properties.js";
 
 export const CLIENT_PORTAL_FILES_BUCKET = "client-portal-files";
 export const CLIENT_PORTAL_PROPERTY_STATUSES = [
@@ -60,6 +61,27 @@ function userFullName(user: User) {
 function userAvatarUrl(user: User) {
   const metadata = user.user_metadata || {};
   return textValue(metadata.avatar_url) || textValue(metadata.picture);
+}
+
+function propertyCategoryFromSubmission(operation: unknown) {
+  if (operation === "alquiler_turistico") return "alquiler_turistico";
+  if (operation === "alquiler" || operation === "alquiler_permanente") return "alquiler_permanente";
+  return "venta";
+}
+
+function escapeHtml(value: unknown) {
+  return textValue(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function descriptionToHtml(value: unknown) {
+  const text = textValue(value);
+  if (!text) return "";
+  return `<p>${escapeHtml(text).replace(/\n+/g, "</p><p>")}</p>`;
 }
 
 export function portalClientSyncData(values: any = {}, user: User) {
@@ -355,6 +377,58 @@ export async function listClientPropertySubmissionsByClientId(clientId: string):
   return listClientPropertySubmissions(portalProfile.userId);
 }
 
+async function createPropertyFromClientSubmission(
+  tx: any,
+  submission: any,
+  client: { id: string; email: string },
+  userId: string
+) {
+  const title = textValue(submission.title);
+  const category = propertyCategoryFromSubmission(submission.operation);
+  const location = textValue(submission.address || submission.location || submission.zone);
+  const description = textValue(submission.description);
+  const latitude = Number(submission.latitude);
+  const longitude = Number(submission.longitude);
+  const slugBase = slugify(title || `solicitud-${submission.id}`, 80) || `solicitud-${submission.id.slice(0, 8)}`;
+  const slug = slugify(`${slugBase}-${submission.id.slice(0, 8)}`, 96) || `${submission.id.slice(0, 8)}`;
+
+  const property = await tx.property.create({
+    data: {
+      title: title || "Propiedad sin titulo",
+      slug,
+      location,
+      price: textValue(submission.price) || "Consultar",
+      currency: "USD",
+      area: textValue(submission.area) || "Superficie a confirmar",
+      category,
+      latitude: Number.isFinite(latitude) ? latitude : null,
+      longitude: Number.isFinite(longitude) ? longitude : null,
+      markerColor: CATEGORY_META[category]?.mapColor || CATEGORY_META.venta.mapColor,
+      summary: description,
+      descriptionHtml: descriptionToHtml(description),
+      rawDescription: description,
+      isPublished: false,
+      displayOrder: 0
+    },
+    select: {
+      id: true
+    }
+  });
+
+  await tx.clientPropertyAssignment.create({
+    data: {
+      clientId: client.id,
+      propertyId: property.id,
+      relationship: "propietario",
+      notes: "",
+      createdBy: userId,
+      updatedBy: userId
+    }
+  });
+
+  return property.id;
+}
+
 export async function createClientPropertySubmission(
   values: any,
   userId: string
@@ -405,7 +479,13 @@ export async function updateClientPropertySubmission(
 
 export async function reviewClientPropertySubmission(
   id: string,
-  values: { status?: string; adminMessage?: string }
+  values: {
+    action?: string;
+    status?: string;
+    adminMessage?: string;
+    clientId?: string;
+    userId?: string;
+  }
 ): Promise<ClientPropertySubmissionViewModel> {
   const submissionId = textValue(id);
 
@@ -413,11 +493,74 @@ export async function reviewClientPropertySubmission(
     throw new Error("Falta la solicitud de propiedad a revisar.");
   }
 
+  const action = textValue(values.action || "");
+  const prisma = getPrisma();
+  const submission = await prisma.clientPropertySubmission.findUnique({
+    where: { id: submissionId }
+  });
+
+  if (!submission) {
+    throw new Error("No se encontro la solicitud de propiedad.");
+  }
+
+  if (action === "approve") {
+    const clientId = textValue(values.clientId);
+
+    if (!clientId) {
+      throw new Error("Falta el cliente para aprobar la solicitud.");
+    }
+
+    const client = await prisma.client.findUnique({
+      where: { id: clientId },
+      select: {
+        id: true,
+        email: true
+      }
+    });
+
+    if (!client?.email) {
+      throw new Error("No se pudo encontrar el cliente para asignar la propiedad.");
+    }
+
+    const portalProfile = await prisma.clientPortalProfile.findFirst({
+      where: {
+        email: client.email.toLowerCase()
+      },
+      select: {
+        userId: true
+      }
+    });
+
+    if (!portalProfile?.userId) {
+      throw new Error("El cliente no tiene un usuario del portal asociado.");
+    }
+
+    const userId = textValue(values.userId);
+    if (!userId) {
+      throw new Error("Falta el usuario interno que aprueba la solicitud.");
+    }
+
+    const row = await prisma.$transaction(async (tx: any) => {
+      const propertyId = await createPropertyFromClientSubmission(tx, submission, client, userId);
+
+      return tx.clientPropertySubmission.update({
+        where: { id: submissionId },
+        data: {
+          status: "contactado",
+          adminMessage: textValue(values.adminMessage),
+          convertedPropertyId: propertyId
+        }
+      });
+    });
+
+    return clientPropertySubmissionToViewModel(row);
+  }
+
   const update: Record<string, unknown> = {};
   if (values.status) update.status = values.status;
   if (values.adminMessage !== undefined) update.adminMessage = textValue(values.adminMessage);
 
-  const row = await getPrisma().clientPropertySubmission.update({
+  const row = await prisma.clientPropertySubmission.update({
     where: { id: submissionId },
     data: update
   });

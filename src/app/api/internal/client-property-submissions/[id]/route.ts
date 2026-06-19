@@ -6,12 +6,15 @@ export const dynamic = "force-dynamic";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireAdmin(request);
+    const { user } = await requireAdmin(request);
     const { id } = await params;
     const body = await readJsonBody(request);
     const propertySubmission = await reviewClientPropertySubmission(id, {
+      action: body.action,
       status: body.status,
-      adminMessage: body.adminMessage
+      adminMessage: body.adminMessage,
+      clientId: body.clientId,
+      userId: user.id
     });
 
     return Response.json({ propertySubmission });

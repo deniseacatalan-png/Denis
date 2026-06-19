@@ -54,7 +54,7 @@ import {
   SEARCH_REQUEST_STATUS_LABELS,
   SEARCH_REQUEST_OPERATION_LABELS,
   SEARCH_REQUEST_OPERATIONS,
-  updateClientPropertySubmission,
+  reviewClientPropertySubmission,
   updateSearchRequest
 } from "../utils/supabase/clients";
 import {
@@ -1172,22 +1172,25 @@ function AdminApp() {
     }
   };
 
-  const handleClientPropertySubmissionReview = async (submissionId, status) => {
+  const handleClientPropertySubmissionReview = async (submissionId, action, clientId) => {
     if (!submissionId) return;
 
     setClientPropertySubmissionsMessage("");
     setClientPropertySubmissionsError("");
 
     try {
-      const updated = await updateClientPropertySubmission(submissionId, { status });
+      const updated = await reviewClientPropertySubmission(submissionId, {
+        action,
+        clientId,
+        status: action === "approve" ? "contactado" : "archivado"
+      });
       setClientPropertySubmissions((current) =>
         current
           .map((item) => (item.id === submissionId ? updated : item))
           .sort((first, second) => second.updatedAt.localeCompare(first.updatedAt))
       );
-      setClientPropertySubmissionsMessage(
-        status === "contactado" ? "Solicitud aceptada." : "Solicitud cancelada."
-      );
+      await Promise.all([loadProperties(), loadAllClients(), loadClients()]);
+      setClientPropertySubmissionsMessage(action === "approve" ? "Solicitud aceptada y propiedad creada." : "Solicitud cancelada.");
       setTimeout(() => setClientPropertySubmissionsMessage(""), 3000);
     } catch (saveError) {
       setClientPropertySubmissionsError(saveError.message);
@@ -2493,7 +2496,7 @@ function AdminApp() {
     </section>
   );
 
-  const renderClientPropertySubmissionsPanel = () => (
+  const renderClientPropertySubmissionsPanel = (clientId) => (
     <section className="admin-panel admin-client-submissions-panel" aria-labelledby="admin-client-submissions-title">
       <div className="admin-sellers-header">
         <div>
@@ -2564,10 +2567,10 @@ function AdminApp() {
 
               {canReview ? (
                 <div className="admin-header-actions">
-                  <button type="button" className="wa-btn" onClick={() => handleClientPropertySubmissionReview(submission.id, "contactado")}>
+                  <button type="button" className="wa-btn" onClick={() => handleClientPropertySubmissionReview(submission.id, "approve", clientId)}>
                     Aceptar
                   </button>
-                  <button type="button" className="map-btn" onClick={() => handleClientPropertySubmissionReview(submission.id, "archivado")}>
+                  <button type="button" className="map-btn" onClick={() => handleClientPropertySubmissionReview(submission.id, "cancel", clientId)}>
                     Cancelar
                   </button>
                 </div>
@@ -2663,7 +2666,7 @@ function AdminApp() {
         fetchNotes={fetchClientNotes}
         createNote={createClientNote}
       />
-      {renderClientPropertySubmissionsPanel()}
+      {renderClientPropertySubmissionsPanel(client.id)}
       <DocumentsPanel
         entityType="client"
         entityId={client.id}
