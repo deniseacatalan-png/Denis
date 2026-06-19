@@ -33,8 +33,30 @@ describe("Prisma view model mappers", () => {
       propertyImages: [
         { id: "image-2", url: "/second.jpg", alt: "Casa", sortOrder: 2 },
         { id: "image-1", url: "/first.jpg", alt: "Casa", sortOrder: 1 }
+      ],
+      clientAssignments: [
+        {
+          id: "assignment-1",
+          clientId: "client-1",
+          propertyId: "property-1",
+          relationship: "propietario",
+          notes: "Titular",
+          createdBy: "seller-1",
+          updatedBy: "admin-1",
+          createdAt: new Date("2026-06-01T11:00:00.000Z"),
+          updatedAt: new Date("2026-06-02T11:00:00.000Z"),
+          client: {
+            id: "client-1",
+            fullName: "Maria Perez",
+            phone: "2944",
+            email: "maria@example.com",
+            operation: "locador",
+            isOwner: true,
+            status: "visitando"
+          }
+        }
       ]
-    });
+    }, { includeClientAssignments: true });
 
     assert.deepEqual(property, {
       id: "property-1",
@@ -46,7 +68,7 @@ describe("Prisma view model mappers", () => {
       price: "Consultar",
       area: "Superficie a confirmar",
       category: "venta",
-      markerColor: "#b0528c",
+      markerColor: "#8b5cf6",
       coords: [-40.1, -71.3],
       latitude: -40.1,
       longitude: -71.3,
@@ -57,7 +79,31 @@ describe("Prisma view model mappers", () => {
       displayOrder: 4,
       createdAt: "2026-06-01T10:00:00.000Z",
       updatedAt: "2026-06-02T10:00:00.000Z",
-      images: ["/first.jpg", "/second.jpg"]
+      currency: "USD",
+      priceAmount: null,
+      images: ["/first.jpg", "/second.jpg"],
+      clientAssignments: [
+        {
+          id: "assignment-1",
+          clientId: "client-1",
+          propertyId: "property-1",
+          relationship: "propietario",
+          notes: "Titular",
+          createdBy: "seller-1",
+          updatedBy: "admin-1",
+          createdAt: "2026-06-01T11:00:00.000Z",
+          updatedAt: "2026-06-02T11:00:00.000Z",
+          client: {
+            id: "client-1",
+            fullName: "Maria Perez",
+            phone: "2944",
+            email: "maria@example.com",
+            operation: "locador",
+            isOwner: true,
+            status: "visitando"
+          }
+        }
+      ]
     });
   });
 

@@ -2,12 +2,24 @@ import { getPrisma } from "./prisma";
 import { propertyToViewModel, type PropertyViewModel } from "./view-models";
 import { slugify } from "../utils/properties.js";
 
-const propertyInclude = {
+const publicPropertyInclude = {
   propertyImages: {
     orderBy: {
       sortOrder: "asc" as const
     }
   }
+};
+
+const adminPropertyInclude = {
+  ...publicPropertyInclude,
+  clientAssignments: {
+    include: {
+      client: true
+    },
+    orderBy: {
+      updatedAt: "desc" as const
+    }
+  },
 };
 
 function textValue(value: unknown) {
@@ -68,26 +80,26 @@ export async function listPublishedProperties(): Promise<PropertyViewModel[]> {
     where: {
       isPublished: true
     },
-    include: propertyInclude,
+    include: publicPropertyInclude,
     orderBy: [
       { displayOrder: "asc" },
       { title: "asc" }
     ]
   });
 
-  return rows.map(propertyToViewModel);
+  return rows.map((row) => propertyToViewModel(row));
 }
 
 export async function listAdminProperties(): Promise<PropertyViewModel[]> {
   const rows = await getPrisma().property.findMany({
-    include: propertyInclude,
+    include: adminPropertyInclude,
     orderBy: [
       { displayOrder: "asc" },
       { title: "asc" }
     ]
   });
 
-  return rows.map(propertyToViewModel);
+  return rows.map((row) => propertyToViewModel(row, { includeClientAssignments: true }));
 }
 
 export async function getPublishedPropertyBySlug(slug: string): Promise<PropertyViewModel | null> {
@@ -96,7 +108,7 @@ export async function getPublishedPropertyBySlug(slug: string): Promise<Property
       slug,
       isPublished: true
     },
-    include: propertyInclude
+    include: publicPropertyInclude
   });
 
   return row ? propertyToViewModel(row) : null;
