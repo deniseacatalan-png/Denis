@@ -18,7 +18,8 @@ import {
 import {
   fileDataFromClientValues,
   propertySubmissionDataFromClientValues,
-  searchRequestDataFromClientValues
+  searchRequestDataFromClientValues,
+  portalClientSyncData
 } from "../src/server/client-portal.ts";
 
 const googleUser = {
@@ -53,6 +54,23 @@ describe("client portal helpers", () => {
       createdAt: "",
       updatedAt: ""
     });
+  });
+
+  it("derives the client list payload from portal auth metadata", () => {
+    assert.deepEqual(
+      portalClientSyncData(
+        {
+          fullName: "  Ivan Muller  ",
+          phone: "  +54 9 2944 123456  "
+        },
+        googleUser
+      ),
+      {
+        email: "cliente@example.com",
+        fullName: "Ivan Muller",
+        phone: "+54 9 2944 123456"
+      }
+    );
   });
 
   it("keeps portal submission statuses constrained and never trusts body user ids", () => {

@@ -851,7 +851,7 @@ function AdminApp() {
   const [searchRequestError, setSearchRequestError] = useState("");
   const [searchRequestMessage, setSearchRequestMessage] = useState("");
   const [isSavingSearchRequest, setIsSavingSearchRequest] = useState(false);
-  const [showClientPropertyAssignmentForm, setShowClientPropertyAssignmentForm] = useState(false);
+  const [showClientPropertyAssignmentModal, setShowClientPropertyAssignmentModal] = useState(false);
   const [hasLoadedProperties, setHasLoadedProperties] = useState(false);
   const [hasLoadedAllClients, setHasLoadedAllClients] = useState(false);
   const [hasLoadedSellers, setHasLoadedSellers] = useState(false);
@@ -1205,7 +1205,7 @@ function AdminApp() {
         syncedClientRouteRef.current = routeKey;
         setClientForm(emptyClientForm);
         setClientPropertyAssignmentForm(emptyClientPropertyAssignmentForm);
-        setShowClientPropertyAssignmentForm(false);
+        setShowClientPropertyAssignmentModal(false);
         setClientMessage("");
         setClientError("");
       }
@@ -1218,7 +1218,7 @@ function AdminApp() {
         syncedClientRouteRef.current = routeKey;
         setClientForm(clientToForm(client));
         setClientPropertyAssignmentForm(emptyClientPropertyAssignmentForm);
-        setShowClientPropertyAssignmentForm(false);
+        setShowClientPropertyAssignmentModal(false);
         setClientMessage("");
         setClientError("");
       }
@@ -1283,6 +1283,18 @@ function AdminApp() {
     setSellerError("");
     setSellerForm({ ...emptySellerForm });
     navigateAdmin("/admin/vendedores/nuevo");
+  };
+
+  const openClientPropertyAssignmentModal = () => {
+    setClientMessage("");
+    setClientError("");
+    setClientPropertyAssignmentForm(emptyClientPropertyAssignmentForm);
+    setShowClientPropertyAssignmentModal(true);
+  };
+
+  const closeClientPropertyAssignmentModal = () => {
+    setClientPropertyAssignmentForm(emptyClientPropertyAssignmentForm);
+    setShowClientPropertyAssignmentModal(false);
   };
 
   const handlePropertyDragStart = (event, propertyId) => {
@@ -1444,6 +1456,7 @@ function AdminApp() {
       );
       setClientPropertyAssignmentForm(emptyClientPropertyAssignmentForm);
       setClientMessage("Propiedad asignada al cliente.");
+      setShowClientPropertyAssignmentModal(false);
       const refreshError = await refreshClientsAfterPropertyAssignment();
 
       if (refreshError) {
@@ -1455,6 +1468,31 @@ function AdminApp() {
       setIsSavingClientPropertyAssignment(false);
     }
   };
+
+  useEffect(() => {
+    if (!showClientPropertyAssignmentModal) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        closeClientPropertyAssignmentModal();
+      }
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showClientPropertyAssignmentModal]);
+
+  useEffect(() => {
+    if (route.section !== "clients" || (route.mode !== "view" && route.mode !== "edit")) {
+      setShowClientPropertyAssignmentModal(false);
+    }
+  }, [route.mode, route.section]);
 
   const handleClientPropertyAssignmentDelete = async (assignmentId) => {
     if (!assignmentId) return;
@@ -1480,6 +1518,51 @@ function AdminApp() {
     } finally {
       setIsSavingClientPropertyAssignment(false);
     }
+  };
+
+  const renderClientPropertyAssignmentModal = (clientId) => {
+    if (!showClientPropertyAssignmentModal || !clientId) return null;
+
+    return (
+      <div
+        className="service-modal-backdrop admin-client-property-modal-backdrop"
+        role="presentation"
+        onMouseDown={closeClientPropertyAssignmentModal}
+      >
+        <div
+          className="service-modal admin-client-property-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="admin-client-property-modal-title"
+          onMouseDown={(event) => event.stopPropagation()}
+        >
+          <button
+            type="button"
+            className="service-modal-close"
+            aria-label="Cerrar modal"
+            onClick={closeClientPropertyAssignmentModal}
+          >
+            ×
+          </button>
+          <div className="admin-client-property-modal-header">
+            <p>Propiedades</p>
+            <h3 id="admin-client-property-modal-title">Asignar al cliente</h3>
+          </div>
+          <ClientPropertyAssignmentsPanel
+            assignments={[]}
+            properties={properties}
+            form={clientPropertyAssignmentForm}
+            isSaving={isSavingClientPropertyAssignment}
+            isLoadingProperties={isLoading && !hasLoadedProperties}
+            onAssign={(event) => handleClientPropertyAssign(event, clientId)}
+            onDelete={handleClientPropertyAssignmentDelete}
+            onFormChange={updateClientPropertyAssignmentField}
+            showAssignments={false}
+            showForm
+          />
+        </div>
+      </div>
+    );
   };
 
   const handleDelete = async () => {
@@ -2285,6 +2368,9 @@ function AdminApp() {
           <button type="button" className="wa-btn" onClick={() => navigateAdmin(`/admin/clientes/${client.id}/editar`)}>
             Editar
           </button>
+          <button type="button" className="wa-btn" onClick={openClientPropertyAssignmentModal}>
+            Agregar propiedad
+          </button>
         </div>
       </div>
 
@@ -2346,38 +2432,6 @@ function AdminApp() {
         </label>
       </div>
 
-      {!showClientPropertyAssignmentForm ? (
-        <button
-          type="button"
-          className="wa-btn"
-          style={{ marginBottom: "1rem" }}
-          onClick={() => setShowClientPropertyAssignmentForm(true)}
-        >
-          Agregar propiedad
-        </button>
-      ) : (
-        <>
-          <ClientPropertyAssignmentsPanel
-            assignments={client.propertyAssignments || []}
-            properties={properties}
-            form={clientPropertyAssignmentForm}
-            isSaving={isSavingClientPropertyAssignment}
-            isLoadingProperties={isLoading && !hasLoadedProperties}
-            onAssign={(event) => handleClientPropertyAssign(event, client.id)}
-            onDelete={handleClientPropertyAssignmentDelete}
-            onFormChange={updateClientPropertyAssignmentField}
-          />
-          <button
-            type="button"
-            className="map-btn"
-            style={{ marginTop: "1rem" }}
-            onClick={() => setShowClientPropertyAssignmentForm(false)}
-          >
-            Cancelar
-          </button>
-        </>
-      )}
-
       <NotesPanel
         entityId={client.id}
         author={activityAuthor}
@@ -2392,6 +2446,14 @@ function AdminApp() {
         fetchDocuments={fetchClientDocuments}
         createDocument={createClientDocument}
       />
+      <ClientPropertyAssignmentsPanel
+        assignments={client.propertyAssignments || []}
+        properties={properties}
+        isSaving={isSavingClientPropertyAssignment}
+        onDelete={handleClientPropertyAssignmentDelete}
+        showForm={false}
+      />
+      {renderClientPropertyAssignmentModal(client.id)}
     </section>
   );
 
@@ -2406,6 +2468,11 @@ function AdminApp() {
           <button type="button" className="map-btn" onClick={() => navigateAdmin("/admin/clientes")}>
             Volver
           </button>
+          {clientForm.id ? (
+            <button type="button" className="wa-btn" onClick={openClientPropertyAssignmentModal}>
+              Agregar propiedad
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -2466,37 +2533,13 @@ function AdminApp() {
       </div>
 
       {clientForm.id ? (
-        !showClientPropertyAssignmentForm ? (
-          <button
-            type="button"
-            className="wa-btn"
-            style={{ marginBottom: "1rem" }}
-            onClick={() => setShowClientPropertyAssignmentForm(true)}
-          >
-            Agregar propiedad
-          </button>
-        ) : (
-          <>
-            <ClientPropertyAssignmentsPanel
-              assignments={clientForm.propertyAssignments || []}
-              properties={properties}
-              form={clientPropertyAssignmentForm}
-              isSaving={isSavingClientPropertyAssignment}
-              isLoadingProperties={isLoading && !hasLoadedProperties}
-              onAssign={(event) => handleClientPropertyAssign(event, clientForm.id)}
-              onDelete={handleClientPropertyAssignmentDelete}
-              onFormChange={updateClientPropertyAssignmentField}
-            />
-            <button
-              type="button"
-              className="map-btn"
-              style={{ marginTop: "1rem" }}
-              onClick={() => setShowClientPropertyAssignmentForm(false)}
-            >
-              Cancelar
-            </button>
-          </>
-        )
+        <ClientPropertyAssignmentsPanel
+          assignments={clientForm.propertyAssignments || []}
+          properties={properties}
+          isSaving={isSavingClientPropertyAssignment}
+          onDelete={handleClientPropertyAssignmentDelete}
+          showForm={false}
+        />
       ) : null}
 
       <div className="admin-editor-actions">
@@ -2507,6 +2550,7 @@ function AdminApp() {
           Volver
         </button>
       </div>
+      {renderClientPropertyAssignmentModal(clientForm.id)}
     </form>
   );
 
