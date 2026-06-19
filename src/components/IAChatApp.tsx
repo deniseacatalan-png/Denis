@@ -40,13 +40,13 @@ const welcomeMessage: ChatMessage = {
   id: "welcome",
   role: "assistant",
   content:
-    "Hola, soy el asistente de Denise Catalan Bienes Raices. Contame zona, presupuesto y tipo de operacion, y te muestro propiedades publicadas reales sin inventar resultados."
+    "Hola, soy el asistente de Denise Catalan Bienes Raices. Contame zona, presupuesto, tipo de operacion y si buscás temporada de invierno o de verano, y te muestro propiedades publicadas reales sin inventar resultados."
 };
 
 const quickPrompts = [
-  "Mostrame casas en venta",
-  "Quiero un alquiler permanente",
-  "Busco alquiler turistico",
+  "Busco alquiler de invierno en Chapelco",
+  "Busco alquiler de verano en Lolog",
+  "Quiero comprar en Centro o Vega",
   "Tengo un presupuesto acotado"
 ];
 
@@ -295,20 +295,6 @@ export function IAChatApp({ initialProperties, hasOpenAIKey }: IAChatAppProps) {
             </p>
           </div>
 
-          <div className="ia-hero-stats">
-            <div>
-              <strong>{initialProperties.length}</strong>
-              <span>propiedades publicadas</span>
-            </div>
-            <div>
-              <strong>{ruleModeLabel}</strong>
-              <span>con contexto de inventario</span>
-            </div>
-            <div>
-              <strong>{session.turnCount || 0} turnos</strong>
-              <span>memoria en el navegador</span>
-            </div>
-          </div>
         </section>
 
         <section className="ia-mode-banner" aria-label="Estado del asistente">
@@ -409,6 +395,7 @@ export function IAChatApp({ initialProperties, hasOpenAIKey }: IAChatAppProps) {
               <p className="ia-sidebar-kicker">Como responder mejor</p>
               <ul className="ia-guidance">
                 <li>Decime si buscás venta, alquiler permanente o turístico.</li>
+                <li>Si es turístico, aclarame invierno o verano.</li>
                 <li>Agregá zona, rango de precio y ambientes si los tenés.</li>
                 <li>Si querés, también puedo ayudarte a comparar opciones similares.</li>
               </ul>

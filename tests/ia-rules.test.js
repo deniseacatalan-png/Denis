@@ -60,6 +60,19 @@ describe("IA rules fallback", () => {
     assert.match(reply.reply, /temporario|temporada|zona/i);
   });
 
+  it("understands winter and summer seasonal rentals and known areas", () => {
+    const reply = generateRuleReply({
+      query: "Busco alquiler de invierno en Lolog",
+      properties,
+      session: createRuleSession()
+    });
+
+    assert.equal(reply.session.intent, "alquiler_turistico");
+    assert.equal(reply.session.lastSeason, "invierno");
+    assert.match(reply.reply, /temporada de invierno/i);
+    assert.match(reply.reply, /Lolog/i);
+  });
+
   it("changes the reply style on the second and third message", () => {
     const first = generateRuleReply({
       query: "Busco una casa para comprar en centro",
@@ -104,4 +117,3 @@ describe("IA rules fallback", () => {
     assert.notEqual(first.reply, changed.reply);
   });
 });
-

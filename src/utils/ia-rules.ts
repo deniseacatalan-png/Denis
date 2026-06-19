@@ -1,4 +1,5 @@
 import { CATEGORY_META, propertyPublicPath } from "./properties.js";
+import { detectIaSeason, detectIaZone, seasonLabel, type IaSeason } from "./ia-knowledge";
 import type { PropertyViewModel } from "@/server/view-models";
 import type { IaPropertySuggestion } from "@/server/ia";
 
@@ -12,6 +13,7 @@ export type IaRuleSession = {
   lastZone: string;
   lastBudget: string;
   lastRooms: string;
+  lastSeason: IaSeason;
 };
 
 export type IaRuleReply = {
@@ -29,6 +31,7 @@ type ExtractedSignals = {
   budget: string;
   rooms: string;
   preferences: string[];
+  season: IaSeason;
   followUpOnly: boolean;
   changedTopic: boolean;
 };
@@ -100,21 +103,25 @@ const QUICK_REPLIES: Record<1 | 2 | 3, Record<IaIntent, string[]>> = {
     comprar: ["Mostrame oportunidades para comprar", "Quiero ver casas en venta", "Tengo presupuesto"],
     vender: ["Quiero vender una propiedad", "Necesito tasación", "Hablemos de publicación"],
     alquiler_permanente: ["Busco alquiler permanente", "Quiero ver casas en alquiler", "Tengo zona definida"],
-    alquiler_turistico: ["Busco alquiler temporario", "Quiero ver opciones de temporada", "Tengo fechas definidas"]
+    alquiler_turistico: [
+      "Busco alquiler de invierno",
+      "Busco alquiler de verano",
+      "Quiero ver opciones de temporada"
+    ]
   },
   2: {
     general: ["Mostrame 3 opciones reales", "Compará por zona", "Quiero ajustar el presupuesto"],
     comprar: ["Comparame estas propiedades", "Busco algo más barato", "Mostrame mejores opciones"],
     vender: ["Quiero una respuesta más comercial", "Mostrame pasos para vender", "Necesito una evaluación"],
     alquiler_permanente: ["Mostrame opciones similares", "Ajustá por zona", "Ajustá por presupuesto"],
-    alquiler_turistico: ["Quiero ver otras opciones", "Ajustá por fechas", "Compará por ubicación"]
+    alquiler_turistico: ["Quiero ver otras opciones", "Ajustá por invierno/verano", "Compará por ubicación"]
   },
   3: {
     general: ["Cerrame una shortlist", "Comparame las 3 mejores", "Enviar a WhatsApp"],
     comprar: ["Comparame las 3 mejores", "Mostrame solo las top", "Enviar a WhatsApp"],
     vender: ["Quiero hablar con un asesor", "Enviar a WhatsApp", "Necesito una guía corta"],
     alquiler_permanente: ["Cerrame la shortlist", "Compará las dos mejores", "Enviar a WhatsApp"],
-    alquiler_turistico: ["Cerrame la shortlist", "Compará por fechas", "Enviar a WhatsApp"]
+    alquiler_turistico: ["Cerrame la shortlist", "Compará por temporada", "Enviar a WhatsApp"]
   }
 };
 
@@ -192,6 +199,18 @@ function detectIntentFromQuery(query: string): IaIntent {
   return "general";
 }
 
+function detectZoneFromQuery(query: string, properties: PropertyViewModel[]) {
+  const explicitMatch = detectIaZone(query);
+  if (explicitMatch) return explicitMatch.canonical;
+
+  const normalized = normalizeIaText(query);
+  const propertyMatch = properties
+    .map((property) => normalizeIaText(property.location))
+    .find((location) => location && normalized.includes(location));
+
+  return propertyMatch || "";
+}
+
 function isFollowUpOnly(query: string) {
   const normalized = normalizeIaText(query);
   if (!normalized) return true;
@@ -252,6 +271,8 @@ function extractPreferences(query: string) {
     "vista",
     "centro",
     "lago",
+    "invierno",
+    "verano",
     "calefaccion",
     "internet"
   ].filter((term) => normalized.includes(term));
@@ -275,15 +296,28 @@ function summarizeIntent(intent: IaIntent) {
 function extractSignals(query: string, properties: PropertyViewModel[], previousIntent: IaIntent): ExtractedSignals {
   const directIntent = detectIntentFromQuery(query);
   const followUpOnly = isFollowUpOnly(query);
-  const intent = directIntent === "general" ? previousIntent : directIntent;
+  const normalizedQuery = normalizeIaText(query);
+  let intent = directIntent === "general" ? previousIntent : directIntent;
   const changedTopic = Boolean(previousIntent && directIntent !== "general" && intent !== previousIntent);
+  const season = detectIaSeason(query);
+
+  if (
+    season &&
+    intent === "alquiler_permanente" &&
+    !normalizedQuery.includes("permanente") &&
+    !normalizedQuery.includes("mensual") &&
+    !normalizedQuery.includes("largo plazo")
+  ) {
+    intent = "alquiler_turistico";
+  }
 
   return {
     intent,
-    zone: extractZone(query, properties),
+    zone: detectZoneFromQuery(query, properties) || extractZone(query, properties),
     budget: extractBudget(query),
     rooms: extractRooms(query),
     preferences: extractPreferences(query),
+    season,
     followUpOnly,
     changedTopic
   };
@@ -300,6 +334,8 @@ function intentCategory(intent: IaIntent) {
 function scoreProperty(property: PropertyViewModel, query: string, intent: IaIntent) {
   const normalizedQuery = normalizeIaText(query);
   const queryTokens = tokenize(query);
+  const season = detectIaSeason(query);
+  const propertyZone = detectIaZone(property.location);
   const haystack = normalizeIaText(
     [
       property.title,
@@ -351,6 +387,18 @@ function scoreProperty(property: PropertyViewModel, query: string, intent: IaInt
     score += 3;
   }
 
+  if (season && propertyZone?.seasonalFocus?.includes(season)) {
+    score += 6;
+  }
+
+  if (season === "invierno" && /chapelco|cota 1500|esqui|nieve/.test(normalizeIaText(property.location + " " + property.summary))) {
+    score += 4;
+  }
+
+  if (season === "verano" && /lolog|lacar|quila quina|meliquina|traful|hua hum/.test(normalizeIaText(property.location + " " + property.summary))) {
+    score += 4;
+  }
+
   return score;
 }
 
@@ -362,6 +410,7 @@ function buildMatchReasons(property: PropertyViewModel, query: string, intent: I
   const summary = normalizeIaText(property.summary);
   const price = normalizeIaText(property.price);
   const area = normalizeIaText(property.area);
+  const propertyZone = detectIaZone(property.location);
 
   if (intent !== "general" && property.category === intentCategory(intent)) {
     reasons.push(`Encaja con ${summarizeIntent(intent)}`);
@@ -381,6 +430,9 @@ function buildMatchReasons(property: PropertyViewModel, query: string, intent: I
   if (area && normalizedQuery.split(" ").some((token) => token && area.includes(token))) {
     reasons.push("Coincide con la superficie");
   }
+  if (propertyZone?.canonical && normalizedQuery.includes(normalizeIaText(propertyZone.canonical))) {
+    reasons.push(`Coincide con la zona ${propertyZone.canonical}`);
+  }
 
   if (!reasons.length) {
     reasons.push(`Propiedad publicada de ${summarizeIntent(intent)}`);
@@ -397,7 +449,8 @@ export function createRuleSession(): IaRuleSession {
     lastSuggestionIds: [],
     lastZone: "",
     lastBudget: "",
-    lastRooms: ""
+    lastRooms: "",
+    lastSeason: ""
   };
 }
 
@@ -419,7 +472,8 @@ export function normalizeRuleSession(value: unknown): IaRuleSession {
       : [],
     lastZone: textValue(candidate.lastZone),
     lastBudget: textValue(candidate.lastBudget),
-    lastRooms: textValue(candidate.lastRooms)
+    lastRooms: textValue(candidate.lastRooms),
+    lastSeason: candidate.lastSeason === "invierno" || candidate.lastSeason === "verano" ? candidate.lastSeason : ""
   };
 }
 
@@ -465,6 +519,9 @@ function describeMissingSignals(signals: ExtractedSignals) {
   if (!signals.rooms && (signals.intent === "alquiler_permanente" || signals.intent === "alquiler_turistico")) {
     missing.push("ambientes");
   }
+  if (signals.intent === "alquiler_turistico" && !signals.season) {
+    missing.push("temporada de invierno o verano");
+  }
   return missing;
 }
 
@@ -494,6 +551,7 @@ function buildReplyBody({
 }) {
   const opener = pickVariant(STAGE_OPENERS[stage], `${query}:${signals.intent}:${previousSession.turnCount}`);
   const intentLabel = summarizeIntent(signals.intent);
+  const seasonText = seasonLabel(signals.season);
   const missing = describeMissingSignals(signals);
   const topSuggestions = suggestions.slice(0, stage === 1 ? 2 : stage === 2 ? 3 : 3);
 
@@ -523,6 +581,17 @@ function buildReplyBody({
 
   if (signals.preferences.length) {
     pieces.push(`Preferencias detectadas: ${signals.preferences.slice(0, 3).join(", ")}.`);
+  }
+
+  if (seasonText) {
+    pieces.push(`Temporada detectada: ${seasonText}.`);
+    if (signals.intent === "alquiler_turistico") {
+      pieces.push(
+        signals.season === "invierno"
+          ? "Para invierno suelen pesar mucho Chapelco, el centro y los accesos rápidos a nieve."
+          : "Para verano suelen pesar mucho Lolog, Quila Quina, el Lago Lácar y los circuitos lacustres."
+      );
+    }
   }
 
   if (topSuggestions.length) {
@@ -614,7 +683,8 @@ export function generateRuleReply({
       lastSuggestionIds: suggestions.map((item) => item.id).slice(0, 6),
       lastZone: signals.zone,
       lastBudget: signals.budget,
-      lastRooms: signals.rooms
+      lastRooms: signals.rooms,
+      lastSeason: signals.season
     }
   };
 }
