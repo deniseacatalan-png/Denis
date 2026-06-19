@@ -16,6 +16,7 @@ import {
   CURRENCY_OPTIONS,
   filterAdminPropertiesByType,
   filterPropertiesBySearch,
+  getCategoryMapColor,
   getAdminPropertyTypeTabs,
   slugify
 } from "../utils/properties";
@@ -83,7 +84,7 @@ const emptyPropertyForm = {
   category: "venta",
   latitude: "-40.1573",
   longitude: "-71.3524",
-  markerColor: CATEGORY_META.venta.mapColor,
+  markerColor: getCategoryMapColor("venta"),
   summary: "",
   descriptionHtml: "",
   rawDescription: "",
@@ -666,6 +667,7 @@ function imagePathForFile(file, propertySlug, index) {
 
 function propertyToForm(property) {
   const rawDescription = property.rawDescription || "";
+  const category = property.category || "venta";
 
   return {
     databaseId: property.databaseId || property.id || "",
@@ -676,10 +678,10 @@ function propertyToForm(property) {
     priceAmount: property.priceAmount != null ? String(property.priceAmount) : "",
     currency: property.currency || "USD",
     area: property.area || "Superficie a confirmar",
-    category: property.category || "venta",
+    category,
     latitude: String(property.latitude ?? property.coords?.[0] ?? ""),
     longitude: String(property.longitude ?? property.coords?.[1] ?? ""),
-    markerColor: property.markerColor || CATEGORY_META[property.category]?.mapColor || CATEGORY_META.venta.mapColor,
+    markerColor: getCategoryMapColor(category),
     summary: property.summary || "",
     descriptionHtml: property.descriptionHtml || textToParagraphHtml(rawDescription),
     rawDescription,
@@ -1200,6 +1202,7 @@ function AdminApp() {
   const updateField = (field, value) => {
     setForm((current) => ({
       ...current,
+      ...(field === "category" ? { markerColor: getCategoryMapColor(value) } : {}),
       [field]: value
     }));
   };
@@ -2241,7 +2244,7 @@ function AdminApp() {
           latitude={form.latitude}
           longitude={form.longitude}
           location={form.location}
-          markerColor={form.markerColor}
+          markerColor={getCategoryMapColor(form.category)}
           onCoordinatesChange={(nextLatitude, nextLongitude) => {
             setForm((current) => ({
               ...current,
@@ -2250,23 +2253,6 @@ function AdminApp() {
             }));
           }}
         />
-        <label className="admin-color-field">
-          Color del punto en el mapa
-          <div className="admin-color-picker">
-            <input
-              type="color"
-              value={colorValue(form.markerColor, CATEGORY_META[form.category]?.mapColor || CATEGORY_META.venta.mapColor)}
-              onChange={(event) => updateField("markerColor", event.target.value)}
-              aria-label="Color del punto en el mapa"
-            />
-            <input
-              type="text"
-              value={form.markerColor}
-              onChange={(event) => updateField("markerColor", event.target.value)}
-              placeholder={CATEGORY_META[form.category]?.mapColor || CATEGORY_META.venta.mapColor}
-            />
-          </div>
-        </label>
       </div>
 
       <label>

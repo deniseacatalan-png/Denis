@@ -1,5 +1,6 @@
 import { getPrisma } from "./prisma";
 import { propertyToViewModel, type PropertyViewModel } from "./view-models";
+import { CATEGORY_META } from "../utils/properties.js";
 import { slugify } from "../utils/properties.js";
 
 const publicPropertyInclude = {
@@ -34,6 +35,7 @@ function propertyDataFromValues(values: any) {
   const title = textValue(values.title);
   const lat = Number(values.latitude);
   const lng = Number(values.longitude);
+  const category = textValue(values.category) || "venta";
 
   if (!title) {
     throw new Error("El titulo es obligatorio.");
@@ -51,10 +53,10 @@ function propertyDataFromValues(values: any) {
     priceAmount: values.priceAmount != null && values.priceAmount !== "" ? Number(values.priceAmount) : null,
     currency: textValue(values.currency) || "USD",
     area: textValue(values.area) || "Superficie a confirmar",
-    category: textValue(values.category) || "venta",
+    category,
     latitude: lat,
     longitude: lng,
-    markerColor: textValue(values.markerColor) || "#b0528c",
+    markerColor: CATEGORY_META[category]?.mapColor || CATEGORY_META.venta.mapColor,
     summary: textValue(values.summary),
     descriptionHtml: textValue(values.descriptionHtml),
     rawDescription: textValue(values.rawDescription),

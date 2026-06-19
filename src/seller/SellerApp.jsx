@@ -14,6 +14,7 @@ import {
   CURRENCY_OPTIONS,
   filterAdminPropertiesByType,
   filterPropertiesBySearch,
+  getCategoryMapColor,
   getAdminPropertyTypeTabs,
   propertyPublicPath,
   slugify
@@ -84,7 +85,7 @@ const emptyPropertyForm = {
   category: "venta",
   latitude: defaultPropertyCoords.latitude,
   longitude: defaultPropertyCoords.longitude,
-  markerColor: CATEGORY_META.venta.mapColor,
+  markerColor: getCategoryMapColor("venta"),
   summary: "",
   rawDescription: "",
   descriptionHtml: "",
@@ -230,6 +231,7 @@ function getInitialSellerPropertyMode() {
 
 function propertyToForm(property) {
   const rawDescription = property.rawDescription || htmlToPlainText(property.descriptionHtml);
+  const category = property.category || "venta";
 
   return {
     databaseId: property.databaseId || property.id || "",
@@ -240,10 +242,10 @@ function propertyToForm(property) {
     priceAmount: property.priceAmount != null ? String(property.priceAmount) : "",
     currency: property.currency || "USD",
     area: property.area || "Superficie a confirmar",
-    category: property.category || "venta",
+    category,
     latitude: String(property.latitude ?? property.coords?.[0] ?? defaultPropertyCoords.latitude),
     longitude: String(property.longitude ?? property.coords?.[1] ?? defaultPropertyCoords.longitude),
-    markerColor: property.markerColor || CATEGORY_META[property.category]?.mapColor || CATEGORY_META.venta.mapColor,
+    markerColor: getCategoryMapColor(category),
     summary: property.summary || "",
     rawDescription,
     descriptionHtml: property.descriptionHtml || textToParagraphHtml(rawDescription),
@@ -694,6 +696,7 @@ function SellerApp() {
   const updatePropertyField = (field, value) => {
     setPropertyForm((current) => ({
       ...current,
+      ...(field === "category" ? { markerColor: getCategoryMapColor(value) } : {}),
       [field]: value
     }));
   };
@@ -997,10 +1000,7 @@ function SellerApp() {
     try {
       const payload = {
         ...propertyForm,
-        markerColor:
-          propertyForm.markerColor ||
-          CATEGORY_META[propertyForm.category]?.mapColor ||
-          CATEGORY_META.venta.mapColor,
+        markerColor: getCategoryMapColor(propertyForm.category),
         descriptionHtml: propertyForm.descriptionHtml || textToParagraphHtml(propertyForm.rawDescription)
       };
       const propertyId = await saveSellerProperty(payload);
@@ -1271,7 +1271,7 @@ function SellerApp() {
               setPropertyForm((current) => ({
                 ...current,
                 category: nextCategory,
-                markerColor: CATEGORY_META[nextCategory]?.mapColor || current.markerColor
+                markerColor: getCategoryMapColor(nextCategory)
               }));
             }}
           >
@@ -1328,25 +1328,6 @@ function SellerApp() {
             onChange={(event) => updatePropertyField("longitude", event.target.value)}
             required
           />
-        </label>
-        <label className="admin-color-field">
-          Color del punto
-          <div className="admin-color-picker">
-            <input
-              type="color"
-              value={colorValue(
-                propertyForm.markerColor,
-                CATEGORY_META[propertyForm.category]?.mapColor || CATEGORY_META.venta.mapColor
-              )}
-              onChange={(event) => updatePropertyField("markerColor", event.target.value)}
-              aria-label="Color del punto"
-            />
-            <input
-              type="text"
-              value={propertyForm.markerColor}
-              onChange={(event) => updatePropertyField("markerColor", event.target.value)}
-            />
-          </div>
         </label>
         <label className="admin-toggle admin-seller-toggle">
           <input

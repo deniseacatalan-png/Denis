@@ -158,15 +158,15 @@ describe("property helpers", () => {
     assert.doesNotMatch(supabasePropertiesSource, /\.in\("category"/);
   });
 
-  it("uses the rose-violet design system colors for property categories", () => {
+  it("uses the current design system colors for property categories", () => {
     assert.deepEqual(
       Object.fromEntries(
         Object.entries(CATEGORY_META).map(([category, meta]) => [category, meta.mapColor])
       ),
       {
-        venta: "#b0528c",
-        alquiler_turistico: "#8e6a96",
-        alquiler_permanente: "#6e4f82",
+        venta: "#8b5cf6",
+        alquiler_turistico: "#ef4444",
+        alquiler_permanente: "#eab308",
         vendido: "#4d3661",
         proceso: "#c0a0cf"
       }

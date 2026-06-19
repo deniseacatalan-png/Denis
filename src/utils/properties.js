@@ -58,10 +58,17 @@ function categoryMarkerColor(category) {
 
 function normalizeMarkerColor(value, category) {
   const markerColor = String(value || "").trim();
-  if (!markerColor) return categoryMarkerColor(category);
-
   const legacyCategory = legacyCategoryMarkerColors[markerColor.toLowerCase()];
-  return legacyCategory === category ? categoryMarkerColor(category) : markerColor;
+
+  if (legacyCategory && legacyCategory !== category) {
+    return categoryMarkerColor(category);
+  }
+
+  return categoryMarkerColor(category);
+}
+
+export function getCategoryMapColor(category) {
+  return categoryMarkerColor(category);
 }
 
 export function slugify(value, maxLength = Number.POSITIVE_INFINITY) {

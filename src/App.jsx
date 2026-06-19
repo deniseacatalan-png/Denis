@@ -25,6 +25,7 @@ import {
   formatPricePerM2,
   getPublicSelectedPropertyId,
   getVisiblePublicProperties,
+  getCategoryMapColor,
   propertyShareData,
   propertyPublicPath
 } from "./utils/properties";
@@ -123,10 +124,8 @@ function escapeMarkerText(value) {
     .replace(/'/g, "&#39;");
 }
 
-function safeMarkerColor(value, category) {
-  const fallback = CATEGORY_META[category]?.mapColor || CATEGORY_META.venta.mapColor;
-  const color = String(value || "").trim();
-  return /^#[0-9a-f]{3,8}$/i.test(color) ? color : fallback;
+function safeMarkerColor(category) {
+  return getCategoryMapColor(category);
 }
 
 function normalizeMapSearchText(value) {
@@ -357,7 +356,7 @@ function MapAutoViewport({ properties, focusProperty }) {
 }
 
 function PriceMapMarker({ property, isActive, displayedPrice, onHover, onClick }) {
-  const markerColor = safeMarkerColor(property.markerColor, property.category);
+  const markerColor = safeMarkerColor(property.category);
   const markerHtml = useMemo(() => {
     const activeClass = isActive ? " map-price-marker--active" : "";
     return `
@@ -1197,9 +1196,8 @@ function PublicApp({ initialProperties = [] }) {
                         radius={property.id === activeMapPropertyId ? 11 : 8}
                         bubblingMouseEvents={false}
                         pathOptions={{
-                          color: property.markerColor || CATEGORY_META[property.category]?.mapColor || CATEGORY_META.venta.mapColor,
-                          fillColor:
-                            property.markerColor || CATEGORY_META[property.category]?.mapColor || CATEGORY_META.venta.mapColor,
+                          color: getCategoryMapColor(property.category),
+                          fillColor: getCategoryMapColor(property.category),
                           fillOpacity: 0.9,
                           weight: property.id === activeMapPropertyId ? 4 : 2
                         }}
