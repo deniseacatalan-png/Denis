@@ -1485,7 +1485,88 @@ body {
 }
 
 .property-detail-video-card--instagram {
-  padding: 0.75rem;
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.85rem;
+  background:
+    radial-gradient(circle at top left, rgba(225, 48, 108, 0.18), transparent 34%),
+    radial-gradient(circle at top right, rgba(253, 216, 53, 0.14), transparent 28%),
+    rgba(30, 26, 31, 0.38);
+}
+
+.property-detail-instagram-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.property-detail-instagram-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.property-detail-instagram-mark {
+  width: 2.2rem;
+  height: 2.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-family: "Manrope", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #fff;
+  background: linear-gradient(135deg, #f58529 0%, #dd2a7b 45%, #8134af 100%);
+  box-shadow: 0 10px 22px rgba(221, 42, 123, 0.24);
+}
+
+.property-detail-instagram-brand strong,
+.property-detail-instagram-brand span {
+  display: block;
+}
+
+.property-detail-instagram-brand strong {
+  color: #fff;
+  font-family: "Manrope", sans-serif;
+  font-size: 0.94rem;
+}
+
+.property-detail-instagram-brand span {
+  color: #f1eaf2;
+  font-size: 0.92rem;
+}
+
+.property-detail-instagram-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.4rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  color: #fff;
+  font-family: "Manrope", sans-serif;
+  font-size: 0.84rem;
+  font-weight: 800;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.property-detail-instagram-open:hover,
+.property-detail-instagram-open:focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.26);
+  outline: none;
+}
+
+.property-detail-instagram-frame {
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.18);
 }
 
 .property-detail-video-frame {

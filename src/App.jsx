@@ -1182,17 +1182,39 @@ function PublicApp({ initialProperties = [] }) {
                           return (
                             <article
                               key={`${videoUrl}-${index}`}
-                              className="property-detail-video-card property-detail-video-card--instagram"
+                              className="property-detail-video-card property-detail-instagram-card"
                             >
-                              <blockquote
-                                className="instagram-media"
-                                data-instgrm-permalink={embedData.embedUrl}
-                                data-instgrm-version="14"
-                              >
-                                <a href={videoUrl} target="_blank" rel="noreferrer">
-                                  Ver en Instagram
+                              <div className="property-detail-instagram-header">
+                                <div className="property-detail-instagram-brand">
+                                  <span className="property-detail-instagram-mark" aria-hidden="true">
+                                    IG
+                                  </span>
+                                  <div>
+                                    <strong>Instagram Reel</strong>
+                                    <span>Reel de la propiedad</span>
+                                  </div>
+                                </div>
+                                <a
+                                  href={videoUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="property-detail-instagram-open"
+                                >
+                                  Abrir
                                 </a>
-                              </blockquote>
+                              </div>
+                              <div className="property-detail-instagram-frame">
+                                <blockquote
+                                  className="instagram-media"
+                                  data-instgrm-permalink={embedData.embedUrl}
+                                  data-instgrm-version="14"
+                                  data-instgrm-captioned="true"
+                                >
+                                  <a href={videoUrl} target="_blank" rel="noreferrer">
+                                    Ver en Instagram
+                                  </a>
+                                </blockquote>
+                              </div>
                             </article>
                           );
                         }
