@@ -176,42 +176,6 @@ export async function deleteClientPropertyAssignment(assignmentId) {
   });
 }
 
-export const SEARCH_REQUEST_STATUSES = ["borrador", "en_revision", "contactado", "convertido", "archivado"];
-export const SEARCH_REQUEST_STATUS_LABELS = {
-  borrador: "Borrador",
-  en_revision: "En revision",
-  contactado: "Contactado",
-  convertido: "Convertido",
-  archivado: "Archivado"
-};
-
-export const SEARCH_REQUEST_OPERATIONS = ["comprar", "alquilar", "temporada"];
-export const SEARCH_REQUEST_OPERATION_LABELS = {
-  comprar: "Comprar",
-  alquilar: "Alquilar",
-  temporada: "Temporada"
-};
-
-export async function fetchSearchRequests(filters = {}) {
-  const params = new URLSearchParams();
-
-  if (filters.status) params.set("status", filters.status);
-  if (filters.operation) params.set("operation", filters.operation);
-
-  const query = params.toString();
-  const payload = await fetchJsonWithAuth(`/api/internal/search-requests${query ? `?${query}` : ""}`);
-  return payload.searchRequests || [];
-}
-
-export async function updateSearchRequest(id, data) {
-  const payload = await fetchJsonWithAuth(`/api/internal/search-requests/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify(data)
-  });
-
-  return payload.searchRequest;
-}
-
 export async function fetchClientPropertySubmissions(clientId) {
   const payload = await fetchJsonWithAuth(`/api/internal/client-property-submissions?clientId=${encodeURIComponent(clientId)}`);
   return payload.propertySubmissions || [];

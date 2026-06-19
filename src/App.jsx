@@ -115,6 +115,46 @@ function formatCoords(coords) {
   return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 }
 
+function getVideoSourceLabel(url) {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./i, "").toLowerCase();
+    if (host === "youtu.be" || host.endsWith("youtube.com")) return "YouTube";
+    if (host.endsWith("instagram.com")) return "Instagram Reels";
+  } catch {
+    return "Video";
+  }
+
+  return "Video";
+}
+
+function getVideoEmbedData(url) {
+  try {
+    const parsedUrl = new URL(url);
+    const hostname = parsedUrl.hostname.replace(/^www\./i, "").toLowerCase();
+
+    if (hostname === "youtu.be") {
+      const videoId = parsedUrl.pathname.split("/").filter(Boolean)[0];
+      return videoId ? { source: "YouTube", embedUrl: `https://www.youtube.com/embed/${videoId}` } : null;
+    }
+
+    if (hostname.endsWith("youtube.com")) {
+      const videoId = parsedUrl.searchParams.get("v") || parsedUrl.pathname.split("/").filter(Boolean)[1];
+      return videoId ? { source: "YouTube", embedUrl: `https://www.youtube.com/embed/${videoId}` } : null;
+    }
+
+    if (hostname.endsWith("instagram.com")) {
+      return {
+        source: "Instagram Reels",
+        embedUrl: `${parsedUrl.origin}${parsedUrl.pathname.replace(/\/?$/, "/")}embed/`
+      };
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 function escapeMarkerText(value) {
   return String(value || "")
     .replace(/&/g, "&amp;")
@@ -1086,6 +1126,29 @@ function PublicApp({ initialProperties = [] }) {
                 ) : (
                   <p className="gallery-empty">Esta propiedad todavia no tiene fotos cargadas.</p>
                 )}
+
+                {routedProperty.videos?.length ? (
+                  <section className="property-detail-videos" aria-labelledby="property-detail-videos-title">
+                    <div className="property-detail-videos-header">
+                      <h2 id="property-detail-videos-title">Videos</h2>
+                      <p>Links externos para ver recorridos y reels de la propiedad.</p>
+                    </div>
+                    <div className="property-detail-videos-list">
+                      {routedProperty.videos.map((videoUrl, index) => (
+                        <a
+                          key={`${videoUrl}-${index}`}
+                          href={videoUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="property-detail-video-link"
+                        >
+                          <strong>{getVideoSourceLabel(videoUrl)}</strong>
+                          <span>Ver video {index + 1}</span>
+                        </a>
+                      ))}
+                    </div>
+                  </section>
+                ) : null}
 
                 <div className="property-detail-actions">
                   <button

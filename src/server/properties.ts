@@ -8,6 +8,11 @@ const publicPropertyInclude = {
     orderBy: {
       sortOrder: "asc" as const
     }
+  },
+  propertyVideos: {
+    orderBy: {
+      sortOrder: "asc" as const
+    }
   }
 };
 
@@ -77,6 +82,42 @@ function imageRowsFromValues(propertyId: string, values: any) {
     }));
 }
 
+function normalizeVideoUrl(value: unknown) {
+  const rawUrl = textValue(value);
+  if (!rawUrl) return "";
+
+  const candidate = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
+  let parsedUrl: URL;
+
+  try {
+    parsedUrl = new URL(candidate);
+  } catch {
+    throw new Error(`Link de video invalido: ${rawUrl}.`);
+  }
+
+  const hostname = parsedUrl.hostname.replace(/^www\./i, "").toLowerCase();
+  const isYoutube =
+    hostname === "youtube.com" || hostname.endsWith(".youtube.com") || hostname === "youtu.be";
+  const isInstagram = hostname === "instagram.com" || hostname.endsWith(".instagram.com");
+
+  if (!isYoutube && !isInstagram) {
+    throw new Error("Los videos deben ser links de YouTube o Instagram.");
+  }
+
+  return parsedUrl.href;
+}
+
+function videoRowsFromValues(propertyId: string, values: any) {
+  return (values.videos || [])
+    .map((url: unknown) => normalizeVideoUrl(url))
+    .filter(Boolean)
+    .map((url: string, index: number) => ({
+      propertyId,
+      url,
+      sortOrder: index
+    }));
+}
+
 export async function listPublishedProperties(): Promise<PropertyViewModel[]> {
   const rows = await getPrisma().property.findMany({
     where: {
@@ -138,12 +179,24 @@ export async function saveAdminProperty(values: any) {
         propertyId: property.id
       }
     });
+    await tx.propertyVideo.deleteMany({
+      where: {
+        propertyId: property.id
+      }
+    });
 
     const imageRows = imageRowsFromValues(property.id, values);
+    const nextVideoRows = videoRowsFromValues(property.id, values);
 
     if (imageRows.length) {
       await tx.propertyImage.createMany({
         data: imageRows
+      });
+    }
+
+    if (nextVideoRows.length) {
+      await tx.propertyVideo.createMany({
+        data: nextVideoRows
       });
     }
 

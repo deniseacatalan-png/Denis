@@ -34,6 +34,10 @@ describe("Prisma view model mappers", () => {
         { id: "image-2", url: "/second.jpg", alt: "Casa", sortOrder: 2 },
         { id: "image-1", url: "/first.jpg", alt: "Casa", sortOrder: 1 }
       ],
+      propertyVideos: [
+        { id: "video-2", url: "https://www.instagram.com/reel/test-2/", sortOrder: 2 },
+        { id: "video-1", url: "https://www.youtube.com/watch?v=test-1", sortOrder: 1 }
+      ],
       clientAssignments: [
         {
           id: "assignment-1",
@@ -82,6 +86,10 @@ describe("Prisma view model mappers", () => {
       currency: "USD",
       priceAmount: null,
       images: ["/first.jpg", "/second.jpg"],
+      videos: [
+        "https://www.youtube.com/watch?v=test-1",
+        "https://www.instagram.com/reel/test-2/"
+      ],
       clientAssignments: [
         {
           id: "assignment-1",

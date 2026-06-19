@@ -48,15 +48,9 @@ import {
   deleteClientPropertyAssignment,
   fetchClients,
   fetchClientPropertySubmissions,
-  fetchSearchRequests,
   saveClient,
   saveClientPropertyAssignment,
-  SEARCH_REQUEST_STATUSES,
-  SEARCH_REQUEST_STATUS_LABELS,
-  SEARCH_REQUEST_OPERATION_LABELS,
-  SEARCH_REQUEST_OPERATIONS,
   reviewClientPropertySubmission,
-  updateSearchRequest
 } from "../utils/supabase/clients";
 import {
   createSellerFromAdmin,
@@ -90,7 +84,8 @@ const emptyPropertyForm = {
   rawDescription: "",
   isPublished: true,
   displayOrder: 0,
-  images: []
+  images: [],
+  videos: []
 };
 
 const emptySellerForm = {
@@ -292,10 +287,6 @@ function parseAdminRoute(pathname = window.location.pathname) {
     }
     if (action && action !== "editar") return { section: "not-found", mode: "not-found", id: "" };
     return { section: "clients", mode: action === "editar" ? "edit" : id ? "view" : "list", id };
-  }
-  if (section === "busquedas") {
-    if (action || extra) return { section: "not-found", mode: "not-found", id: "" };
-    return { section: "searchRequests", mode: id ? "view" : "list", id };
   }
   if (section === "vendedores") {
     if (extra) return { section: "not-found", mode: "not-found", id: "" };
@@ -665,6 +656,25 @@ function imagePathForFile(file, propertySlug, index) {
   return `properties/${propertySlug}/${Date.now()}-${index}-${safeBaseName}${extension}`;
 }
 
+function splitVideoLinks(value) {
+  return String(value || "")
+    .split(/\r?\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function getVideoSourceLabel(url) {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./i, "").toLowerCase();
+    if (host === "youtu.be" || host.endsWith("youtube.com")) return "YouTube";
+    if (host.endsWith("instagram.com")) return "Instagram Reels";
+  } catch {
+    return "Video";
+  }
+
+  return "Video";
+}
+
 function propertyToForm(property) {
   const rawDescription = property.rawDescription || "";
   const category = property.category || "venta";
@@ -687,7 +697,8 @@ function propertyToForm(property) {
     rawDescription,
     isPublished: Boolean(property.isPublished),
     displayOrder: property.displayOrder || 0,
-    images: property.images || []
+    images: property.images || [],
+    videos: property.videos || []
   };
 }
 
@@ -873,11 +884,6 @@ function AdminApp() {
   const [clientError, setClientError] = useState("");
   const [sellerMessage, setSellerMessage] = useState("");
   const [sellerError, setSellerError] = useState("");
-  const [searchRequests, setSearchRequests] = useState([]);
-  const [searchRequestFilters, setSearchRequestFilters] = useState({ status: "", operation: "" });
-  const [searchRequestError, setSearchRequestError] = useState("");
-  const [searchRequestMessage, setSearchRequestMessage] = useState("");
-  const [isSavingSearchRequest, setIsSavingSearchRequest] = useState(false);
   const [clientPropertySubmissions, setClientPropertySubmissions] = useState([]);
   const [clientPropertySubmissionsMessage, setClientPropertySubmissionsMessage] = useState("");
   const [clientPropertySubmissionsError, setClientPropertySubmissionsError] = useState("");
@@ -1082,24 +1088,6 @@ function AdminApp() {
     loadClients();
   }, [session, clientFilters.operation, clientFilters.status, clientFilters.createdBy]);
 
-  const loadSearchRequests = async () => {
-    if (!session) {
-      setSearchRequests([]);
-      return;
-    }
-    setSearchRequestError("");
-    try {
-      const data = await fetchSearchRequests(searchRequestFilters);
-      setSearchRequests(data);
-    } catch (loadError) {
-      setSearchRequestError(loadError.message);
-    }
-  };
-
-  useEffect(() => {
-    loadSearchRequests();
-  }, [session, searchRequestFilters.status, searchRequestFilters.operation]);
-
   useEffect(() => {
     if (route.section !== "clients" || !route.id || (route.mode !== "view" && route.mode !== "edit")) {
       setClientPropertySubmissions([]);
@@ -1143,36 +1131,6 @@ function AdminApp() {
       mounted = false;
     };
   }, [allClients, route.id, route.mode, route.section]);
-
-  const handleSearchRequestStatusUpdate = async (id, status) => {
-    setIsSavingSearchRequest(true);
-    setSearchRequestError("");
-    try {
-      const updated = await updateSearchRequest(id, { status });
-      setSearchRequests((current) => current.map((sr) => (sr.id === id ? updated : sr)));
-      setSearchRequestMessage("Estado actualizado.");
-      setTimeout(() => setSearchRequestMessage(""), 3000);
-    } catch (saveError) {
-      setSearchRequestError(saveError.message);
-    } finally {
-      setIsSavingSearchRequest(false);
-    }
-  };
-
-  const handleSearchRequestMessageUpdate = async (id, adminMessage) => {
-    setIsSavingSearchRequest(true);
-    setSearchRequestError("");
-    try {
-      const updated = await updateSearchRequest(id, { adminMessage });
-      setSearchRequests((current) => current.map((sr) => (sr.id === id ? updated : sr)));
-      setSearchRequestMessage("Mensaje guardado.");
-      setTimeout(() => setSearchRequestMessage(""), 3000);
-    } catch (saveError) {
-      setSearchRequestError(saveError.message);
-    } finally {
-      setIsSavingSearchRequest(false);
-    }
-  };
 
   const handleClientPropertySubmissionReview = async (submissionId, action, clientId) => {
     if (!submissionId) return;
@@ -2153,6 +2111,30 @@ function AdminApp() {
         ) : null}
       </section>
 
+      <section className="admin-images-field">
+        <div className="admin-images-header">
+          <span>{property.videos.length ? `${property.videos.length} links de video` : "Sin links de video"}</span>
+        </div>
+        {property.videos.length ? (
+          <div className="admin-video-list">
+            {property.videos.map((url, index) => (
+              <a
+                key={`${url}-${index}`}
+                className="admin-video-link"
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <strong>{getVideoSourceLabel(url)}</strong>
+                <span>{url}</span>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <p className="seller-empty-state">Esta propiedad no tiene videos cargados.</p>
+        )}
+      </section>
+
       <NotesPanel
         entityId={property.databaseId || property.id}
         author={activityAuthor}
@@ -2360,6 +2342,41 @@ function AdminApp() {
           </div>
         ) : null}
       </div>
+
+      <section className="admin-images-field">
+        <div className="admin-images-header">
+          <div>
+            <span>Links de video</span>
+            <small>YouTube o Instagram Reels. Un link por linea.</small>
+          </div>
+          <span>{form.videos.length ? `${form.videos.length} links` : "Sin links"}</span>
+        </div>
+        <label className="admin-videos-input">
+          <span>Videos</span>
+          <textarea
+            rows="5"
+            value={form.videos.join("\n")}
+            onChange={(event) => updateField("videos", splitVideoLinks(event.target.value))}
+            placeholder="https://www.youtube.com/watch?v=...\nhttps://www.instagram.com/reel/..."
+          />
+        </label>
+        {form.videos.length ? (
+          <div className="admin-video-list">
+            {form.videos.map((url, index) => (
+              <a
+                key={`${url}-${index}`}
+                className="admin-video-link"
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <strong>{getVideoSourceLabel(url)}</strong>
+                <span>{url}</span>
+              </a>
+            ))}
+          </div>
+        ) : null}
+      </section>
 
       <div className="admin-editor-actions">
         <button type="submit" className="wa-btn" disabled={isLoading}>
@@ -3088,195 +3105,6 @@ function AdminApp() {
     return renderClientNotFound();
   };
 
-  const renderSearchRequestsList = () => (
-    <section className="admin-sellers-panel" aria-labelledby="admin-search-requests-title">
-      <div className="admin-sellers-header">
-        <div>
-          <p>Portal de clientes</p>
-          <h2 id="admin-search-requests-title">Búsquedas</h2>
-        </div>
-      </div>
-
-      {searchRequestMessage ? <p className="admin-success">{searchRequestMessage}</p> : null}
-      {searchRequestError ? <p className="admin-error">{searchRequestError}</p> : null}
-
-      <div className="admin-grid">
-        <label>
-          Operación
-          <select
-            value={searchRequestFilters.operation}
-            onChange={(event) =>
-              setSearchRequestFilters((current) => ({ ...current, operation: event.target.value }))
-            }
-          >
-            <option value="">Todas</option>
-            {SEARCH_REQUEST_OPERATIONS.map((op) => (
-              <option value={op} key={op}>
-                {SEARCH_REQUEST_OPERATION_LABELS[op]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Estado
-          <select
-            value={searchRequestFilters.status}
-            onChange={(event) =>
-              setSearchRequestFilters((current) => ({ ...current, status: event.target.value }))
-            }
-          >
-            <option value="">Todos</option>
-            {SEARCH_REQUEST_STATUSES.map((s) => (
-              <option value={s} key={s}>
-                {SEARCH_REQUEST_STATUS_LABELS[s]}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      <div className="admin-table-list">
-        {searchRequests.map((sr) => (
-          <div className="admin-table-row" key={sr.id}>
-            <div>
-              <strong>{sr.userName || sr.userEmail || "Usuario sin perfil"}</strong>
-              <span>{SEARCH_REQUEST_OPERATION_LABELS[sr.operation] || sr.operation}</span>
-              <small>
-                {sr.zone || "Sin zona"} · {sr.budget || "Sin presupuesto"} · {sr.rooms || "Sin ambientes"}
-              </small>
-              <small>{formatAdminDate(sr.updatedAt || sr.createdAt)}</small>
-            </div>
-            <span className={`seller-status-pill seller-status-pill--${sr.status}`}>
-              {SEARCH_REQUEST_STATUS_LABELS[sr.status] || sr.status}
-            </span>
-            <div className="admin-header-actions">
-              <button type="button" className="map-btn" onClick={() => navigateAdmin(`/admin/busquedas/${sr.id}`)}>
-                Ver
-              </button>
-            </div>
-          </div>
-        ))}
-        {!searchRequests.length ? <p className="seller-empty-state">No hay busquedas para estos filtros.</p> : null}
-      </div>
-    </section>
-  );
-
-  const renderSearchRequestView = (sr) => (
-    <section className="admin-editor" aria-labelledby="admin-search-request-view-title">
-      <div className="admin-editor-title">
-        <div>
-          <p>Búsqueda de cliente</p>
-          <h2 id="admin-search-request-view-title">{sr.userName || sr.userEmail || "Usuario sin perfil"}</h2>
-        </div>
-        <div className="admin-header-actions">
-          <button type="button" className="map-btn" onClick={() => navigateAdmin("/admin/busquedas")}>
-            Volver
-          </button>
-        </div>
-      </div>
-
-      {searchRequestMessage ? <p className="admin-success">{searchRequestMessage}</p> : null}
-      {searchRequestError ? <p className="admin-error">{searchRequestError}</p> : null}
-
-      <div className="admin-grid">
-        <label>
-          Cliente
-          <input readOnly value={sr.userName || "Sin nombre"} />
-        </label>
-        <label>
-          Email
-          <input readOnly value={sr.userEmail || "Sin email"} />
-        </label>
-        <label>
-          Operación
-          <input readOnly value={SEARCH_REQUEST_OPERATION_LABELS[sr.operation] || sr.operation} />
-        </label>
-        <label>
-          Zona
-          <input readOnly value={sr.zone || "Sin zona"} />
-        </label>
-        <label>
-          Presupuesto
-          <input readOnly value={sr.budget || "Sin presupuesto"} />
-        </label>
-        <label>
-          Ambientes
-          <input readOnly value={sr.rooms || "Sin ambientes"} />
-        </label>
-        <label className="admin-field-wide">
-          Detalle de búsqueda
-          <textarea readOnly rows="4" value={sr.searchDetail || "Sin detalle"} />
-        </label>
-        <label className="admin-field-wide">
-          Preferencias
-          <textarea readOnly rows="3" value={sr.preferences || "Sin preferencias"} />
-        </label>
-        <label className="admin-field-wide">
-          No negociables
-          <textarea readOnly rows="2" value={sr.mustHaves || "Sin requisitos"} />
-        </label>
-        <label>
-          Fecha de creación
-          <input readOnly value={formatAdminDate(sr.createdAt)} />
-        </label>
-        <label>
-          Última actualización
-          <input readOnly value={formatAdminDate(sr.updatedAt)} />
-        </label>
-      </div>
-
-      <div className="admin-grid" style={{ marginTop: "1.5rem" }}>
-        <label>
-          Estado
-          <select
-            value={sr.status}
-            disabled={isSavingSearchRequest}
-            onChange={(event) => handleSearchRequestStatusUpdate(sr.id, event.target.value)}
-          >
-            {SEARCH_REQUEST_STATUSES.map((s) => (
-              <option value={s} key={s}>
-                {SEARCH_REQUEST_STATUS_LABELS[s]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="admin-field-wide">
-          Mensaje para el cliente
-          <textarea
-            rows="3"
-            defaultValue={sr.adminMessage || ""}
-            disabled={isSavingSearchRequest}
-            onBlur={(event) => {
-              if (event.target.value !== (sr.adminMessage || "")) {
-                handleSearchRequestMessageUpdate(sr.id, event.target.value);
-              }
-            }}
-          />
-        </label>
-      </div>
-    </section>
-  );
-
-  const renderSearchRequestsSection = () => {
-    if (route.mode === "list") return renderSearchRequestsList();
-
-    if (!route.id) return renderSearchRequestsList();
-
-    const sr = searchRequests.find((item) => item.id === route.id);
-    if (!sr) {
-      return (
-        <section className="admin-panel">
-          <p>No se encontró la búsqueda.</p>
-          <button type="button" className="wa-btn" onClick={() => navigateAdmin("/admin/busquedas")}>
-            Volver a búsquedas
-          </button>
-        </section>
-      );
-    }
-
-    return renderSearchRequestView(sr);
-  };
-
   const renderAdminContent = () => {
     if (route.section === "not-found") return <AdminNotFound navigateAdmin={navigateAdmin} />;
 
@@ -3299,9 +3127,6 @@ function AdminApp() {
     if (route.section === "properties") return renderPropertiesSection();
 
     if (route.section === "clients") return renderClientsSection();
-
-    if (route.section === "searchRequests") return renderSearchRequestsSection();
-
     if (route.section === "sellers") return renderSellersSection();
 
     return <AdminNotFound navigateAdmin={navigateAdmin} />;

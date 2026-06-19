@@ -72,6 +72,7 @@ export type PropertyViewModel = {
   createdAt: string;
   updatedAt: string;
   images: string[];
+  videos: string[];
   clientAssignments: PropertyClientAssignmentViewModel[];
 };
 
@@ -203,22 +204,6 @@ export type ClientPropertySubmissionViewModel = {
   updatedAt: string;
 };
 
-export type ClientSearchRequestViewModel = {
-  id: string;
-  userId: string;
-  operation: string;
-  status: string;
-  searchDetail: string;
-  zone: string;
-  budget: string;
-  rooms: string;
-  preferences: string;
-  mustHaves: string;
-  adminMessage: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
 export type ClientPortalFileViewModel = {
   id: string;
   userId: string;
@@ -259,6 +244,10 @@ export function propertyToViewModel(row: any, options: { includeClientAssignment
     .sort((first, second) => (first.sortOrder ?? first.sort_order ?? 0) - (second.sortOrder ?? second.sort_order ?? 0))
     .map((image) => image.url)
     .filter(Boolean);
+  const videos = [...(row.propertyVideos || row.property_videos || [])]
+    .sort((first, second) => (first.sortOrder ?? first.sort_order ?? 0) - (second.sortOrder ?? second.sort_order ?? 0))
+    .map((video) => video.url)
+    .filter(Boolean);
   const clientAssignments = options.includeClientAssignments
     ? [...(row.clientAssignments || row.client_assignments || [])]
         .map((assignment) => propertyClientAssignmentToViewModel(assignment))
@@ -291,6 +280,7 @@ export function propertyToViewModel(row: any, options: { includeClientAssignment
     createdAt: isoDate(row.createdAt || row.created_at),
     updatedAt: isoDate(row.updatedAt || row.updated_at),
     images,
+    videos,
     clientAssignments
   };
 }
@@ -422,17 +412,6 @@ export function activityDocumentToViewModel(row: any): ActivityDocumentViewModel
   };
 }
 
-function jsonText(value: unknown, fallback = "") {
-  if (!value) return fallback;
-  if (typeof value === "string") return value;
-  if (Array.isArray(value)) return value.map((item) => String(item || "").trim()).filter(Boolean).join(", ");
-
-  return Object.values(value as Record<string, unknown>)
-    .map((item) => String(item || "").trim())
-    .filter(Boolean)
-    .join(", ") || fallback;
-}
-
 export function clientPortalProfileToViewModel(row: any = {}, user: any = {}): ClientPortalProfileViewModel {
   const metadata = user.user_metadata || {};
   const fullName = row.fullName || row.full_name || metadata.full_name || metadata.name || "";
@@ -471,39 +450,6 @@ export function clientPropertySubmissionToViewModel(row: any): ClientPropertySub
     longitude: Number.isFinite(longitude) ? longitude : null,
     adminMessage: row.adminMessage || row.admin_message || "",
     convertedPropertyId: row.convertedPropertyId || row.converted_property_id || "",
-    createdAt: isoDate(row.createdAt || row.created_at),
-    updatedAt: isoDate(row.updatedAt || row.updated_at)
-  };
-}
-
-export type SearchRequestWithProfileViewModel = ClientSearchRequestViewModel & {
-  userName: string;
-  userEmail: string;
-};
-
-export function searchRequestWithProfileToViewModel(row: any): SearchRequestWithProfileViewModel {
-  const profile = row.clientPortalProfile || row.profile || {};
-
-  return {
-    ...clientSearchRequestToViewModel(row),
-    userName: profile.fullName || profile.full_name || "",
-    userEmail: profile.email || ""
-  };
-}
-
-export function clientSearchRequestToViewModel(row: any): ClientSearchRequestViewModel {
-  return {
-    id: row.id || "",
-    userId: row.userId || row.user_id || "",
-    operation: row.operation || "alquilar",
-    status: row.status || "borrador",
-    searchDetail: row.searchDetail || row.search_detail || "",
-    zone: row.zone || "",
-    budget: row.budget || "",
-    rooms: row.rooms || "",
-    preferences: jsonText(row.preferences),
-    mustHaves: jsonText(row.mustHaves || row.must_haves),
-    adminMessage: row.adminMessage || row.admin_message || "",
     createdAt: isoDate(row.createdAt || row.created_at),
     updatedAt: isoDate(row.updatedAt || row.updated_at)
   };

@@ -9,12 +9,10 @@ export const CLIENT_PORTAL_PROPERTY_STATUSES = [
   "convertido",
   "archivado"
 ];
-export const CLIENT_PORTAL_SEARCH_STATUSES = CLIENT_PORTAL_PROPERTY_STATUSES;
 export const CLIENT_PORTAL_FILE_KINDS = ["photo", "document"];
 export const CLIENT_PORTAL_PASSWORD_MIN_LENGTH = 8;
 
 const PROPERTY_OPERATIONS = ["venta", "alquiler", "alquiler_permanente", "alquiler_turistico"];
-const SEARCH_OPERATIONS = ["comprar", "alquilar", "temporada"];
 const ACTIVE_FILE_STATUS = "active";
 
 function textValue(value) {
@@ -234,24 +232,6 @@ export function normalizePropertySubmission(row = {}) {
   };
 }
 
-export function normalizeSearchRequest(row = {}) {
-  return {
-    id: row.id || "",
-    userId: row.userId || row.user_id || "",
-    operation: SEARCH_OPERATIONS.includes(row.operation) ? row.operation : "alquilar",
-    status: CLIENT_PORTAL_SEARCH_STATUSES.includes(row.status) ? row.status : "borrador",
-    searchDetail: row.searchDetail || row.search_detail || "",
-    zone: row.zone || "",
-    budget: row.budget || "",
-    rooms: row.rooms || "",
-    preferences: row.preferences || "",
-    mustHaves: row.mustHaves || row.must_haves || "",
-    adminMessage: row.adminMessage || row.admin_message || "",
-    createdAt: row.createdAt || row.created_at || "",
-    updatedAt: row.updatedAt || row.updated_at || ""
-  };
-}
-
 export function normalizeClientPortalFile(row = {}) {
   const fileType = row.fileType || row.file_type || "";
 
@@ -321,27 +301,6 @@ export function propertySubmissionToClientPayload(values = {}, userId) {
   };
 }
 
-export function searchRequestToClientPayload(values = {}, userId) {
-  const normalizedUserId = requireUserId(userId);
-  const searchDetail = textValue(values.searchDetail);
-
-  if (!searchDetail) {
-    throw new Error("El detalle de busqueda es obligatorio.");
-  }
-
-  return {
-    userId: normalizedUserId,
-    operation: SEARCH_OPERATIONS.includes(values.operation) ? values.operation : "alquilar",
-    status: submittedStatus(values.status),
-    searchDetail,
-    zone: textValue(values.zone),
-    budget: textValue(values.budget),
-    rooms: textValue(values.rooms),
-    preferences: textValue(values.preferences),
-    mustHaves: textValue(values.mustHaves)
-  };
-}
-
 export function fileMetadataToClientPayload(values = {}, userId) {
   const normalizedUserId = requireUserId(userId);
   const storagePath = textValue(values.storagePath || values.storage_path);
@@ -376,7 +335,6 @@ export async function fetchClientPortalDashboard(user) {
   return {
     profile: normalizeClientPortalProfile(payload.profile || {}, user),
     propertySubmissions: (payload.propertySubmissions || []).map(normalizePropertySubmission),
-    searchRequests: (payload.searchRequests || []).map(normalizeSearchRequest),
     files: (payload.files || []).map(normalizeClientPortalFile)
   };
 }
@@ -399,16 +357,6 @@ export async function savePropertySubmission(values, userId) {
   });
 
   return normalizePropertySubmission(payload.propertySubmission || {});
-}
-
-export async function saveSearchRequest(values, userId) {
-  const searchRequest = searchRequestToClientPayload(values, userId);
-  const payload = await fetchJsonWithAuth("/api/client-portal/search-requests", {
-    method: "POST",
-    body: JSON.stringify({ searchRequest })
-  });
-
-  return normalizeSearchRequest(payload.searchRequest || {});
 }
 
 export async function saveClientPortalFileMetadata(values, userId) {

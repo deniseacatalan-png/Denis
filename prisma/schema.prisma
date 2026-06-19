@@ -39,6 +39,7 @@ model Property {
   createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime           @default(now()) @map("updated_at") @db.Timestamptz(6)
   propertyImages  PropertyImage[]
+  propertyVideos  PropertyVideo[]
   propertyNotes   PropertyNote[]
   propertyDocs    PropertyDocument[]
   portalSubmissions ClientPropertySubmission[]
@@ -57,6 +58,17 @@ model PropertyImage {
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   @@map("property_images")
+}
+
+model PropertyVideo {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  propertyId String   @map("property_id") @db.Uuid
+  url        String
+  sortOrder  Int      @default(0) @map("sort_order")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@map("property_videos")
 }
 
 model SellerProfile {
@@ -209,24 +221,6 @@ model ClientPropertySubmission {
   convertedProperty   Property? @relation(fields: [convertedPropertyId], references: [id], onDelete: SetNull)
 
   @@map("client_property_submissions")
-}
-
-model ClientSearchRequest {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId       String   @map("user_id") @db.Uuid
-  operation    String   @default("comprar")
-  status       String   @default("borrador")
-  searchDetail String   @default("") @map("search_detail")
-  zone         String   @default("")
-  budget       String   @default("")
-  rooms        String   @default("")
-  preferences  Json     @default("{}")
-  mustHaves    Json     @default("[]") @map("must_haves")
-  adminMessage String   @default("") @map("admin_message")
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
-
-  @@map("client_search_requests")
 }
 
 model ClientPortalFile {

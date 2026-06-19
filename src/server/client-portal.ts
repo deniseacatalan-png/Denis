@@ -5,13 +5,9 @@ import {
   clientPortalFileToViewModel,
   clientPortalProfileToViewModel,
   clientPropertySubmissionToViewModel,
-  clientSearchRequestToViewModel,
-  searchRequestWithProfileToViewModel,
   type ClientPortalFileViewModel,
   type ClientPortalProfileViewModel,
-  type ClientPropertySubmissionViewModel,
-  type ClientSearchRequestViewModel,
-  type SearchRequestWithProfileViewModel
+  type ClientPropertySubmissionViewModel
 } from "./view-models";
 import {
   createSupabaseRequestClient,
@@ -28,12 +24,10 @@ export const CLIENT_PORTAL_PROPERTY_STATUSES = [
   "convertido",
   "archivado"
 ];
-export const CLIENT_PORTAL_SEARCH_STATUSES = CLIENT_PORTAL_PROPERTY_STATUSES;
 export const CLIENT_PORTAL_FILE_KINDS = ["photo", "document"];
 
 const PROPERTY_OPERATIONS = ["venta", "alquiler", "alquiler_permanente", "alquiler_turistico"];
-const SEARCH_OPERATIONS = ["comprar", "alquilar", "temporada"];
-const FILE_ENTITY_TYPES = ["profile", "property_submission", "search_request"];
+const FILE_ENTITY_TYPES = ["profile", "property_submission"];
 const ACTIVE_FILE_STATUS = "active";
 
 type ClientPortalContext = {
@@ -102,17 +96,6 @@ export function assertClientPortalStoragePath(storagePath: string, userId: strin
   if (!storagePath.startsWith(`${userId}/`)) {
     throw new Error("La ruta del archivo no pertenece al cliente autenticado.");
   }
-}
-
-function splitList(value: unknown) {
-  if (Array.isArray(value)) {
-    return value.map(textValue).filter(Boolean);
-  }
-
-  return textValue(value)
-    .split(/[,\n]/g)
-    .map(textValue)
-    .filter(Boolean);
 }
 
 export function profileDataFromClientValues(values: any = {}, user: User) {
@@ -226,29 +209,6 @@ export function propertySubmissionDataFromClientValues(values: any = {}, userId:
   };
 }
 
-export function searchRequestDataFromClientValues(values: any = {}, userId: string) {
-  const searchDetail = textValue(values.searchDetail);
-
-  if (!searchDetail) {
-    throw new Error("El detalle de busqueda es obligatorio.");
-  }
-
-  const preferences = textValue(values.preferences);
-
-  return {
-    userId,
-    operation: SEARCH_OPERATIONS.includes(values.operation) ? values.operation : "alquilar",
-    status: submittedStatus(values.status),
-    searchDetail,
-    zone: textValue(values.zone),
-    budget: textValue(values.budget),
-    rooms: textValue(values.rooms),
-    preferences: preferences ? { text: preferences } : {},
-    mustHaves: splitList(values.mustHaves),
-    adminMessage: ""
-  };
-}
-
 export function fileDataFromClientValues(values: any = {}, userId: string) {
   const storagePath = textValue(values.storagePath);
   const fileName = textValue(values.fileName);
@@ -289,22 +249,19 @@ export async function getClientPortalSnapshot(
 ): Promise<{
   profile: ClientPortalProfileViewModel;
   propertySubmissions: ClientPropertySubmissionViewModel[];
-  searchRequests: ClientSearchRequestViewModel[];
   files: ClientPortalFileViewModel[];
 }> {
   await syncClientPortalUser({}, context.user);
 
-  const [profile, propertySubmissions, searchRequests, files] = await Promise.all([
+  const [profile, propertySubmissions, files] = await Promise.all([
     getClientPortalProfile(context.user),
     listClientPropertySubmissions(context.user.id),
-    listClientSearchRequests(context.user.id),
     listClientPortalFiles(context)
   ]);
 
   return {
     profile,
     propertySubmissions,
-    searchRequests,
     files
   };
 }
@@ -566,73 +523,6 @@ export async function reviewClientPropertySubmission(
   });
 
   return clientPropertySubmissionToViewModel(row);
-}
-
-export async function listClientSearchRequests(userId: string): Promise<ClientSearchRequestViewModel[]> {
-  const rows = await getPrisma().clientSearchRequest.findMany({
-    where: {
-      userId
-    },
-    orderBy: [
-      { updatedAt: "desc" },
-      { createdAt: "desc" }
-    ]
-  });
-
-  return rows.map(clientSearchRequestToViewModel);
-}
-
-export async function createClientSearchRequest(values: any, userId: string): Promise<ClientSearchRequestViewModel> {
-  const row = await getPrisma().clientSearchRequest.create({
-    data: searchRequestDataFromClientValues(values, userId)
-  });
-
-  return clientSearchRequestToViewModel(row);
-}
-
-export async function listAllSearchRequests(filters: {
-  status?: string;
-  operation?: string;
-} = {}): Promise<SearchRequestWithProfileViewModel[]> {
-  const where: Record<string, string> = {};
-  if (filters.status) where.status = filters.status;
-  if (filters.operation) where.operation = filters.operation;
-
-  const rows = await getPrisma().clientSearchRequest.findMany({
-    where,
-    orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }]
-  });
-
-  const userIds = [...new Set(rows.map((r: any) => r.userId))];
-  const profiles = userIds.length
-    ? await getPrisma().clientPortalProfile.findMany({ where: { userId: { in: userIds } } })
-    : [];
-  const profileMap = new Map(profiles.map((p: any) => [p.userId, p]));
-
-  return rows.map((row: any) => {
-    const profile = profileMap.get(row.userId) || {};
-    return searchRequestWithProfileToViewModel({ ...row, clientPortalProfile: profile });
-  });
-}
-
-export async function updateSearchRequest(
-  id: string,
-  data: { status?: string; adminMessage?: string }
-): Promise<SearchRequestWithProfileViewModel> {
-  const update: Record<string, string> = {};
-  if (data.status !== undefined) update.status = data.status;
-  if (data.adminMessage !== undefined) update.adminMessage = data.adminMessage;
-
-  const row = await getPrisma().clientSearchRequest.update({
-    where: { id },
-    data: update
-  });
-
-  const profile = await getPrisma().clientPortalProfile.findUnique({
-    where: { userId: row.userId }
-  });
-
-  return searchRequestWithProfileToViewModel({ ...row, clientPortalProfile: profile || {} });
 }
 
 async function createClientFileSignedUrl(accessToken: string, storagePath: string) {

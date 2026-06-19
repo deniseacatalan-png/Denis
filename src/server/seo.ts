@@ -127,6 +127,7 @@ export function propertyJsonLd(property: PropertyViewModel) {
     name: property.title,
     url: absoluteUrl(pathname),
     image: property.images,
+    video: property.videos.length ? property.videos : undefined,
     description: property.summary || property.rawDescription || property.location,
     address: {
       "@type": "PostalAddress",

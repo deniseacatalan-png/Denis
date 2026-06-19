@@ -333,6 +333,9 @@ export function normalizeDatabaseProperty(row) {
   const images = [...(row.property_images || [])]
     .sort((first, second) => (first.sort_order || 0) - (second.sort_order || 0))
     .map((image) => image.url);
+  const videos = [...(row.propertyVideos || row.property_videos || [])]
+    .sort((first, second) => (first.sort_order || 0) - (second.sort_order || 0))
+    .map((video) => video.url);
 
   return {
     id: row.id,
@@ -355,7 +358,8 @@ export function normalizeDatabaseProperty(row) {
     currency: row.currency || "USD",
     isPublished: row.is_published,
     displayOrder: row.display_order || 0,
-    images
+    images,
+    videos
   };
 }
 

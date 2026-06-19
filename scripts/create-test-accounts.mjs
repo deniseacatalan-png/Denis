@@ -38,18 +38,6 @@ const TEST_ACCOUNTS = {
       bathrooms: 2,
       description: "Fixture para probar el alta y seguimiento de propiedades desde el portal de clientes.",
       adminMessage: "Solicitud de prueba recibida para validar el panel de clientes."
-    },
-    searchRequest: {
-      id: "00000000-0000-4000-8000-000000000102",
-      operation: "comprar",
-      status: "contactado",
-      searchDetail: "Busco una casa de prueba con jardin para validar el portal de clientes.",
-      zone: "Centro o Chapelco",
-      budget: "Hasta USD 300.000",
-      rooms: "3 dormitorios",
-      preferences: { text: "Priorizar buena luz natural y acceso comodo." },
-      mustHaves: ["jardin", "cochera", "internet"],
-      adminMessage: "Busqueda de prueba contactada para revisar estados y mensajes."
     }
   }
 };
@@ -206,49 +194,6 @@ async function upsertClientPortalFixtures(db, { userId, fixtures }) {
     ]
   );
 
-  await db.query(
-    `
-      insert into public.client_search_requests (
-        id,
-        user_id,
-        operation,
-        status,
-        search_detail,
-        zone,
-        budget,
-        rooms,
-        preferences,
-        must_haves,
-        admin_message
-      )
-      values ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb, $11)
-      on conflict (id) do update
-      set user_id = excluded.user_id,
-          operation = excluded.operation,
-          status = excluded.status,
-          search_detail = excluded.search_detail,
-          zone = excluded.zone,
-          budget = excluded.budget,
-          rooms = excluded.rooms,
-          preferences = excluded.preferences,
-          must_haves = excluded.must_haves,
-          admin_message = excluded.admin_message,
-          updated_at = now()
-    `,
-    [
-      fixtures.searchRequest.id,
-      userId,
-      fixtures.searchRequest.operation,
-      fixtures.searchRequest.status,
-      fixtures.searchRequest.searchDetail,
-      fixtures.searchRequest.zone,
-      fixtures.searchRequest.budget,
-      fixtures.searchRequest.rooms,
-      JSON.stringify(fixtures.searchRequest.preferences),
-      JSON.stringify(fixtures.searchRequest.mustHaves),
-      fixtures.searchRequest.adminMessage
-    ]
-  );
 }
 
 const env = readEnv();
@@ -332,7 +277,7 @@ try {
     console.log(`- Admin: ${TEST_ACCOUNTS.admin.username} (${adminEmail})`);
     console.log(`- Vendedor: ${TEST_ACCOUNTS.seller.username} (${sellerEmail})`);
     console.log(`- Cliente portal: ${TEST_ACCOUNTS.client.email}`);
-    console.log("- Fixtures cliente: 1 propiedad enviada, 1 busqueda guardada");
+      console.log("- Fixtures cliente: 1 propiedad enviada");
   } catch (error) {
     await db.query("rollback");
     throw error;

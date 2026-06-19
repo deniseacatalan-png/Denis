@@ -12,7 +12,6 @@ import {
   onClientPortalAuthStateChange,
   saveClientPortalProfile,
   savePropertySubmission,
-  saveSearchRequest,
   sendClientPortalPasswordResetEmail,
   signInWithEmailClient,
   signInWithGoogleClient,
@@ -59,16 +58,6 @@ const emptyPropertyForm = {
   longitude: "-71.3524"
 };
 
-const emptySearchForm = {
-  operation: "alquilar",
-  searchDetail: "",
-  zone: "",
-  budget: "",
-  rooms: "",
-  preferences: "",
-  mustHaves: ""
-};
-
 const uploadTargetOptions = [
   {
     value: "profile",
@@ -81,12 +70,6 @@ const uploadTargetOptions = [
     label: "Propiedad",
     description: "Fotos, planos, escrituras o datos del inmueble.",
     visual: "property"
-  },
-  {
-    value: "search_request",
-    label: "Busqueda",
-    description: "Referencias, requisitos y archivos de respaldo.",
-    visual: "search"
   }
 ];
 
@@ -94,7 +77,6 @@ const portalNav = [
   { id: "panel", label: "Panel", path: "/clientes" },
   { id: "perfil", label: "Perfil", path: "/clientes/perfil" },
   { id: "propiedades", label: "Mis propiedades", path: "/clientes/propiedades" },
-  { id: "busquedas", label: "Busquedas", path: "/clientes/busquedas" },
   { id: "documentos", label: "Archivos", path: "/clientes/documentos" }
 ];
 
@@ -122,7 +104,6 @@ function activeViewFromPath() {
   const pathname = window.location.pathname;
   if (pathname.includes("/clientes/perfil")) return "perfil";
   if (pathname.includes("/clientes/propiedades")) return "propiedades";
-  if (pathname.includes("/clientes/busquedas")) return "busquedas";
   if (pathname.includes("/clientes/documentos")) return "documentos";
   return "panel";
 }
@@ -164,11 +145,11 @@ function EmptyState({ title, text }) {
   );
 }
 
-function SubmissionList({ items, type, onEditPropertySubmission }) {
+function SubmissionList({ items, onEditPropertySubmission }) {
   if (!items.length) {
     return (
       <EmptyState
-        title={type === "property" ? "Todavia no cargaste propiedades" : "Todavia no cargaste busquedas"}
+        title="Todavia no cargaste propiedades"
         text="Cuando envies una solicitud, queda visible aca para seguimiento."
       />
     );
@@ -180,7 +161,7 @@ function SubmissionList({ items, type, onEditPropertySubmission }) {
         <article className="client-record" key={item.id}>
           <div>
             <div className="client-record-title">
-              <strong>{item.title || item.searchDetail || "Solicitud"}</strong>
+              <strong>{item.title || "Solicitud"}</strong>
               <StatusPill status={item.status} />
             </div>
             <p>
@@ -257,15 +238,6 @@ function UploadTargetVisual({ type }) {
           <path d="M13 46h46" />
         </svg>
       ) : null}
-      {type === "search" ? (
-        <svg viewBox="0 0 72 56" focusable="false">
-          <path d="M18 14v31l13-5 13 5 10-4V10L44 14l-13-5-13 5Z" />
-          <path d="M31 9v31" />
-          <path d="M44 14v31" />
-          <circle cx="42" cy="27" r="7" />
-          <path d="m47 32 7 7" />
-        </svg>
-      ) : null}
     </span>
   );
 }
@@ -309,7 +281,7 @@ function ClientAuthLayout({ children }) {
         <aside className="client-auth-visual">
           <div className="client-auth-visual-copy">
             <p>Portal privado</p>
-            <h2>Propiedades, busquedas y archivos en un solo lugar.</h2>
+            <h2>Propiedades y archivos en un solo lugar.</h2>
             <span>San Martin de los Andes</span>
           </div>
         </aside>
@@ -349,11 +321,9 @@ export default function ClientPortalApp() {
   const [session, setSession] = useState(undefined);
   const [profile, setProfile] = useState(null);
   const [propertySubmissions, setPropertySubmissions] = useState([]);
-  const [searchRequests, setSearchRequests] = useState([]);
   const [files, setFiles] = useState([]);
   const [profileForm, setProfileForm] = useState(emptyProfileForm);
   const [propertyForm, setPropertyForm] = useState(emptyPropertyForm);
-  const [searchForm, setSearchForm] = useState(emptySearchForm);
   const [authForm, setAuthForm] = useState(emptyAuthForm);
   const [authMode, setAuthMode] = useState(() => (passwordResetRouteFromPath() ? "recover" : "login"));
   const [passwordUpdateForm, setPasswordUpdateForm] = useState(emptyPasswordUpdateForm);
@@ -382,7 +352,6 @@ export default function ClientPortalApp() {
         const dashboard = await fetchClientPortalDashboard(nextSession.user);
         setProfile(dashboard.profile);
         setPropertySubmissions(dashboard.propertySubmissions);
-        setSearchRequests(dashboard.searchRequests);
         setFiles(dashboard.files);
         setProfileForm({
           fullName: dashboard.profile.fullName || "",
@@ -437,13 +406,11 @@ export default function ClientPortalApp() {
 
   const summary = useMemo(
     () => ({
-      inReview: propertySubmissions.filter((item) => item.status === "en_revision").length +
-        searchRequests.filter((item) => item.status === "en_revision").length,
-      contacted: propertySubmissions.filter((item) => item.status === "contactado").length +
-        searchRequests.filter((item) => item.status === "contactado").length,
+      inReview: propertySubmissions.filter((item) => item.status === "en_revision").length,
+      contacted: propertySubmissions.filter((item) => item.status === "contactado").length,
       totalFiles: files.length
     }),
-    [files.length, propertySubmissions, searchRequests]
+    [files.length, propertySubmissions]
   );
 
   function navigate(path, viewId) {
@@ -601,24 +568,6 @@ export default function ClientPortalApp() {
     setPropertyForm(emptyPropertyForm);
   }
 
-  async function submitSearch(event) {
-    event.preventDefault();
-    setSaving("search");
-    setError("");
-    setNotice("");
-
-    try {
-      const saved = await saveSearchRequest(searchForm, user.id);
-      setSearchRequests((current) => [saved, ...current]);
-      setSearchForm(emptySearchForm);
-      setNotice("Busqueda guardada.");
-    } catch (saveError) {
-      setError(saveError.message || "No se pudo guardar la busqueda.");
-    } finally {
-      setSaving("");
-    }
-  }
-
   async function submitFile(event) {
     const uploadForm = event.currentTarget;
     event.preventDefault();
@@ -668,11 +617,11 @@ export default function ClientPortalApp() {
           <section className="client-login-panel">
             <div>
               <h1>{authMode === "recover" ? "Recuperar acceso" : "Portal de clientes"}</h1>
-              <p>
-                {authMode === "recover"
-                  ? "Te enviamos un link seguro para crear una nueva contrasenia."
-                  : "Ingresa con Google o con email para cargar propiedades, busquedas y archivos privados."}
-              </p>
+                <p>
+                  {authMode === "recover"
+                    ? "Te enviamos un link seguro para crear una nueva contrasenia."
+                  : "Ingresa con Google o con email para cargar propiedades y archivos privados."}
+                </p>
             </div>
             {error ? <p className="client-alert client-alert--error">{error}</p> : null}
             {notice ? <p className="client-alert client-alert--success">{notice}</p> : null}
@@ -900,7 +849,7 @@ export default function ClientPortalApp() {
                   <p>Ultimos movimientos</p>
                   <h2>Seguimiento</h2>
                 </div>
-                <SubmissionList items={[...propertySubmissions, ...searchRequests].slice(0, 4)} type="property" />
+                <SubmissionList items={propertySubmissions.slice(0, 4)} />
               </section>
             </section>
           ) : null}
@@ -914,7 +863,7 @@ export default function ClientPortalApp() {
                   <h2>Acceso al portal</h2>
                 </div>
                 <p>{user.email}</p>
-                <p>Desde este panel podes actualizar tus datos, cargar propiedades, guardar busquedas y subir archivos privados.</p>
+                <p>Desde este panel podes actualizar tus datos, cargar propiedades y subir archivos privados.</p>
               </section>
             </section>
           ) : null}
@@ -1009,65 +958,7 @@ export default function ClientPortalApp() {
                   <p>Historial</p>
                   <h2>Propiedades enviadas</h2>
                 </div>
-                <SubmissionList items={propertySubmissions} type="property" onEditPropertySubmission={startEditPropertySubmission} />
-              </section>
-            </section>
-          ) : null}
-
-          {activeView === "busquedas" ? (
-            <section className="client-workspace-grid">
-              <form className="client-panel client-form" onSubmit={submitSearch}>
-                <div className="client-panel-heading">
-                  <p>Solicitud de busqueda</p>
-                  <h2>Que estas buscando</h2>
-                </div>
-                <label>
-                  Detalle
-                  <textarea name="searchDetail" value={searchForm.searchDetail} onChange={fieldSetter(setSearchForm)} rows={4} required />
-                </label>
-                <div className="client-form-row">
-                  <label>
-                    Operacion
-                    <select name="operation" value={searchForm.operation} onChange={fieldSetter(setSearchForm)}>
-                      <option value="alquilar">Alquilar</option>
-                      <option value="comprar">Comprar</option>
-                      <option value="temporada">Temporada</option>
-                    </select>
-                  </label>
-                  <label>
-                    Zona
-                    <input name="zone" value={searchForm.zone} onChange={fieldSetter(setSearchForm)} />
-                  </label>
-                </div>
-                <div className="client-form-row">
-                  <label>
-                    Presupuesto
-                    <input name="budget" value={searchForm.budget} onChange={fieldSetter(setSearchForm)} />
-                  </label>
-                  <label>
-                    Ambientes
-                    <input name="rooms" value={searchForm.rooms} onChange={fieldSetter(setSearchForm)} />
-                  </label>
-                </div>
-                <label>
-                  Preferencias
-                  <input name="preferences" value={searchForm.preferences} onChange={fieldSetter(setSearchForm)} />
-                </label>
-                <label>
-                  Imprescindibles
-                  <input name="mustHaves" value={searchForm.mustHaves} onChange={fieldSetter(setSearchForm)} />
-                </label>
-                <button type="submit" className="wa-btn" disabled={saving === "search"}>
-                  {saving === "search" ? "Guardando..." : "Guardar busqueda"}
-                </button>
-              </form>
-
-              <section className="client-panel">
-                <div className="client-panel-heading">
-                  <p>Historial</p>
-                  <h2>Busquedas guardadas</h2>
-                </div>
-                <SubmissionList items={searchRequests} type="search" />
+                <SubmissionList items={propertySubmissions} onEditPropertySubmission={startEditPropertySubmission} />
               </section>
             </section>
           ) : null}

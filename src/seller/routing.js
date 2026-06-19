@@ -1,7 +1,6 @@
 export const SELLER_HOME_PATH = "/vendedor";
 export const SELLER_PROPERTIES_PATH = "/vendedor/propiedades";
 export const SELLER_NEW_PROPERTY_PATH = `${SELLER_PROPERTIES_PATH}/nueva`;
-export const SELLER_SEARCH_REQUESTS_PATH = "/vendedor/busquedas";
 
 export function getSellerRouteFromPathname(pathname = "") {
   if (/^\/vendedor\/propiedades\/nueva\/?$/.test(pathname)) {
@@ -39,17 +38,6 @@ export function getSellerRouteFromPathname(pathname = "") {
       clientId: "",
       propertyId: "",
       propertyMode: "list"
-    };
-  }
-
-  const searchRequestMatch = pathname.match(/^\/vendedor\/busquedas(?:\/([^/]+))?\/?$/);
-  if (searchRequestMatch) {
-    return {
-      section: "searchRequests",
-      clientId: "",
-      propertyId: "",
-      propertyMode: "list",
-      searchRequestId: searchRequestMatch[1] ? decodeURIComponent(searchRequestMatch[1]) : ""
     };
   }
 

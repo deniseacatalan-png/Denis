@@ -1445,6 +1445,70 @@ body {
   height: 130px;
 }
 
+.property-detail-videos {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(35, 35, 31, 0.18);
+}
+
+.property-detail-videos-header {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.property-detail-videos-header h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.25rem;
+}
+
+.property-detail-videos-header p {
+  margin: 0;
+  color: #f1eaf2;
+  font-size: 0.98rem;
+}
+
+.property-detail-videos-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.7rem;
+}
+
+.property-detail-video-link {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.9rem 1rem;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(30, 26, 31, 0.38);
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.property-detail-video-link strong {
+  font-family: "Manrope", sans-serif;
+  font-size: 0.86rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.property-detail-video-link span {
+  color: #f1eaf2;
+  font-size: 1rem;
+}
+
+.property-detail-video-link:hover,
+.property-detail-video-link:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(216, 191, 143, 0.55);
+  background: rgba(30, 26, 31, 0.54);
+  outline: none;
+}
+
 .property-detail-actions {
   display: flex;
   justify-content: flex-end;
@@ -3267,6 +3331,50 @@ body {
 
 .admin-upload-control {
   max-width: 360px;
+}
+
+.admin-videos-input {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.admin-videos-input span {
+  color: var(--text-soft);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.admin-videos-input textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+.admin-video-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-video-link {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.85rem 0.95rem;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.admin-video-link strong {
+  font-family: "Manrope", sans-serif;
+  font-size: 0.84rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-video-link span {
+  word-break: break-word;
 }
 
 .admin-image-grid {

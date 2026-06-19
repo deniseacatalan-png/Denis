@@ -75,7 +75,6 @@ describe("app navbar configuration", () => {
         ["dashboard", "Resumen", false, "link"],
         ["properties", "Propiedades", false, "link"],
         ["clients", "Clientes", true, "link"],
-        ["searchRequests", "Búsquedas", false, "link"],
         ["sellers", "Vendedores", false, "link"],
         ["signout", "Cerrar sesión", false, "cta"]
       ]
@@ -85,7 +84,6 @@ describe("app navbar configuration", () => {
       sellerNavbarItems({ isClientDetail: true }).map((item) => [item.id, item.label, Boolean(item.active), item.variant || "link"]),
       [
         ["clients", "Clientes", true, "link"],
-        ["searchRequests", "Búsquedas", false, "link"],
         ["properties", "Propiedades", false, "link"],
         ["publicSite", "Ver web", false, "link"],
         ["signout", "Cerrar sesión", false, "cta"]
@@ -96,7 +94,6 @@ describe("app navbar configuration", () => {
       sellerNavbarItems({ activeSection: "properties" }).map((item) => [item.id, item.label, Boolean(item.active), item.variant || "link"]),
       [
         ["clients", "Clientes", false, "link"],
-        ["searchRequests", "Búsquedas", false, "link"],
         ["properties", "Propiedades", true, "link"],
         ["publicSite", "Ver web", false, "link"],
         ["signout", "Cerrar sesión", false, "cta"]

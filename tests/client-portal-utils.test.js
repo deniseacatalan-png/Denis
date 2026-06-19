@@ -12,13 +12,11 @@ import {
   normalizeClientPortalProfile,
   passwordUpdateToClientPayload,
   profileToClientPayload,
-  propertySubmissionToClientPayload,
-  searchRequestToClientPayload
+  propertySubmissionToClientPayload
 } from "../src/utils/supabase/clientPortal.js";
 import {
   fileDataFromClientValues,
   propertySubmissionDataFromClientValues,
-  searchRequestDataFromClientValues,
   portalClientSyncData
 } from "../src/server/client-portal.ts";
 
@@ -111,27 +109,6 @@ describe("client portal helpers", () => {
     assert.equal(serverPayload.status, "borrador");
   });
 
-  it("validates required search detail and maps list-like preferences", () => {
-    assert.throws(
-      () => searchRequestToClientPayload({ searchDetail: " " }, googleUser.id),
-      /detalle de busqueda/i
-    );
-
-    const serverPayload = searchRequestDataFromClientValues(
-      {
-        searchDetail: "Casa con jardin",
-        operation: "comprar",
-        preferences: "vista al lago",
-        mustHaves: "cochera, patio"
-      },
-      googleUser.id
-    );
-
-    assert.equal(serverPayload.userId, googleUser.id);
-    assert.deepEqual(serverPayload.preferences, { text: "vista al lago" });
-    assert.deepEqual(serverPayload.mustHaves, ["cochera", "patio"]);
-  });
-
   it("builds and validates private Supabase Storage paths by authenticated user", () => {
     const storagePath = clientPortalStoragePath({
       userId: googleUser.id,
@@ -188,7 +165,6 @@ describe("client portal helpers", () => {
     assert.match(source, /const uploadTargetOptions = \[/);
     assert.match(source, /value: "profile"/);
     assert.match(source, /value: "property_submission"/);
-    assert.match(source, /value: "search_request"/);
     assert.match(source, /className="client-upload-target-grid"/);
     assert.match(source, /className=\{`client-upload-target-card/);
     assert.doesNotMatch(source, /<select value=\{uploadTarget\}/);
