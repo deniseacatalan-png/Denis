@@ -209,6 +209,9 @@ export function normalizeClientPortalProfile(row = {}, user = {}) {
 }
 
 export function normalizePropertySubmission(row = {}) {
+  const latitude = Number(row.latitude);
+  const longitude = Number(row.longitude);
+
   return {
     id: row.id || "",
     userId: row.userId || row.user_id || "",
@@ -221,6 +224,8 @@ export function normalizePropertySubmission(row = {}) {
     area: row.area || "",
     rooms: row.rooms || "",
     description: row.description || "",
+    latitude: Number.isFinite(latitude) ? latitude : null,
+    longitude: Number.isFinite(longitude) ? longitude : null,
     adminMessage: row.adminMessage || row.admin_message || "",
     convertedPropertyId: row.convertedPropertyId || row.converted_property_id || "",
     createdAt: row.createdAt || row.created_at || "",
@@ -289,6 +294,8 @@ export function profileToClientPayload(values = {}, user = {}) {
 export function propertySubmissionToClientPayload(values = {}, userId) {
   const normalizedUserId = requireUserId(userId);
   const title = textValue(values.title);
+  const latitude = Number(values.latitude);
+  const longitude = Number(values.longitude);
 
   if (!title) {
     throw new Error("El titulo de la propiedad es obligatorio.");
@@ -305,7 +312,9 @@ export function propertySubmissionToClientPayload(values = {}, userId) {
     price: textValue(values.price),
     area: textValue(values.area),
     rooms: textValue(values.rooms),
-    description: textValue(values.description)
+    description: textValue(values.description),
+    latitude: Number.isFinite(latitude) ? latitude : null,
+    longitude: Number.isFinite(longitude) ? longitude : null
   };
 }
 

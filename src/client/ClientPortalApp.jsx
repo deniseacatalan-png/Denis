@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import logoMark from "../../ISO GRAFITO.png";
 import AppNavbar from "../components/AppNavbar";
 import { clientNavbarItems } from "../components/AppNavbarConfig";
+import { LocationPicker } from "../components/LocationPicker";
 import {
   fetchClientPortalDashboard,
   getClientPortalSession,
@@ -52,7 +53,9 @@ const emptyPropertyForm = {
   price: "",
   area: "",
   rooms: "",
-  description: ""
+  description: "",
+  latitude: "-40.1573",
+  longitude: "-71.3524"
 };
 
 const emptySearchForm = {
@@ -905,6 +908,24 @@ export default function ClientPortalApp() {
                   Direccion
                   <input name="address" value={propertyForm.address} onChange={fieldSetter(setPropertyForm)} />
                 </label>
+                <LocationPicker
+                  latitude={propertyForm.latitude}
+                  longitude={propertyForm.longitude}
+                  location={propertyForm.address}
+                  onCoordinatesChange={(nextLatitude, nextLongitude) =>
+                    setPropertyForm((current) => ({
+                      ...current,
+                      latitude: nextLatitude,
+                      longitude: nextLongitude
+                    }))
+                  }
+                  onPlaceSelect={(place) =>
+                    setPropertyForm((current) => ({
+                      ...current,
+                      address: place.display_name || current.address
+                    }))
+                  }
+                />
                 <div className="client-form-row">
                   <label>
                     Zona

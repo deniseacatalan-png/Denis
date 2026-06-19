@@ -160,6 +160,8 @@ export type ClientPropertySubmissionViewModel = {
   area: string;
   rooms: string;
   description: string;
+  latitude: number | null;
+  longitude: number | null;
   adminMessage: string;
   convertedPropertyId: string;
   createdAt: string;
@@ -379,6 +381,9 @@ export function clientPortalProfileToViewModel(row: any = {}, user: any = {}): C
 }
 
 export function clientPropertySubmissionToViewModel(row: any): ClientPropertySubmissionViewModel {
+  const latitude = Number(row.latitude);
+  const longitude = Number(row.longitude);
+
   return {
     id: row.id || "",
     userId: row.userId || row.user_id || "",
@@ -391,6 +396,8 @@ export function clientPropertySubmissionToViewModel(row: any): ClientPropertySub
     area: row.area || "",
     rooms: row.rooms || "",
     description: row.description || "",
+    latitude: Number.isFinite(latitude) ? latitude : null,
+    longitude: Number.isFinite(longitude) ? longitude : null,
     adminMessage: row.adminMessage || row.admin_message || "",
     convertedPropertyId: row.convertedPropertyId || row.converted_property_id || "",
     createdAt: isoDate(row.createdAt || row.created_at),

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { homeJsonLd, homeMetadata } from "@/server/seo";
+import "leaflet/dist/leaflet.css";
 import "../styles/design-system.css";
 import "../styles.css";
 import "../styles/public-design-system.css";

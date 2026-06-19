@@ -98,6 +98,8 @@ export function profileDataFromClientValues(values: any = {}, user: User) {
 
 export function propertySubmissionDataFromClientValues(values: any = {}, userId: string) {
   const title = textValue(values.title);
+  const latitude = Number(values.latitude);
+  const longitude = Number(values.longitude);
 
   if (!title) {
     throw new Error("El titulo de la propiedad es obligatorio.");
@@ -115,7 +117,9 @@ export function propertySubmissionDataFromClientValues(values: any = {}, userId:
     price: textValue(values.price),
     area: textValue(values.area),
     rooms: textValue(values.rooms),
-    description: textValue(values.description)
+    description: textValue(values.description),
+    latitude: Number.isFinite(latitude) ? latitude : null,
+    longitude: Number.isFinite(longitude) ? longitude : null
   };
 }
 
