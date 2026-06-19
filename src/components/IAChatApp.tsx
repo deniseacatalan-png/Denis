@@ -6,18 +6,35 @@ import type { PropertyViewModel } from "@/server/view-models";
 import { publicNavbarItems } from "./AppNavbarConfig";
 import AppNavbar from "./AppNavbar";
 import { CATEGORY_META, propertyPublicPath } from "@/utils/properties";
+import {
+  createRuleSession,
+  generateRuleReply,
+  getRuleModeLabel,
+  normalizeRuleSession,
+  type IaRuleSession
+} from "@/utils/ia-rules";
 import type { IaPropertySuggestion } from "@/server/ia";
 
 type ChatMessage = {
   id: string;
   role: "user" | "assistant";
   content: string;
-  provider?: string;
+  provider?: "rules" | "openai";
 };
 
 type IAChatAppProps = {
   initialProperties: PropertyViewModel[];
+  hasOpenAIKey: boolean;
 };
+
+type StoredIaSession = {
+  version: 1;
+  messages: ChatMessage[];
+  session: IaRuleSession;
+  suggestions: IaPropertySuggestion[];
+};
+
+const STORAGE_KEY = "denise-ia-session-v1";
 
 const welcomeMessage: ChatMessage = {
   id: "welcome",
@@ -50,6 +67,48 @@ function propertyToSuggestion(property: PropertyViewModel): IaPropertySuggestion
   };
 }
 
+function sanitizeMessages(messages: ChatMessage[]) {
+  return messages.slice(-12);
+}
+
+function readStoredSession(): StoredIaSession | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as Partial<StoredIaSession>;
+    if (parsed.version !== 1 || !Array.isArray(parsed.messages)) return null;
+
+    return {
+      version: 1,
+      messages: parsed.messages
+        .filter((message): message is ChatMessage => Boolean(message?.role === "assistant" || message?.role === "user"))
+        .map((message) => ({
+          id: String(message.id || crypto.randomUUID()),
+          role: message.role,
+          content: String(message.content || ""),
+          provider: message.provider === "rules" || message.provider === "openai" ? message.provider : undefined
+        })),
+      session: normalizeRuleSession(parsed.session),
+      suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions.slice(0, 4) : []
+    };
+  } catch {
+    return null;
+  }
+}
+
+function persistStoredSession(payload: StoredIaSession) {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  } catch {
+    // Ignore storage issues and keep the chat usable.
+  }
+}
+
 function MessageBubble({ message }: { message: ChatMessage }) {
   return (
     <article className={`ia-message ia-message--${message.role}`}>
@@ -59,7 +118,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
       <div className="ia-message-body">
         <div className="ia-message-meta">
           <strong>{message.role === "assistant" ? "Asistente" : "Vos"}</strong>
-          {message.provider === "openai" ? <span>IA conectada</span> : null}
+          {message.provider === "openai" ? <span>IA conectada</span> : message.provider === "rules" ? <span>Reglas activas</span> : null}
         </div>
         <p>{message.content}</p>
       </div>
@@ -82,19 +141,40 @@ function PropertyCard({ property }: { property: IaPropertySuggestion }) {
   );
 }
 
-export function IAChatApp({ initialProperties }: IAChatAppProps) {
+export function IAChatApp({ initialProperties, hasOpenAIKey }: IAChatAppProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([welcomeMessage]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
+  const [session, setSession] = useState<IaRuleSession>(() => createRuleSession());
   const [suggestions, setSuggestions] = useState<IaPropertySuggestion[]>(
     () => initialProperties.slice(0, 4).map(propertyToSuggestion)
   );
   const threadEndRef = useRef<HTMLDivElement | null>(null);
+  const ruleModeLabel = getRuleModeLabel(hasOpenAIKey);
 
   useEffect(() => {
     threadEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, suggestions, isSending]);
+
+  useEffect(() => {
+    const stored = readStoredSession();
+
+    if (!stored) return;
+
+    setMessages(stored.messages.length ? sanitizeMessages(stored.messages) : [welcomeMessage]);
+    setSession(stored.session);
+    setSuggestions(stored.suggestions.length ? stored.suggestions : initialProperties.slice(0, 4).map(propertyToSuggestion));
+  }, [initialProperties]);
+
+  useEffect(() => {
+    persistStoredSession({
+      version: 1,
+      messages: sanitizeMessages(messages),
+      session,
+      suggestions: suggestions.slice(0, 4)
+    });
+  }, [messages, session, suggestions]);
 
   const updateSuggestions = (nextSuggestions: IaPropertySuggestion[]) => {
     if (!nextSuggestions.length) return;
@@ -111,11 +191,31 @@ export function IAChatApp({ initialProperties }: IAChatAppProps) {
       content: text
     };
     const nextMessages = [...messages, userMessage];
+    const localReply = generateRuleReply({
+      query: text,
+      properties: initialProperties,
+      session
+    });
 
     setMessages(nextMessages);
     setIsSending(true);
     setError("");
     setInput("");
+
+    if (!hasOpenAIKey) {
+      const assistantMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: localReply.reply,
+        provider: "rules"
+      };
+
+      setMessages((current) => [...current, assistantMessage]);
+      setSession(localReply.session);
+      updateSuggestions(localReply.suggestions);
+      setIsSending(false);
+      return;
+    }
 
     try {
       const response = await fetch("/api/ia/chat", {
@@ -141,13 +241,24 @@ export function IAChatApp({ initialProperties }: IAChatAppProps) {
         id: crypto.randomUUID(),
         role: "assistant",
         content: String(payload.reply || "No tengo una respuesta en este momento."),
-        provider: String(payload.provider || "")
+        provider: payload.provider === "rules" ? "rules" : "openai"
       };
 
       setMessages((current) => [...current, assistantMessage]);
-      updateSuggestions(Array.isArray(payload.suggestions) ? payload.suggestions : []);
+      setSession(localReply.session);
+      updateSuggestions(Array.isArray(payload.suggestions) && payload.suggestions.length ? payload.suggestions : localReply.suggestions);
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "No pudimos enviar el mensaje.");
+      const assistantMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: localReply.reply,
+        provider: "rules"
+      };
+
+      setMessages((current) => [...current, assistantMessage]);
+      setSession(localReply.session);
+      updateSuggestions(localReply.suggestions);
+      console.error("IA chat fallback activated:", submitError);
     } finally {
       setIsSending(false);
     }
@@ -190,14 +301,19 @@ export function IAChatApp({ initialProperties }: IAChatAppProps) {
               <span>propiedades publicadas</span>
             </div>
             <div>
-              <strong>Chat en vivo</strong>
+              <strong>{ruleModeLabel}</strong>
               <span>con contexto de inventario</span>
             </div>
             <div>
-              <strong>Salida segura</strong>
-              <span>sin prometer disponibilidad</span>
+              <strong>{session.turnCount || 0} turnos</strong>
+              <span>memoria en el navegador</span>
             </div>
           </div>
+        </section>
+
+        <section className="ia-mode-banner" aria-label="Estado del asistente">
+          <span className="ia-mode-pill">{ruleModeLabel}</span>
+          <span>Memoria local activa {session.turnCount ? `· ${session.turnCount} mensajes de usuario` : "· sin conversación previa"}</span>
         </section>
 
         <div className="ia-layout">
@@ -257,15 +373,15 @@ export function IAChatApp({ initialProperties }: IAChatAppProps) {
 
             <div className="ia-quick-prompts" aria-label="Consultas sugeridas">
               {quickPrompts.map((prompt) => (
-                <button
-                  key={prompt}
-                  type="button"
-                  className="ia-quick-prompt"
-                  onClick={() => void handleQuickPrompt(prompt)}
-                  disabled={isSending}
-                >
-                  {prompt}
-                </button>
+              <button
+                key={prompt}
+                type="button"
+                className="ia-quick-prompt"
+                onClick={() => void handleQuickPrompt(prompt)}
+                disabled={isSending}
+              >
+                {prompt}
+              </button>
               ))}
             </div>
           </section>

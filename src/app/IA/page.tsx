@@ -10,7 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function IAPage() {
   const initialProperties = await listPublishedProperties().catch(() => []);
+  const hasOpenAIKey = Boolean(process.env.OPENAI_API_KEY);
 
-  return <IAChatApp initialProperties={initialProperties} />;
+  return <IAChatApp initialProperties={initialProperties} hasOpenAIKey={hasOpenAIKey} />;
 }
-
