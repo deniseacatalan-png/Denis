@@ -46,6 +46,7 @@ import {
   CLIENT_STATUSES,
   deleteClientPropertyAssignment,
   fetchClients,
+  fetchClientPropertySubmissions,
   fetchSearchRequests,
   saveClient,
   saveClientPropertyAssignment,
@@ -53,6 +54,7 @@ import {
   SEARCH_REQUEST_STATUS_LABELS,
   SEARCH_REQUEST_OPERATION_LABELS,
   SEARCH_REQUEST_OPERATIONS,
+  updateClientPropertySubmission,
   updateSearchRequest
 } from "../utils/supabase/clients";
 import {
@@ -105,6 +107,21 @@ const statusLabels = {
   visitando: "Visitando",
   cerrado: "Cerrado",
   pausado: "Pausado"
+};
+
+const clientPropertySubmissionStatusLabels = {
+  borrador: "Borrador",
+  en_revision: "En revision",
+  contactado: "Aceptada",
+  convertido: "Convertida",
+  archivado: "Cancelada"
+};
+
+const propertyAssignmentLabels = {
+  propietario: "Propietario",
+  comprador: "Comprador",
+  interesado: "Interesado",
+  inquilino: "Locatario"
 };
 
 const emptyClientForm = {
@@ -161,6 +178,14 @@ function formatAdminDate(value) {
     month: "2-digit",
     year: "numeric"
   }).format(new Date(value));
+}
+
+function formatPropertyAssignmentLabel(relationship) {
+  return propertyAssignmentLabels[relationship] || relationship || "Asignacion";
+}
+
+function getPropertyAssignmentViewActionLabel(relationship) {
+  return `Ver ${relationship === "inquilino" ? "locatario" : formatPropertyAssignmentLabel(relationship).toLowerCase()}`;
 }
 
 const imageContentTypes = ["image/avif", "image/jpeg", "image/png", "image/webp"];
@@ -851,6 +876,10 @@ function AdminApp() {
   const [searchRequestError, setSearchRequestError] = useState("");
   const [searchRequestMessage, setSearchRequestMessage] = useState("");
   const [isSavingSearchRequest, setIsSavingSearchRequest] = useState(false);
+  const [clientPropertySubmissions, setClientPropertySubmissions] = useState([]);
+  const [clientPropertySubmissionsMessage, setClientPropertySubmissionsMessage] = useState("");
+  const [clientPropertySubmissionsError, setClientPropertySubmissionsError] = useState("");
+  const [isLoadingClientPropertySubmissions, setIsLoadingClientPropertySubmissions] = useState(false);
   const [showClientPropertyAssignmentModal, setShowClientPropertyAssignmentModal] = useState(false);
   const [hasLoadedProperties, setHasLoadedProperties] = useState(false);
   const [hasLoadedAllClients, setHasLoadedAllClients] = useState(false);
@@ -1069,6 +1098,50 @@ function AdminApp() {
     loadSearchRequests();
   }, [session, searchRequestFilters.status, searchRequestFilters.operation]);
 
+  useEffect(() => {
+    if (route.section !== "clients" || !route.id || (route.mode !== "view" && route.mode !== "edit")) {
+      setClientPropertySubmissions([]);
+      setClientPropertySubmissionsMessage("");
+      setClientPropertySubmissionsError("");
+      setIsLoadingClientPropertySubmissions(false);
+      return;
+    }
+
+    const routedClient = allClients.find((client) => client.id === route.id);
+    const clientEmail = routedClient?.email?.trim();
+
+    if (!clientEmail) {
+      setClientPropertySubmissions([]);
+      setClientPropertySubmissionsMessage("");
+      setClientPropertySubmissionsError("Este cliente no tiene email asociado para buscar sus solicitudes del portal.");
+      return;
+    }
+
+    let mounted = true;
+    setIsLoadingClientPropertySubmissions(true);
+    setClientPropertySubmissionsMessage("");
+    setClientPropertySubmissionsError("");
+
+    fetchClientPropertySubmissions(route.id)
+      .then((items) => {
+        if (!mounted) return;
+        setClientPropertySubmissions(items);
+      })
+      .catch((loadError) => {
+        if (!mounted) return;
+        setClientPropertySubmissions([]);
+        setClientPropertySubmissionsError(loadError.message || "No se pudieron cargar las propiedades enviadas.");
+      })
+      .finally(() => {
+        if (!mounted) return;
+        setIsLoadingClientPropertySubmissions(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [allClients, route.id, route.mode, route.section]);
+
   const handleSearchRequestStatusUpdate = async (id, status) => {
     setIsSavingSearchRequest(true);
     setSearchRequestError("");
@@ -1096,6 +1169,28 @@ function AdminApp() {
       setSearchRequestError(saveError.message);
     } finally {
       setIsSavingSearchRequest(false);
+    }
+  };
+
+  const handleClientPropertySubmissionReview = async (submissionId, status) => {
+    if (!submissionId) return;
+
+    setClientPropertySubmissionsMessage("");
+    setClientPropertySubmissionsError("");
+
+    try {
+      const updated = await updateClientPropertySubmission(submissionId, { status });
+      setClientPropertySubmissions((current) =>
+        current
+          .map((item) => (item.id === submissionId ? updated : item))
+          .sort((first, second) => second.updatedAt.localeCompare(first.updatedAt))
+      );
+      setClientPropertySubmissionsMessage(
+        status === "contactado" ? "Solicitud aceptada." : "Solicitud cancelada."
+      );
+      setTimeout(() => setClientPropertySubmissionsMessage(""), 3000);
+    } catch (saveError) {
+      setClientPropertySubmissionsError(saveError.message);
     }
   };
 
@@ -1974,6 +2069,50 @@ function AdminApp() {
         </label>
       </div>
 
+      <section className="admin-description-widget admin-property-assignments-widget">
+        <div className="admin-widget-header">
+          <h3>Asignaciones</h3>
+        </div>
+        {property.clientAssignments?.length ? (
+          <div className="admin-property-assignments-list">
+            {property.clientAssignments.map((assignment) => {
+              const client = assignment.client;
+
+              if (!client) {
+                return (
+                  <article className="admin-property-assignment-card" key={assignment.id}>
+                    <div>
+                      <strong>{formatPropertyAssignmentLabel(assignment.relationship)}</strong>
+                      <small>Cliente no disponible</small>
+                    </div>
+                  </article>
+                );
+              }
+
+              return (
+                <article className="admin-property-assignment-card" key={assignment.id}>
+                  <div>
+                    <strong>{formatPropertyAssignmentLabel(assignment.relationship)}</strong>
+                    <small>{client.fullName || "Sin nombre"}</small>
+                  </div>
+                  <div className="admin-header-actions">
+                    <button
+                      type="button"
+                      className="map-btn"
+                      onClick={() => navigateAdmin(`/admin/clientes/${client.id}`)}
+                    >
+                      {getPropertyAssignmentViewActionLabel(assignment.relationship)}
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="seller-empty-state">Esta propiedad no tiene clientes asignados.</p>
+        )}
+      </section>
+
       <section className="admin-description-widget">
         <div className="admin-widget-header">
           <h3>Resumen</h3>
@@ -2354,6 +2493,92 @@ function AdminApp() {
     </section>
   );
 
+  const renderClientPropertySubmissionsPanel = () => (
+    <section className="admin-panel admin-client-submissions-panel" aria-labelledby="admin-client-submissions-title">
+      <div className="admin-sellers-header">
+        <div>
+          <p>Portal de clientes</p>
+          <h2 id="admin-client-submissions-title">Propiedades enviadas</h2>
+        </div>
+      </div>
+
+      {clientPropertySubmissionsMessage ? <p className="admin-success">{clientPropertySubmissionsMessage}</p> : null}
+      {clientPropertySubmissionsError ? <p className="admin-error">{clientPropertySubmissionsError}</p> : null}
+      {isLoadingClientPropertySubmissions ? <p className="seller-empty-state">Cargando solicitudes del portal...</p> : null}
+
+      {!isLoadingClientPropertySubmissions && !clientPropertySubmissions.length ? (
+        <p className="seller-empty-state">Este cliente todavía no envió propiedades desde el portal.</p>
+      ) : null}
+
+      <div className="admin-client-submissions-list">
+        {clientPropertySubmissions.map((submission) => {
+          const canReview = submission.status === "en_revision";
+
+          return (
+            <article className="admin-client-submission-card" key={submission.id}>
+              <div className="admin-client-submission-card__header">
+                <div>
+                  <strong>{submission.title || "Sin titulo"}</strong>
+                  <small>
+                    {submission.operation || "venta"} · {submission.propertyType || "Sin tipo"}
+                  </small>
+                </div>
+                <span className={`seller-status-pill seller-status-pill--${submission.status}`}>
+                  {clientPropertySubmissionStatusLabels[submission.status] || submission.status}
+                </span>
+              </div>
+
+              <div className="admin-client-submission-grid">
+                <span>
+                  <small>Ubicacion</small>
+                  <strong>{submission.location || "Sin ubicacion"}</strong>
+                </span>
+                <span>
+                  <small>Zona</small>
+                  <strong>{submission.zone || "Sin zona"}</strong>
+                </span>
+                <span>
+                  <small>Precio</small>
+                  <strong>{submission.price || "Sin precio"}</strong>
+                </span>
+                <span>
+                  <small>Ambientes</small>
+                  <strong>{submission.rooms || "Sin cargar"}</strong>
+                </span>
+                <span>
+                  <small>Superficie</small>
+                  <strong>{submission.area || "Sin cargar"}</strong>
+                </span>
+                <span>
+                  <small>Coordenadas</small>
+                  <strong>
+                    {Number.isFinite(Number(submission.latitude)) && Number.isFinite(Number(submission.longitude))
+                      ? `${Number(submission.latitude).toFixed(6)}, ${Number(submission.longitude).toFixed(6)}`
+                      : "Sin coordenadas"}
+                  </strong>
+                </span>
+              </div>
+
+              {submission.description ? <p className="admin-client-submission-description">{submission.description}</p> : null}
+              {submission.adminMessage ? <p className="admin-client-submission-note">{submission.adminMessage}</p> : null}
+
+              {canReview ? (
+                <div className="admin-header-actions">
+                  <button type="button" className="wa-btn" onClick={() => handleClientPropertySubmissionReview(submission.id, "contactado")}>
+                    Aceptar
+                  </button>
+                  <button type="button" className="map-btn" onClick={() => handleClientPropertySubmissionReview(submission.id, "archivado")}>
+                    Cancelar
+                  </button>
+                </div>
+              ) : null}
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+
   const renderClientView = (client) => (
     <section className="admin-editor" aria-labelledby="admin-client-view-title">
       <div className="admin-editor-title">
@@ -2438,6 +2663,7 @@ function AdminApp() {
         fetchNotes={fetchClientNotes}
         createNote={createClientNote}
       />
+      {renderClientPropertySubmissionsPanel()}
       <DocumentsPanel
         entityType="client"
         entityId={client.id}

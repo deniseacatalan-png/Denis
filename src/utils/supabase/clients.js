@@ -211,3 +211,17 @@ export async function updateSearchRequest(id, data) {
 
   return payload.searchRequest;
 }
+
+export async function fetchClientPropertySubmissions(clientId) {
+  const payload = await fetchJsonWithAuth(`/api/internal/client-property-submissions?clientId=${encodeURIComponent(clientId)}`);
+  return payload.propertySubmissions || [];
+}
+
+export async function updateClientPropertySubmission(id, data) {
+  const payload = await fetchJsonWithAuth(`/api/internal/client-property-submissions/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data)
+  });
+
+  return payload.propertySubmission;
+}

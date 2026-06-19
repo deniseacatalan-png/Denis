@@ -153,6 +153,28 @@ export async function syncClientPortalUser(values: any = {}, user: User) {
       notes: ""
     }
   });
+
+  const portalProfile = await prisma.clientPortalProfile.findUnique({
+    where: {
+      userId: user.id
+    },
+    select: {
+      userId: true
+    }
+  });
+
+  if (!portalProfile) {
+    await prisma.clientPortalProfile.create({
+      data: {
+        userId: user.id,
+        email: data.email,
+        fullName: data.fullName,
+        avatarUrl: userAvatarUrl(user),
+        phone: data.phone,
+        isActive: true
+      }
+    });
+  }
 }
 
 export function propertySubmissionDataFromClientValues(values: any = {}, userId: string) {
@@ -305,6 +327,34 @@ export async function listClientPropertySubmissions(userId: string): Promise<Cli
   return rows.map(clientPropertySubmissionToViewModel);
 }
 
+export async function listClientPropertySubmissionsByClientId(clientId: string): Promise<ClientPropertySubmissionViewModel[]> {
+  const client = await getPrisma().client.findUnique({
+    where: { id: textValue(clientId) },
+    select: {
+      email: true
+    }
+  });
+
+  if (!client?.email) {
+    return [];
+  }
+
+  const portalProfile = await getPrisma().clientPortalProfile.findFirst({
+    where: {
+      email: client.email.toLowerCase()
+    },
+    select: {
+      userId: true
+    }
+  });
+
+  if (!portalProfile?.userId) {
+    return [];
+  }
+
+  return listClientPropertySubmissions(portalProfile.userId);
+}
+
 export async function createClientPropertySubmission(
   values: any,
   userId: string
@@ -348,6 +398,28 @@ export async function updateClientPropertySubmission(
       ...propertySubmissionDataFromClientValues(values, userId),
       status: existing.status
     }
+  });
+
+  return clientPropertySubmissionToViewModel(row);
+}
+
+export async function reviewClientPropertySubmission(
+  id: string,
+  values: { status?: string; adminMessage?: string }
+): Promise<ClientPropertySubmissionViewModel> {
+  const submissionId = textValue(id);
+
+  if (!submissionId) {
+    throw new Error("Falta la solicitud de propiedad a revisar.");
+  }
+
+  const update: Record<string, unknown> = {};
+  if (values.status) update.status = values.status;
+  if (values.adminMessage !== undefined) update.adminMessage = textValue(values.adminMessage);
+
+  const row = await getPrisma().clientPropertySubmission.update({
+    where: { id: submissionId },
+    data: update
   });
 
   return clientPropertySubmissionToViewModel(row);

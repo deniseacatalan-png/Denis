@@ -36,6 +36,15 @@ function normalizeMarkerColor(value: unknown, category: string) {
   return legacyCategory === category ? categoryMarkerColor(category) : markerColor;
 }
 
+function normalizePropertyClientOperation(value: unknown, isOwner = false) {
+  const operation = String(value || "");
+  if (["comprador", "vendedor", "locador", "inquilino"].includes(operation)) return operation;
+  if (operation === "comprar") return isOwner ? "vendedor" : "comprador";
+  if (operation === "alquilar" || operation === "temporada") return isOwner ? "locador" : "inquilino";
+
+  return isOwner ? "vendedor" : "comprador";
+}
+
 export type PropertyViewModel = {
   id: string;
   databaseId: string;
@@ -60,6 +69,28 @@ export type PropertyViewModel = {
   createdAt: string;
   updatedAt: string;
   images: string[];
+  clientAssignments: PropertyClientAssignmentViewModel[];
+};
+
+export type PropertyClientAssignmentViewModel = {
+  id: string;
+  clientId: string;
+  propertyId: string;
+  relationship: string;
+  notes: string;
+  createdBy: string;
+  updatedBy: string;
+  createdAt: string;
+  updatedAt: string;
+  client: {
+    id: string;
+    fullName: string;
+    phone: string;
+    email: string;
+    operation: string;
+    isOwner: boolean;
+    status: string;
+  } | null;
 };
 
 export type ClientViewModel = {
@@ -219,12 +250,17 @@ export type InternalProfile =
       profile: SellerProfileViewModel;
     };
 
-export function propertyToViewModel(row: any): PropertyViewModel {
+export function propertyToViewModel(row: any, options: { includeClientAssignments?: boolean } = {}): PropertyViewModel {
   const category = row.category || "venta";
   const images = [...(row.propertyImages || row.property_images || [])]
     .sort((first, second) => (first.sortOrder ?? first.sort_order ?? 0) - (second.sortOrder ?? second.sort_order ?? 0))
     .map((image) => image.url)
     .filter(Boolean);
+  const clientAssignments = options.includeClientAssignments
+    ? [...(row.clientAssignments || row.client_assignments || [])]
+        .map((assignment) => propertyClientAssignmentToViewModel(assignment))
+        .sort((first, second) => second.updatedAt.localeCompare(first.updatedAt))
+    : [];
   const latitude = Number(row.latitude);
   const longitude = Number(row.longitude);
 
@@ -251,7 +287,37 @@ export function propertyToViewModel(row: any): PropertyViewModel {
     displayOrder: Number(row.displayOrder ?? row.display_order ?? 0),
     createdAt: isoDate(row.createdAt || row.created_at),
     updatedAt: isoDate(row.updatedAt || row.updated_at),
-    images
+    images,
+    clientAssignments
+  };
+}
+
+export function propertyClientAssignmentToViewModel(row: any): PropertyClientAssignmentViewModel {
+  const client = row.client || null;
+  const isOwner = Boolean(client?.isOwner ?? client?.is_owner);
+  const operation = normalizePropertyClientOperation(client?.operation, isOwner);
+
+  return {
+    id: row.id || "",
+    clientId: row.clientId || row.client_id || "",
+    propertyId: row.propertyId || row.property_id || "",
+    relationship: row.relationship || "interesado",
+    notes: row.notes || "",
+    createdBy: row.createdBy || row.created_by || "",
+    updatedBy: row.updatedBy || row.updated_by || "",
+    createdAt: isoDate(row.createdAt || row.created_at),
+    updatedAt: isoDate(row.updatedAt || row.updated_at),
+    client: client
+      ? {
+          id: client.id || "",
+          fullName: client.fullName || client.full_name || "",
+          phone: client.phone || "",
+          email: client.email || "",
+          operation,
+          isOwner,
+          status: client.status || "nuevo"
+        }
+      : null
   };
 }
 
