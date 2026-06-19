@@ -168,6 +168,8 @@ export function IAChatApp({ initialProperties }: IAChatAppProps) {
       <AppNavbar
         logoUrl="/isonegro.jpg"
         brandHref="/"
+        onBrandClick={undefined}
+        onItemSelect={undefined}
         items={publicNavbarItems({ currentPathname: "/IA" })}
       />
 
