@@ -9,7 +9,6 @@ import { CATEGORY_META, propertyPublicPath } from "@/utils/properties";
 import {
   createRuleSession,
   generateRuleReply,
-  getRuleModeLabel,
   normalizeRuleSession,
   type IaRuleSession
 } from "@/utils/ia-rules";
@@ -40,7 +39,7 @@ const welcomeMessage: ChatMessage = {
   id: "welcome",
   role: "assistant",
   content:
-    "Hola, soy el asistente de Denise Catalan Bienes Raices. Contame zona, presupuesto, tipo de operacion y si buscás temporada de invierno o de verano, y te muestro propiedades publicadas reales sin inventar resultados."
+    "Hola, soy el asistente de Denise Catalan Bienes Raices. Contame zona, presupuesto y tipo de operacion, y te muestro propiedades publicadas reales."
 };
 
 const quickPrompts = [
@@ -151,7 +150,6 @@ export function IAChatApp({ initialProperties, hasOpenAIKey }: IAChatAppProps) {
     () => initialProperties.slice(0, 4).map(propertyToSuggestion)
   );
   const threadEndRef = useRef<HTMLDivElement | null>(null);
-  const ruleModeLabel = getRuleModeLabel(hasOpenAIKey);
 
   useEffect(() => {
     threadEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -295,11 +293,6 @@ export function IAChatApp({ initialProperties, hasOpenAIKey }: IAChatAppProps) {
             </p>
           </div>
 
-        </section>
-
-        <section className="ia-mode-banner" aria-label="Estado del asistente">
-          <span className="ia-mode-pill">{ruleModeLabel}</span>
-          <span>Memoria local activa {session.turnCount ? `· ${session.turnCount} mensajes de usuario` : "· sin conversación previa"}</span>
         </section>
 
         <div className="ia-layout">
