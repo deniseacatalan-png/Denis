@@ -154,6 +154,7 @@ export type ClientPropertySubmissionViewModel = {
   title: string;
   operation: string;
   status: string;
+  propertyType: string;
   location: string;
   zone: string;
   price: string;
@@ -390,6 +391,7 @@ export function clientPropertySubmissionToViewModel(row: any): ClientPropertySub
     title: row.title || "",
     operation: row.operation || "venta",
     status: row.status || "borrador",
+    propertyType: row.propertyType || row.property_type || "",
     location: row.address || row.location || row.zone || "",
     zone: row.zone || "",
     price: row.price || "",

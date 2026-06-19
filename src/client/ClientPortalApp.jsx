@@ -45,6 +45,7 @@ const emptyPasswordUpdateForm = {
 };
 
 const emptyPropertyForm = {
+  id: "",
   title: "",
   operation: "venta",
   propertyType: "",
@@ -163,7 +164,7 @@ function EmptyState({ title, text }) {
   );
 }
 
-function SubmissionList({ items, type }) {
+function SubmissionList({ items, type, onEditPropertySubmission }) {
   if (!items.length) {
     return (
       <EmptyState
@@ -188,7 +189,14 @@ function SubmissionList({ items, type }) {
                 .join(" · ")}
             </p>
           </div>
-          {item.adminMessage ? <small>{item.adminMessage}</small> : <small>Actualizado {formatDate(item.updatedAt)}</small>}
+          <div className="client-record-meta">
+            {item.adminMessage ? <small>{item.adminMessage}</small> : <small>Actualizado {formatDate(item.updatedAt)}</small>}
+            {type === "property" && item.status === "en_revision" && onEditPropertySubmission ? (
+              <button type="button" className="map-btn client-record-edit" onClick={() => onEditPropertySubmission(item)}>
+                Editar
+              </button>
+            ) : null}
+          </div>
         </article>
       ))}
     </div>
@@ -356,6 +364,7 @@ export default function ClientPortalApp() {
   const [saving, setSaving] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [editingPropertySubmissionId, setEditingPropertySubmissionId] = useState("");
 
   const user = session?.user || null;
 
@@ -550,14 +559,46 @@ export default function ClientPortalApp() {
 
     try {
       const saved = await savePropertySubmission(propertyForm, user.id);
-      setPropertySubmissions((current) => [saved, ...current]);
+      setPropertySubmissions((current) =>
+        [saved, ...current.filter((item) => item.id !== saved.id)].sort((first, second) =>
+          second.updatedAt.localeCompare(first.updatedAt)
+        )
+      );
       setPropertyForm(emptyPropertyForm);
-      setNotice("Propiedad enviada para revision.");
+      setEditingPropertySubmissionId("");
+      setNotice(propertyForm.id ? "Propiedad actualizada." : "Propiedad enviada para revision.");
     } catch (saveError) {
       setError(saveError.message || "No se pudo enviar la propiedad.");
     } finally {
       setSaving("");
     }
+  }
+
+  function startEditPropertySubmission(submission) {
+    if (submission.status !== "en_revision") return;
+
+    setEditingPropertySubmissionId(submission.id);
+    setPropertyForm({
+      id: submission.id || "",
+      title: submission.title || "",
+      operation: submission.operation || "venta",
+      propertyType: submission.propertyType || "",
+      address: submission.location || "",
+      zone: submission.zone || "",
+      price: submission.price || "",
+      area: submission.area || "",
+      rooms: submission.rooms || "",
+      description: submission.description || "",
+      latitude: Number.isFinite(Number(submission.latitude)) ? String(submission.latitude) : "",
+      longitude: Number.isFinite(Number(submission.longitude)) ? String(submission.longitude) : ""
+    });
+    setActiveView("propiedades");
+    window.history.pushState({}, "", "/clientes/propiedades");
+  }
+
+  function cancelEditPropertySubmission() {
+    setEditingPropertySubmissionId("");
+    setPropertyForm(emptyPropertyForm);
   }
 
   async function submitSearch(event) {
@@ -883,8 +924,16 @@ export default function ClientPortalApp() {
               <form className="client-panel client-form" onSubmit={submitProperty}>
                 <div className="client-panel-heading">
                   <p>Alta de propiedad</p>
-                  <h2>Cargar propiedad</h2>
+                  <h2>{editingPropertySubmissionId ? "Editar propiedad" : "Cargar propiedad"}</h2>
                 </div>
+                {editingPropertySubmissionId ? (
+                  <div className="client-edit-banner">
+                    <p>Esta solicitud esta en revision y puede editarse.</p>
+                    <button type="button" className="map-btn" onClick={cancelEditPropertySubmission}>
+                      Cancelar edicion
+                    </button>
+                  </div>
+                ) : null}
                 <label>
                   Titulo
                   <input name="title" value={propertyForm.title} onChange={fieldSetter(setPropertyForm)} required />
@@ -951,7 +1000,7 @@ export default function ClientPortalApp() {
                   <textarea name="description" value={propertyForm.description} onChange={fieldSetter(setPropertyForm)} rows={5} />
                 </label>
                 <button type="submit" className="wa-btn" disabled={saving === "property"}>
-                  {saving === "property" ? "Enviando..." : "Enviar a revision"}
+                  {saving === "property" ? "Guardando..." : editingPropertySubmissionId ? "Guardar cambios" : "Enviar a revision"}
                 </button>
               </form>
 
@@ -960,7 +1009,7 @@ export default function ClientPortalApp() {
                   <p>Historial</p>
                   <h2>Propiedades enviadas</h2>
                 </div>
-                <SubmissionList items={propertySubmissions} type="property" />
+                <SubmissionList items={propertySubmissions} type="property" onEditPropertySubmission={startEditPropertySubmission} />
               </section>
             </section>
           ) : null}

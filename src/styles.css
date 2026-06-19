@@ -1707,6 +1707,49 @@ body {
   justify-content: flex-end;
 }
 
+.admin-client-property-modal-backdrop {
+  z-index: 1100;
+}
+
+.service-modal.admin-client-property-modal {
+  width: min(860px, 100%);
+  max-height: min(90vh, 820px);
+  overflow: auto;
+}
+
+.admin-client-property-modal-header {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 0.9rem;
+  padding-right: 3rem;
+}
+
+.admin-client-property-modal-header p {
+  margin: 0;
+  color: var(--marron-tierra);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-client-property-modal-header h3 {
+  margin: 0;
+  color: var(--verde-bosque);
+}
+
+.admin-client-property-modal .activity-panel {
+  margin-top: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.admin-client-property-modal .activity-form {
+  background: rgba(239, 225, 195, 0.24);
+}
+
 .service-option-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -5343,6 +5386,39 @@ body {
 
 .client-profile-summary .map-btn {
   justify-self: start;
+}
+
+.client-edit-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.8rem 0.9rem;
+  color: var(--verde-bosque);
+  background: rgba(216, 191, 143, 0.18);
+  border: 1px solid rgba(216, 191, 143, 0.34);
+  border-radius: 8px;
+}
+
+.client-edit-banner p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.client-record-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.client-record-edit {
+  min-height: 38px;
+  padding-inline: 0.85rem;
+  white-space: nowrap;
 }
 
 .client-account-panel {

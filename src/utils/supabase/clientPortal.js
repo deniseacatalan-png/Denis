@@ -218,6 +218,7 @@ export function normalizePropertySubmission(row = {}) {
     title: row.title || "",
     operation: PROPERTY_OPERATIONS.includes(row.operation) ? row.operation : "venta",
     status: CLIENT_PORTAL_PROPERTY_STATUSES.includes(row.status) ? row.status : "borrador",
+    propertyType: row.propertyType || row.property_type || "",
     location: row.location || row.address || row.zone || "",
     zone: row.zone || "",
     price: row.price || "",
@@ -293,6 +294,7 @@ export function profileToClientPayload(values = {}, user = {}) {
 
 export function propertySubmissionToClientPayload(values = {}, userId) {
   const normalizedUserId = requireUserId(userId);
+  const id = textValue(values.id);
   const title = textValue(values.title);
   const latitude = Number(values.latitude);
   const longitude = Number(values.longitude);
@@ -302,6 +304,7 @@ export function propertySubmissionToClientPayload(values = {}, userId) {
   }
 
   return {
+    id,
     userId: normalizedUserId,
     title,
     operation: PROPERTY_OPERATIONS.includes(values.operation) ? values.operation : "venta",

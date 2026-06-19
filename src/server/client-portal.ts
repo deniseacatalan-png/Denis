@@ -62,6 +62,20 @@ function userAvatarUrl(user: User) {
   return textValue(metadata.avatar_url) || textValue(metadata.picture);
 }
 
+export function portalClientSyncData(values: any = {}, user: User) {
+  const email = lowerTextValue(user.email);
+
+  if (!email) {
+    throw new Error("No se pudo identificar el email del cliente autenticado.");
+  }
+
+  return {
+    email,
+    fullName: textValue(values.fullName) || userFullName(user),
+    phone: textValue(values.phone)
+  };
+}
+
 export function assertClientPortalStoragePath(storagePath: string, userId: string) {
   if (!storagePath.startsWith(`${userId}/`)) {
     throw new Error("La ruta del archivo no pertenece al cliente autenticado.");
@@ -94,6 +108,51 @@ export function profileDataFromClientValues(values: any = {}, user: User) {
     phone: textValue(values.phone),
     isActive: true
   };
+}
+
+export async function syncClientPortalUser(values: any = {}, user: User) {
+  const prisma = getPrisma();
+  const data = portalClientSyncData(values, user);
+  const existing = await prisma.client.findFirst({
+    where: {
+      email: data.email
+    },
+    select: {
+      id: true
+    }
+  });
+
+  if (existing) {
+    await prisma.client.update({
+      where: {
+        id: existing.id
+      },
+      data: {
+        fullName: data.fullName,
+        phone: data.phone,
+        email: data.email,
+        updatedBy: user.id
+      }
+    });
+    return;
+  }
+
+  await prisma.client.create({
+    data: {
+      createdBy: user.id,
+      updatedBy: user.id,
+      fullName: data.fullName,
+      phone: data.phone,
+      email: data.email,
+      isOwner: false,
+      operation: "comprador",
+      zone: "",
+      budget: "",
+      rooms: "",
+      status: "nuevo",
+      notes: ""
+    }
+  });
 }
 
 export function propertySubmissionDataFromClientValues(values: any = {}, userId: string) {
@@ -189,6 +248,8 @@ export async function getClientPortalSnapshot(
   searchRequests: ClientSearchRequestViewModel[];
   files: ClientPortalFileViewModel[];
 }> {
+  await syncClientPortalUser({}, context.user);
+
   const [profile, propertySubmissions, searchRequests, files] = await Promise.all([
     getClientPortalProfile(context.user),
     listClientPropertySubmissions(context.user.id),
@@ -225,6 +286,8 @@ export async function saveClientPortalProfile(values: any, user: User): Promise<
     create: data
   });
 
+  await syncClientPortalUser(values, user);
+
   return clientPortalProfileToViewModel(row, user);
 }
 
@@ -248,6 +311,43 @@ export async function createClientPropertySubmission(
 ): Promise<ClientPropertySubmissionViewModel> {
   const row = await getPrisma().clientPropertySubmission.create({
     data: propertySubmissionDataFromClientValues(values, userId)
+  });
+
+  return clientPropertySubmissionToViewModel(row);
+}
+
+export async function updateClientPropertySubmission(
+  id: string,
+  values: any,
+  userId: string
+): Promise<ClientPropertySubmissionViewModel> {
+  const submissionId = textValue(id);
+
+  if (!submissionId) {
+    throw new Error("Falta la solicitud de propiedad a actualizar.");
+  }
+
+  const existing = await getPrisma().clientPropertySubmission.findFirst({
+    where: {
+      id: submissionId,
+      userId
+    }
+  });
+
+  if (!existing) {
+    throw new Error("No se encontro la solicitud de propiedad.");
+  }
+
+  if (existing.status !== "en_revision") {
+    throw new Error("Solo se pueden editar solicitudes en revision.");
+  }
+
+  const row = await getPrisma().clientPropertySubmission.update({
+    where: { id: submissionId },
+    data: {
+      ...propertySubmissionDataFromClientValues(values, userId),
+      status: existing.status
+    }
   });
 
   return clientPropertySubmissionToViewModel(row);
