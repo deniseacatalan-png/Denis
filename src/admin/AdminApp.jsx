@@ -656,11 +656,8 @@ function imagePathForFile(file, propertySlug, index) {
   return `properties/${propertySlug}/${Date.now()}-${index}-${safeBaseName}${extension}`;
 }
 
-function splitVideoLinks(value) {
-  return String(value || "")
-    .split(/\r?\n+/)
-    .map((line) => line.trim())
-    .filter(Boolean);
+function sanitizeVideoLinks(values) {
+  return values.map((value) => String(value || "").trim()).filter(Boolean);
 }
 
 function getVideoSourceLabel(url) {
@@ -698,7 +695,7 @@ function propertyToForm(property) {
     isPublished: Boolean(property.isPublished),
     displayOrder: property.displayOrder || 0,
     images: property.images || [],
-    videos: property.videos || []
+    videos: property.videos?.length ? property.videos : [""]
   };
 }
 
@@ -1187,6 +1184,31 @@ function AdminApp() {
     }));
   };
 
+  const updateVideoLink = (index, value) => {
+    setForm((current) => ({
+      ...current,
+      videos: current.videos.length
+        ? current.videos.map((video, videoIndex) => (videoIndex === index ? value : video))
+        : [value]
+    }));
+  };
+
+  const addVideoLink = () => {
+    setForm((current) => ({
+      ...current,
+      videos: [...sanitizeVideoLinks(current.videos), ""]
+    }));
+  };
+
+  const removeVideoLink = (index) => {
+    setForm((current) => ({
+      ...current,
+      videos: current.videos.filter((_, videoIndex) => videoIndex !== index).length
+        ? current.videos.filter((_, videoIndex) => videoIndex !== index)
+        : [""]
+    }));
+  };
+
   const updateDescription = (descriptionHtml, rawDescription = htmlToPlainText(descriptionHtml)) => {
     setForm((current) => ({
       ...current,
@@ -1417,7 +1439,10 @@ function AdminApp() {
     setIsLoading(true);
 
     try {
-      const propertyId = await saveAdminProperty(form);
+      const propertyId = await saveAdminProperty({
+        ...form,
+        videos: sanitizeVideoLinks(form.videos)
+      });
       setMessage("Propiedad guardada.");
       await loadProperties();
       setSelectedId(propertyId);
@@ -2152,8 +2177,11 @@ function AdminApp() {
     </section>
   );
 
-  const renderPropertyEditor = ({ showBackButton = true } = {}) => (
-    <form className="admin-editor" onSubmit={handleSave}>
+  const renderPropertyEditor = ({ showBackButton = true } = {}) => {
+    const videoLinks = sanitizeVideoLinks(form.videos);
+
+    return (
+      <form className="admin-editor" onSubmit={handleSave}>
       <div className="admin-editor-title">
         <div>
           <p>{form.databaseId ? "Editar propiedad" : "Nueva propiedad"}</p>
@@ -2347,22 +2375,43 @@ function AdminApp() {
         <div className="admin-images-header">
           <div>
             <span>Links de video</span>
-            <small>YouTube o Instagram Reels. Un link por linea.</small>
+            <small>YouTube o Instagram Reels. Agregalos de a uno.</small>
           </div>
-          <span>{form.videos.length ? `${form.videos.length} links` : "Sin links"}</span>
+          <button type="button" className="map-btn" onClick={addVideoLink}>
+            Agregar link
+          </button>
         </div>
-        <label className="admin-videos-input">
-          <span>Videos</span>
-          <textarea
-            rows="5"
-            value={form.videos.join("\n")}
-            onChange={(event) => updateField("videos", splitVideoLinks(event.target.value))}
-            placeholder="https://www.youtube.com/watch?v=...\nhttps://www.instagram.com/reel/..."
-          />
-        </label>
-        {form.videos.length ? (
+        <div className="admin-videos-summary">
+          <span>{videoLinks.length ? `${videoLinks.length} links cargados` : "Sin links cargados"}</span>
+          <small>Podés dejar filas vacías mientras armás la lista.</small>
+        </div>
+        <div className="admin-video-rows">
+          {form.videos.map((videoUrl, index) => (
+            <div className="admin-video-row" key={`video-row-${index}`}>
+              <label className="admin-video-input">
+                <span>Video {index + 1}</span>
+                <input
+                  type="url"
+                  inputMode="url"
+                  value={videoUrl}
+                  onChange={(event) => updateVideoLink(index, event.target.value)}
+                  placeholder="https://www.youtube.com/watch?v=... o https://www.instagram.com/reel/..."
+                />
+              </label>
+              <button
+                type="button"
+                className="map-btn admin-video-remove"
+                onClick={() => removeVideoLink(index)}
+                disabled={form.videos.length === 1}
+              >
+                Quitar
+              </button>
+            </div>
+          ))}
+        </div>
+        {videoLinks.length ? (
           <div className="admin-video-list">
-            {form.videos.map((url, index) => (
+            {videoLinks.map((url, index) => (
               <a
                 key={`${url}-${index}`}
                 className="admin-video-link"
@@ -2389,7 +2438,8 @@ function AdminApp() {
         ) : null}
       </div>
     </form>
-  );
+    );
+  };
 
   const renderClientsList = () => (
     <section className="admin-sellers-panel" aria-labelledby="admin-clients-title">

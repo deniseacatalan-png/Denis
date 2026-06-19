@@ -3362,20 +3362,54 @@ body {
   max-width: 360px;
 }
 
-.admin-videos-input {
+.admin-videos-summary {
   display: grid;
-  gap: 0.45rem;
+  gap: 0.2rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.05);
 }
 
-.admin-videos-input span {
+.admin-videos-summary span {
   color: var(--text-soft);
   font-size: 0.95rem;
   font-weight: 700;
 }
 
-.admin-videos-input textarea {
-  min-height: 8rem;
-  resize: vertical;
+.admin-videos-summary small {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.admin-video-rows {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.admin-video-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.7rem;
+  align-items: end;
+}
+
+.admin-video-input {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.admin-video-input span {
+  color: var(--text-soft);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.admin-video-input input {
+  width: 100%;
+}
+
+.admin-video-remove {
+  white-space: nowrap;
 }
 
 .admin-video-list {
