@@ -11,6 +11,7 @@ import {
   getPublicSelectedPropertyId,
   getVisiblePublicProperties,
   normalizeDatabaseProperty,
+  formatPricePerM2,
   propertyMatchesSearch,
   propertyPublicPath,
   propertyShareData,
@@ -186,5 +187,16 @@ describe("property helpers", () => {
     });
 
     assert.equal(property.markerColor, CATEGORY_META.alquiler_turistico.mapColor);
+  });
+
+  it("formats price per square meter as an integer without decimals", () => {
+    assert.equal(
+      formatPricePerM2({
+        priceAmount: 240000,
+        currency: "USD",
+        area: "1.200 m²"
+      }),
+      "U$S 200/m²"
+    );
   });
 });

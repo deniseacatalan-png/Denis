@@ -260,10 +260,32 @@ export function formatPrice(priceAmount, currency) {
 }
 
 function parseAreaM2(area) {
-  if (!area) return null;
-  const match = String(area).match(/([\d.,]+)\s*m/i);
+  const rawArea = String(area || "").trim();
+  if (!rawArea) return null;
+
+  const match = rawArea.match(/(\d[\d.,]*)/);
   if (!match) return null;
-  const value = Number(match[1].replace(/\./g, "").replace(",", "."));
+
+  const numericValue = match[1].replace(/\s+/g, "");
+  const lastSeparatorIndex = Math.max(numericValue.lastIndexOf("."), numericValue.lastIndexOf(","));
+  let normalizedValue = numericValue;
+
+  if (lastSeparatorIndex !== -1) {
+    const decimals = numericValue.length - lastSeparatorIndex - 1;
+
+    if (decimals <= 2) {
+      normalizedValue =
+        numericValue
+          .slice(0, lastSeparatorIndex)
+          .replace(/[.,]/g, "") +
+        "." +
+        numericValue.slice(lastSeparatorIndex + 1);
+    } else {
+      normalizedValue = numericValue.replace(/[.,]/g, "");
+    }
+  }
+
+  const value = Number(normalizedValue);
   return Number.isFinite(value) && value > 0 ? value : null;
 }
 

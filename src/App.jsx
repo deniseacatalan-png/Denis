@@ -452,6 +452,8 @@ function ServiceOptionVisual({ icon }) {
 }
 
 function MapPropertyPreview({ property, isPinned, displayedPrice, onPreviewClick }) {
+  const pricePerM2 = formatPricePerM2(property);
+
   return (
     <article
       className={`map-property-preview ${isPinned ? "map-property-preview--pinned" : ""}`}
@@ -490,10 +492,10 @@ function MapPropertyPreview({ property, isPinned, displayedPrice, onPreviewClick
           <dt>Superficie</dt>
           <dd>{property.area}</dd>
         </div>
-        {property.category === "venta" && formatPricePerM2(property) ? (
+        {pricePerM2 ? (
           <div>
             <dt>Precio/m²</dt>
-            <dd>{formatPricePerM2(property)}</dd>
+            <dd>{pricePerM2}</dd>
           </div>
         ) : null}
       </dl>
@@ -613,6 +615,7 @@ function PublicApp({ initialProperties = [] }) {
     () => findPropertyByPublicPath(visibleProperties, currentPathname),
     [visibleProperties, currentPathname]
   );
+  const routedPropertyPricePerM2 = routedProperty ? formatPricePerM2(routedProperty) : null;
   const selectedProperty =
     routedProperty || visibleProperties.find((property) => property.id === selectedId) || visibleProperties[0] || null;
   const activeMapPropertyId = pinnedPropertyId || hoveredPropertyId || selectedProperty?.id || "";
@@ -1054,8 +1057,8 @@ function PublicApp({ initialProperties = [] }) {
                     <strong>{routedProperty.area}</strong>
                   </div>
                   <div>
-                    <span>{routedProperty.category === "venta" && formatPricePerM2(routedProperty) ? "Precio/m²" : "Geo"}</span>
-                    <strong>{routedProperty.category === "venta" && formatPricePerM2(routedProperty) ? formatPricePerM2(routedProperty) : formatCoords(routedProperty.coords)}</strong>
+                    <span>{routedPropertyPricePerM2 ? "Precio/m²" : "Geo"}</span>
+                    <strong>{routedPropertyPricePerM2 || formatCoords(routedProperty.coords)}</strong>
                   </div>
                 </div>
 
@@ -1305,7 +1308,7 @@ function PublicApp({ initialProperties = [] }) {
                           <span className="property-slide-text">
                             <span className="property-slide-kicker">
                               {formatDisplayedPrice(property)}
-                              {property.category === "venta" && formatPricePerM2(property) ? (
+                              {formatPricePerM2(property) ? (
                                 <small className="property-slide-price-m2"> · {formatPricePerM2(property)}</small>
                               ) : null}
                             </span>
