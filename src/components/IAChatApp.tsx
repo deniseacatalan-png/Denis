@@ -384,15 +384,6 @@ export function IAChatApp({ initialProperties, hasOpenAIKey }: IAChatAppProps) {
               </div>
             </section>
 
-            <section className="ia-sidebar-card ia-sidebar-card--muted">
-              <p className="ia-sidebar-kicker">Como responder mejor</p>
-              <ul className="ia-guidance">
-                <li>Decime si buscás venta, alquiler permanente o turístico.</li>
-                <li>Si es turístico, aclarame invierno o verano.</li>
-                <li>Agregá zona, rango de precio y ambientes si los tenés.</li>
-                <li>Si querés, también puedo ayudarte a comparar opciones similares.</li>
-              </ul>
-            </section>
           </aside>
         </div>
       </main>

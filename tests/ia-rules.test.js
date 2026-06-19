@@ -60,6 +60,17 @@ describe("IA rules fallback", () => {
     assert.match(reply.reply, /temporario|temporada|zona/i);
   });
 
+  it("sounds more natural on the first rental reply", () => {
+    const reply = generateRuleReply({
+      query: "Busco alquiler permanente",
+      properties,
+      session: createRuleSession()
+    });
+
+    assert.match(reply.reply, /te encontré 1 propiedad|te encontré \d+ opciones|algo a tu medida/i);
+    assert.match(reply.reply, /zona|presupuesto|ambientes/i);
+  });
+
   it("understands winter and summer seasonal rentals and known areas", () => {
     const reply = generateRuleReply({
       query: "Busco alquiler de invierno en Lolog",

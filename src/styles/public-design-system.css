@@ -718,7 +718,6 @@
 .ia-hero-stats span,
 .ia-sidebar-card span,
 .ia-sidebar-card p,
-.ia-guidance,
 .ia-message p,
 .ia-composer-hint {
   color: var(--text-soft);
@@ -850,8 +849,7 @@
 .ia-message p,
 .ia-empty-state p,
 .ia-property-card p,
-.ia-property-card small,
-.ia-guidance li {
+.ia-property-card small {
   font-size: 0.92rem;
   line-height: 1.55;
 }
@@ -1087,17 +1085,6 @@
 
 .ia-empty-state p {
   margin: 0.35rem 0 0;
-}
-
-.ia-guidance {
-  margin: 0.9rem 0 0;
-  padding-left: 1.1rem;
-}
-
-.ia-sidebar-card--muted {
-  background:
-    linear-gradient(180deg, rgba(17, 26, 33, 0.9), rgba(12, 21, 27, 0.86)),
-    radial-gradient(circle at top left, rgba(216, 191, 143, 0.12), transparent 26%);
 }
 
 @keyframes iaPulse {

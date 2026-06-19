@@ -77,9 +77,9 @@ const INTENT_KEYWORDS: Record<"comprar" | "vender" | "alquiler_permanente" | "al
 };
 
 const STAGE_OPENERS: Record<1 | 2 | 3, string[]> = {
-  1: ["Perfecto", "Dale", "Entiendo", "Buenísimo"],
-  2: ["Ya tengo una mejor lectura", "Bien, con eso cierro un poco más", "Listo, ahora sí", "Va tomando forma"],
-  3: ["Para cerrarlo rápido", "Con esto ya te puedo afinar la búsqueda", "Si querés, te dejo la shortlist", "Ya queda bastante claro"]
+  1: ["Perfecto", "Dale", "Buenísimo", "Claro"],
+  2: ["Vamos bien", "Perfecto", "Ya lo pude acotar más", "Bien, con eso ya afino mejor"],
+  3: ["Listo", "Ya lo tengo bastante claro", "Con esto ya puedo cerrar la búsqueda", "Te lo dejo bien afinado"]
 };
 
 const STAGE_CLOSERS: Record<1 | 2 | 3, string[]> = {
@@ -550,45 +550,59 @@ function buildReplyBody({
   previousSession: IaRuleSession;
 }) {
   const opener = pickVariant(STAGE_OPENERS[stage], `${query}:${signals.intent}:${previousSession.turnCount}`);
-  const intentLabel = summarizeIntent(signals.intent);
   const seasonText = seasonLabel(signals.season);
   const missing = describeMissingSignals(signals);
   const topSuggestions = suggestions.slice(0, stage === 1 ? 2 : stage === 2 ? 3 : 3);
+  const suggestionCount = topSuggestions.length;
+  const propertyLabel =
+    suggestionCount === 1
+      ? "propiedad"
+      : suggestionCount === 2
+        ? "propiedades"
+        : "opciones";
+  const targetLabel =
+    signals.intent === "alquiler_turistico"
+      ? "alquiler por temporada"
+      : signals.intent === "alquiler_permanente"
+        ? "alquiler permanente"
+        : summarizeIntent(signals.intent);
 
   const pieces: string[] = [];
 
-  if (signals.changedTopic && previousSession.turnCount > 0) {
-    pieces.push(`${opener}. Cambio el foco a ${intentLabel}.`);
-  } else if (stage === 1) {
-    pieces.push(`${opener}, entendí que buscás ${intentLabel}.`);
+  if (stage === 1) {
+    if (signals.changedTopic && previousSession.turnCount > 0) {
+      pieces.push(`${opener}, cambio el foco a ${targetLabel}.`);
+    } else {
+      pieces.push(`${opener}, entendí que buscás ${targetLabel}.`);
+    }
   } else if (stage === 2) {
-    pieces.push(`${opener}. Ya tengo un perfil más claro de tu búsqueda de ${intentLabel}.`);
+    pieces.push(`${opener}, ya tengo la búsqueda bastante más clara.`);
   } else {
-    pieces.push(`${opener}. Te dejo una síntesis corta para ${intentLabel}.`);
+    pieces.push(`${opener}, ya te la pude afinar bastante.`);
   }
 
   if (signals.zone) {
-    pieces.push(`Zona detectada: ${signals.zone}.`);
+    pieces.push(`Zona que marcaste: ${signals.zone}.`);
   }
 
   if (signals.budget) {
-    pieces.push(`Presupuesto detectado: ${signals.budget}.`);
+    pieces.push(`Presupuesto que vi: ${signals.budget}.`);
   }
 
   if (signals.rooms) {
-    pieces.push(`Ambientes/metros detectados: ${signals.rooms}.`);
+    pieces.push(`Ambientes o superficie: ${signals.rooms}.`);
   }
 
   if (signals.preferences.length) {
-    pieces.push(`Preferencias detectadas: ${signals.preferences.slice(0, 3).join(", ")}.`);
+    pieces.push(`Me quedó como preferencia: ${signals.preferences.slice(0, 3).join(", ")}.`);
   }
 
   if (seasonText) {
-    pieces.push(`Temporada detectada: ${seasonText}.`);
+    pieces.push(`Temporada: ${seasonText}.`);
     if (signals.intent === "alquiler_turistico") {
       pieces.push(
         signals.season === "invierno"
-          ? "Para invierno suelen pesar mucho Chapelco, el centro y los accesos rápidos a nieve."
+          ? "Para invierno suelen pesar mucho Chapelco, el centro y los accesos rápidos a la nieve."
           : "Para verano suelen pesar mucho Lolog, Quila Quina, el Lago Lácar y los circuitos lacustres."
       );
     }
@@ -597,18 +611,20 @@ function buildReplyBody({
   if (topSuggestions.length) {
     pieces.push(
       stage === 1
-        ? `Mientras afino, estas son las mejores coincidencias reales que encontré:`
+        ? suggestionCount === 1
+          ? `Por ahora te encontré 1 ${propertyLabel} que puede servirte:`
+          : `Por ahora te encontré ${suggestionCount} ${propertyLabel} que pueden servirte:`
         : stage === 2
-          ? `Las opciones que mejor encajan ahora mismo son:`
-          : `Mis opciones más fuertes para cerrar son:`
+          ? `Te dejo las ${suggestionCount} mejores opciones que veo ahora mismo:`
+          : `Te dejo las ${suggestionCount} opciones más firmes que tengo:`
     );
     pieces.push(topSuggestions.map((property, index) => formatPropertyLine(property, index, stage)).join("\n"));
   } else {
     pieces.push(
       stage === 1
-        ? "No encontré coincidencias fuertes con ese texto, pero puedo afinarlo enseguida si me pasás un dato más."
+        ? `Todavía no encontré una coincidencia fuerte para ${targetLabel}, pero lo afinamos enseguida si me pasás un dato más.`
         : stage === 2
-          ? "Aún no encuentro una coincidencia fuerte, así que conviene ajustar una variable más."
+          ? "Todavía no me cierra del todo, así que conviene ajustar una variable más."
           : "Con lo que me pasaste todavía no aparece un match claro en el inventario."
     );
   }
@@ -622,22 +638,26 @@ function buildReplyBody({
           : `${missing.slice(0, 2).join(", ")} y ${missing[2]}`;
     pieces.push(
       stage === 1
-        ? `Para seguir, decime ${missingText}.`
+        ? `¿Me decís ${missingText} y vemos si tengo algo a tu medida?`
         : stage === 2
           ? `Si me agregás ${missingText}, te la dejo mucho más precisa.`
-          : `Con ${missingText} extra ya te cierro una shortlist más fina.`
+          : `Con ${missingText} extra ya te cierro una búsqueda más fina.`
     );
   } else {
     pieces.push(
       stage === 1
-        ? "Si querés, te sigo con una búsqueda más precisa."
+        ? "Si querés, la seguimos y te afino una propuesta más a medida."
         : stage === 2
           ? "Si querés, ahora te comparo solo las dos o tres mejores."
           : "Si querés, te lo dejo listo para enviar por WhatsApp o seguimos ajustando."
     );
   }
 
-  pieces.push(pickVariant(STAGE_CLOSERS[stage], `${query}:${signals.intent}:${topSuggestions.map((item) => item.id).join(",")}`));
+  if (stage >= 2) {
+    pieces.push(
+      pickVariant(STAGE_CLOSERS[stage], `${query}:${signals.intent}:${topSuggestions.map((item) => item.id).join(",")}`)
+    );
+  }
 
   return pieces.filter(Boolean).join("\n\n");
 }
