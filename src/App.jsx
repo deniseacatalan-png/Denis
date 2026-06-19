@@ -567,6 +567,7 @@ function PublicApp({ initialProperties = [] }) {
   const [currentPathname, setCurrentPathname] = useState(() => window.location.pathname);
   const [shareFeedback, setShareFeedback] = useState("");
   const [lightboxIndex, setLightboxIndex] = useState(-1);
+  const [openedInstagramReels, setOpenedInstagramReels] = useState({});
   const shareFeedbackTimerRef = useRef(0);
 
   useEffect(() => {
@@ -672,15 +673,16 @@ function PublicApp({ initialProperties = [] }) {
   }, [routedProperty, selectedId]);
 
   useEffect(() => {
-    const hasInstagramVideo = routedProperty?.videos?.some((videoUrl) => {
+    const hasOpenedInstagramVideo = routedProperty?.videos?.some((videoUrl) => {
       try {
-        return new URL(videoUrl).hostname.replace(/^www\./i, "").toLowerCase().endsWith("instagram.com");
+        const host = new URL(videoUrl).hostname.replace(/^www\./i, "").toLowerCase();
+        return host.endsWith("instagram.com") && Boolean(openedInstagramReels[videoUrl]);
       } catch {
         return false;
       }
     });
 
-    if (!hasInstagramVideo) return;
+    if (!hasOpenedInstagramVideo) return;
 
     if (!document.querySelector('script[src="https://www.instagram.com/embed.js"]')) {
       const script = document.createElement("script");
@@ -695,7 +697,14 @@ function PublicApp({ initialProperties = [] }) {
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, [routedProperty?.videos, currentPathname]);
+  }, [routedProperty?.videos, currentPathname, openedInstagramReels]);
+
+  const openInstagramReel = (videoUrl) => {
+    setOpenedInstagramReels((current) => ({
+      ...current,
+      [videoUrl]: true
+    }));
+  };
 
   const formatDisplayedPrice = (property) => {
     if (property?.category === "proceso") return "Sin valor";
@@ -1179,42 +1188,72 @@ function PublicApp({ initialProperties = [] }) {
                         }
 
                         if (embedData.source === "Instagram Reels") {
+                          const isOpen = Boolean(openedInstagramReels[videoUrl]);
+
                           return (
                             <article
                               key={`${videoUrl}-${index}`}
                               className="property-detail-video-card property-detail-instagram-card"
                             >
-                              <div className="property-detail-instagram-header">
-                                <div className="property-detail-instagram-brand">
-                                  <span className="property-detail-instagram-mark" aria-hidden="true">
-                                    IG
-                                  </span>
-                                  <div>
-                                    <strong>Instagram Reel</strong>
-                                    <span>Reel de la propiedad</span>
+                              {isOpen ? (
+                                <>
+                                  <div className="property-detail-instagram-header">
+                                    <div className="property-detail-instagram-brand">
+                                      <span className="property-detail-instagram-mark" aria-hidden="true">
+                                        IG
+                                      </span>
+                                      <div>
+                                        <strong>Instagram Reel</strong>
+                                        <span>Reel de la propiedad</span>
+                                      </div>
+                                    </div>
+                                    <a
+                                      href={videoUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="property-detail-instagram-open"
+                                    >
+                                      Abrir
+                                    </a>
                                   </div>
-                                </div>
-                                <a
-                                  href={videoUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="property-detail-instagram-open"
+                                  <div className="property-detail-instagram-frame">
+                                    <blockquote
+                                      className="instagram-media"
+                                      data-instgrm-permalink={embedData.embedUrl}
+                                      data-instgrm-version="14"
+                                      data-instgrm-captioned="true"
+                                    >
+                                      <a href={videoUrl} target="_blank" rel="noreferrer">
+                                        Ver en Instagram
+                                      </a>
+                                    </blockquote>
+                                  </div>
+                                </>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="property-detail-instagram-cover"
+                                  onClick={() => openInstagramReel(videoUrl)}
                                 >
-                                  Abrir
-                                </a>
-                              </div>
-                              <div className="property-detail-instagram-frame">
-                                <blockquote
-                                  className="instagram-media"
-                                  data-instgrm-permalink={embedData.embedUrl}
-                                  data-instgrm-version="14"
-                                  data-instgrm-captioned="true"
-                                >
-                                  <a href={videoUrl} target="_blank" rel="noreferrer">
-                                    Ver en Instagram
-                                  </a>
-                                </blockquote>
-                              </div>
+                                  <div className="property-detail-instagram-cover-top">
+                                    <span className="property-detail-instagram-mark" aria-hidden="true">
+                                      IG
+                                    </span>
+                                    <span className="property-detail-instagram-cover-badge">Reel</span>
+                                  </div>
+                                  <div className="property-detail-instagram-cover-visual" aria-hidden="true">
+                                    <span className="property-detail-instagram-cover-glow property-detail-instagram-cover-glow--one" />
+                                    <span className="property-detail-instagram-cover-glow property-detail-instagram-cover-glow--two" />
+                                    <span className="property-detail-instagram-cover-glow property-detail-instagram-cover-glow--three" />
+                                    <span className="property-detail-instagram-cover-play">▶</span>
+                                  </div>
+                                  <div className="property-detail-instagram-cover-copy">
+                                    <strong>{routedProperty.title}</strong>
+                                    <span>Ver reel en Instagram</span>
+                                  </div>
+                                  <span className="property-detail-instagram-cover-cta">Abrir reel</span>
+                                </button>
+                              )}
                             </article>
                           );
                         }
