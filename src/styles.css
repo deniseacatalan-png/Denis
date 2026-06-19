@@ -1485,8 +1485,6 @@ body {
 }
 
 .property-detail-video-card--instagram {
-  display: grid;
-  gap: 0.7rem;
   padding: 0.85rem;
   background:
     radial-gradient(circle at top left, rgba(225, 48, 108, 0.18), transparent 34%),
@@ -1495,35 +1493,14 @@ body {
 }
 
 .property-detail-instagram-cover {
-  display: grid;
-  gap: 0.8rem;
+  display: block;
   width: 100%;
   padding: 0;
   color: inherit;
-  text-align: left;
+  text-decoration: none;
   border: 0;
   background: transparent;
   cursor: pointer;
-}
-
-.property-detail-instagram-cover-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.7rem;
-}
-
-.property-detail-instagram-cover-badge {
-  padding: 0.35rem 0.65rem;
-  border-radius: 999px;
-  color: #fff;
-  font-family: "Manrope", sans-serif;
-  font-size: 0.76rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .property-detail-instagram-cover-visual {
@@ -1576,37 +1553,6 @@ body {
   filter: blur(8px);
 }
 
-.property-detail-instagram-cover-glow {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(1px);
-}
-
-.property-detail-instagram-cover-glow--one {
-  width: 180px;
-  height: 180px;
-  top: -34px;
-  left: -20px;
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.property-detail-instagram-cover-glow--two {
-  width: 220px;
-  height: 220px;
-  right: -60px;
-  top: 40px;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.property-detail-instagram-cover-glow--three {
-  width: 120px;
-  height: 120px;
-  bottom: 22px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.14);
-}
-
 .property-detail-instagram-cover-play {
   position: relative;
   z-index: 1;
@@ -1622,121 +1568,6 @@ body {
   background: rgba(255, 255, 255, 0.18);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 18px 34px rgba(0, 0, 0, 0.18);
-}
-
-.property-detail-instagram-cover-copy {
-  display: grid;
-  gap: 0.15rem;
-}
-
-.property-detail-instagram-cover-copy strong {
-  color: #fff;
-  font-family: "Manrope", sans-serif;
-  font-size: 1.02rem;
-}
-
-.property-detail-instagram-cover-copy span {
-  color: #f6ead1;
-  font-size: 0.98rem;
-}
-
-.property-detail-instagram-cover-cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;
-  min-height: 2.4rem;
-  padding: 0.45rem 0.8rem;
-  border-radius: 999px;
-  color: #fff;
-  font-family: "Manrope", sans-serif;
-  font-size: 0.84rem;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-}
-
-.property-detail-instagram-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.8rem;
-}
-
-.property-detail-instagram-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-}
-
-.property-detail-instagram-mark {
-  width: 2.2rem;
-  height: 2.2rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  font-family: "Manrope", sans-serif;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: #fff;
-  background: linear-gradient(135deg, #f58529 0%, #dd2a7b 45%, #8134af 100%);
-  box-shadow: 0 10px 22px rgba(221, 42, 123, 0.24);
-}
-
-.property-detail-instagram-brand strong,
-.property-detail-instagram-brand span {
-  display: block;
-}
-
-.property-detail-instagram-brand strong {
-  color: #fff;
-  font-family: "Manrope", sans-serif;
-  font-size: 0.94rem;
-}
-
-.property-detail-instagram-brand span {
-  color: #f1eaf2;
-  font-size: 0.92rem;
-}
-
-.property-detail-instagram-open {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.4rem;
-  padding: 0.55rem 0.9rem;
-  border-radius: 999px;
-  color: #fff;
-  font-family: "Manrope", sans-serif;
-  font-size: 0.84rem;
-  font-weight: 800;
-  text-decoration: none;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-}
-
-.property-detail-instagram-open:hover,
-.property-detail-instagram-open:focus-visible {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.26);
-  outline: none;
-}
-
-.property-detail-instagram-frame {
-  overflow: hidden;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(0, 0, 0, 0.18);
-}
-
-.property-detail-instagram-frame .instagram-media {
-  margin: 0 auto !important;
-  min-width: 0 !important;
-  width: 100% !important;
-  max-width: 100% !important;
 }
 
 .property-detail-video-frame {
