@@ -21,6 +21,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1
     },
     {
+      url: absoluteUrl("/IA"),
+      lastModified: STATIC_LAST_MODIFIED,
+      priority: 0.85
+    },
+    {
       url: absoluteUrl("/map"),
       lastModified: STATIC_LAST_MODIFIED,
       priority: 0.7

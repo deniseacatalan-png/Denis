@@ -61,6 +61,30 @@ export function homeMetadata(): Metadata {
   };
 }
 
+export function iaMetadata(): Metadata {
+  const title = "Asistente IA | Denise Catalán Bienes Raíces";
+  const description =
+    "Asistente de consulta inmobiliaria para comprar, alquilar y descubrir propiedades publicadas de Denise Catalán Bienes Raíces.";
+
+  return {
+    metadataBase: new URL(DEFAULT_SITE_URL),
+    title,
+    description,
+    alternates: {
+      canonical: "/IA"
+    },
+    openGraph: {
+      title,
+      description,
+      url: absoluteUrl("/IA"),
+      siteName: "Denise Catalán Bienes Raíces",
+      locale: "es_AR",
+      type: "website",
+      images: [HOME_IMAGE_PATH]
+    }
+  };
+}
+
 export function propertyMetadata(property: PropertyViewModel | null): Metadata {
   if (!property) {
     return {

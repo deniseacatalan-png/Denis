@@ -1017,7 +1017,7 @@ function PublicApp({ initialProperties = [] }) {
         <AppNavbar
           logoUrl={logoMarkUrl}
           onBrandClick={() => navigateToPath("/")}
-          items={publicNavbarItems({ isPropertyRoute: true })}
+          items={publicNavbarItems({ isPropertyRoute: true, currentPathname })}
           onItemSelect={handlePublicNavbarItemSelect}
         />
 
@@ -1146,7 +1146,7 @@ function PublicApp({ initialProperties = [] }) {
       <AppNavbar
         logoUrl={logoMarkUrl}
         onBrandClick={() => navigateToPath("/")}
-        items={publicNavbarItems()}
+        items={publicNavbarItems({ currentPathname })}
         onItemSelect={handlePublicNavbarItemSelect}
       />
       <header className="hero" id="inicio">
