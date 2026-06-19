@@ -1477,11 +1477,12 @@ body {
 
 .property-detail-video-card--instagram .property-detail-instagram-cover-visual {
   min-height: 0;
-  aspect-ratio: 3 / 2;
+  height: 330px;
 }
 
 .property-detail-video-card--youtube .property-detail-video-frame {
-  aspect-ratio: 4 / 3;
+  height: 330px;
+  aspect-ratio: auto;
 }
 
 .property-detail-instagram-cover {
@@ -1499,7 +1500,7 @@ body {
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 320px;
+  height: 330px;
   overflow: hidden;
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.14);
