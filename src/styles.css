@@ -1475,6 +1475,15 @@ body {
     rgba(30, 26, 31, 0.38);
 }
 
+.property-detail-video-card--instagram .property-detail-instagram-cover-visual {
+  min-height: 0;
+  aspect-ratio: 3 / 2;
+}
+
+.property-detail-video-card--youtube .property-detail-video-frame {
+  aspect-ratio: 4 / 3;
+}
+
 .property-detail-instagram-cover {
   display: block;
   width: 100%;
@@ -1490,7 +1499,7 @@ body {
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 360px;
+  min-height: 320px;
   overflow: hidden;
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.14);

@@ -1181,7 +1181,10 @@ function PublicApp({ initialProperties = [] }) {
                         }
 
                         return (
-                          <article key={`${videoUrl}-${index}`} className="property-detail-video-card">
+                          <article
+                            key={`${videoUrl}-${index}`}
+                            className="property-detail-video-card property-detail-video-card--youtube"
+                          >
                             <div className="property-detail-video-frame">
                               <iframe
                                 src={embedData.embedUrl}
