@@ -1454,23 +1454,6 @@ body {
   background: rgba(35, 35, 31, 0.18);
 }
 
-.property-detail-videos-header {
-  display: grid;
-  gap: 0.2rem;
-}
-
-.property-detail-videos-header h2 {
-  margin: 0;
-  color: #fff;
-  font-size: 1.25rem;
-}
-
-.property-detail-videos-header p {
-  margin: 0;
-  color: #f1eaf2;
-  font-size: 0.98rem;
-}
-
 .property-detail-videos-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));

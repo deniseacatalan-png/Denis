@@ -1128,11 +1128,7 @@ function PublicApp({ initialProperties = [] }) {
                 )}
 
                 {routedProperty.videos?.length ? (
-                  <section className="property-detail-videos" aria-labelledby="property-detail-videos-title">
-                    <div className="property-detail-videos-header">
-                      <h2 id="property-detail-videos-title">Videos</h2>
-                      <p>Videos embebidos para ver recorridos y reels de la propiedad.</p>
-                    </div>
+                  <section className="property-detail-videos" aria-label="Videos de la propiedad">
                     <div className="property-detail-videos-list">
                       {routedProperty.videos.map((videoUrl, index) => {
                         const embedData = getVideoEmbedData(videoUrl);
