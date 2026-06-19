@@ -73,6 +73,7 @@ export type PropertyViewModel = {
   updatedAt: string;
   images: string[];
   videos: string[];
+  videoThumbnails: Record<string, string>;
   clientAssignments: PropertyClientAssignmentViewModel[];
 };
 
@@ -281,6 +282,7 @@ export function propertyToViewModel(row: any, options: { includeClientAssignment
     updatedAt: isoDate(row.updatedAt || row.updated_at),
     images,
     videos,
+    videoThumbnails: {},
     clientAssignments
   };
 }

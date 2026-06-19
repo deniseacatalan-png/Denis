@@ -28,6 +28,8 @@ const adminPropertyInclude = {
   },
 };
 
+const instagramPreviewCache = new Map<string, string | null>();
+
 function textValue(value: unknown) {
   return String(value || "").trim();
 }
@@ -118,6 +120,59 @@ function videoRowsFromValues(propertyId: string, values: any) {
     }));
 }
 
+function isInstagramVideoUrl(value: string) {
+  try {
+    const hostname = new URL(value).hostname.replace(/^www\./i, "").toLowerCase();
+    return hostname.endsWith("instagram.com");
+  } catch {
+    return false;
+  }
+}
+
+async function getInstagramPreviewImage(videoUrl: string) {
+  if (!isInstagramVideoUrl(videoUrl)) return null;
+  if (instagramPreviewCache.has(videoUrl)) return instagramPreviewCache.get(videoUrl) || null;
+
+  try {
+    const response = await fetch(videoUrl, {
+      headers: {
+        "user-agent": "Mozilla/5.0 (compatible; DeniseCatalanBot/1.0)"
+      }
+    });
+
+    if (!response.ok) {
+      instagramPreviewCache.set(videoUrl, null);
+      return null;
+    }
+
+    const html = await response.text();
+    const match =
+      html.match(/<meta property="og:image" content="([^"]+)"/i) ||
+      html.match(/<meta name="twitter:image" content="([^"]+)"/i);
+    const previewUrl = match?.[1]?.replace(/&amp;/g, "&") || null;
+
+    instagramPreviewCache.set(videoUrl, previewUrl);
+    return previewUrl;
+  } catch {
+    instagramPreviewCache.set(videoUrl, null);
+    return null;
+  }
+}
+
+async function addVideoThumbnails(property: PropertyViewModel): Promise<PropertyViewModel> {
+  const videoEntries = await Promise.all(
+    (property.videos || []).map(async (videoUrl) => {
+      const previewUrl = await getInstagramPreviewImage(videoUrl);
+      return previewUrl ? [videoUrl, previewUrl] : null;
+    })
+  );
+
+  return {
+    ...property,
+    videoThumbnails: Object.fromEntries(videoEntries.filter(Boolean) as Array<[string, string]>)
+  };
+}
+
 export async function listPublishedProperties(): Promise<PropertyViewModel[]> {
   const rows = await getPrisma().property.findMany({
     where: {
@@ -130,7 +185,7 @@ export async function listPublishedProperties(): Promise<PropertyViewModel[]> {
     ]
   });
 
-  return rows.map((row) => propertyToViewModel(row));
+  return Promise.all(rows.map((row) => addVideoThumbnails(propertyToViewModel(row))));
 }
 
 export async function listAdminProperties(): Promise<PropertyViewModel[]> {
@@ -142,7 +197,7 @@ export async function listAdminProperties(): Promise<PropertyViewModel[]> {
     ]
   });
 
-  return rows.map((row) => propertyToViewModel(row, { includeClientAssignments: true }));
+  return Promise.all(rows.map((row) => addVideoThumbnails(propertyToViewModel(row, { includeClientAssignments: true }))));
 }
 
 export async function getPublishedPropertyBySlug(slug: string): Promise<PropertyViewModel | null> {
@@ -154,7 +209,7 @@ export async function getPublishedPropertyBySlug(slug: string): Promise<Property
     include: publicPropertyInclude
   });
 
-  return row ? propertyToViewModel(row) : null;
+  return row ? addVideoThumbnails(propertyToViewModel(row)) : null;
 }
 
 export async function saveAdminProperty(values: any) {

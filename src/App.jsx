@@ -1189,6 +1189,7 @@ function PublicApp({ initialProperties = [] }) {
 
                         if (embedData.source === "Instagram Reels") {
                           const isOpen = Boolean(openedInstagramReels[videoUrl]);
+                          const previewUrl = routedProperty.videoThumbnails?.[videoUrl] || "";
 
                           return (
                             <article
@@ -1242,6 +1243,15 @@ function PublicApp({ initialProperties = [] }) {
                                     <span className="property-detail-instagram-cover-badge">Reel</span>
                                   </div>
                                   <div className="property-detail-instagram-cover-visual" aria-hidden="true">
+                                    {previewUrl ? (
+                                      <img
+                                        className="property-detail-instagram-cover-image"
+                                        src={previewUrl}
+                                        alt={`Portada de ${routedProperty.title}`}
+                                        loading="lazy"
+                                      />
+                                    ) : null}
+                                    <span className="property-detail-instagram-cover-overlay" />
                                     <span className="property-detail-instagram-cover-glow property-detail-instagram-cover-glow--one" />
                                     <span className="property-detail-instagram-cover-glow property-detail-instagram-cover-glow--two" />
                                     <span className="property-detail-instagram-cover-glow property-detail-instagram-cover-glow--three" />

@@ -90,6 +90,7 @@ describe("Prisma view model mappers", () => {
         "https://www.youtube.com/watch?v=test-1",
         "https://www.instagram.com/reel/test-2/"
       ],
+      videoThumbnails: {},
       clientAssignments: [
         {
           id: "assignment-1",
