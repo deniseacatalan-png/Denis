@@ -159,7 +159,7 @@ describe("client portal helpers", () => {
     assert.doesNotMatch(submitFileHandler, /event\.currentTarget\.reset\(\)/);
   });
 
-  it("uses three visual upload target cards instead of a select", () => {
+  it("uses two visual upload target cards instead of a select", () => {
     const source = readFileSync("src/client/ClientPortalApp.jsx", "utf8");
 
     assert.match(source, /const uploadTargetOptions = \[/);

@@ -150,7 +150,7 @@ function SubmissionList({ items, onEditPropertySubmission }) {
     return (
       <EmptyState
         title="Todavia no cargaste propiedades"
-        text="Cuando envies una solicitud, queda visible aca para seguimiento."
+        text="Cuando envies una propiedad, queda visible aca para seguimiento."
       />
     );
   }

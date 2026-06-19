@@ -1131,21 +1131,42 @@ function PublicApp({ initialProperties = [] }) {
                   <section className="property-detail-videos" aria-labelledby="property-detail-videos-title">
                     <div className="property-detail-videos-header">
                       <h2 id="property-detail-videos-title">Videos</h2>
-                      <p>Links externos para ver recorridos y reels de la propiedad.</p>
+                      <p>Videos embebidos para ver recorridos y reels de la propiedad.</p>
                     </div>
                     <div className="property-detail-videos-list">
-                      {routedProperty.videos.map((videoUrl, index) => (
-                        <a
-                          key={`${videoUrl}-${index}`}
-                          href={videoUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="property-detail-video-link"
-                        >
-                          <strong>{getVideoSourceLabel(videoUrl)}</strong>
-                          <span>Ver video {index + 1}</span>
-                        </a>
-                      ))}
+                      {routedProperty.videos.map((videoUrl, index) => {
+                        const embedData = getVideoEmbedData(videoUrl);
+
+                        if (!embedData?.embedUrl) {
+                          return (
+                            <a
+                              key={`${videoUrl}-${index}`}
+                              href={videoUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="property-detail-video-link"
+                            >
+                              <strong>{getVideoSourceLabel(videoUrl)}</strong>
+                              <span>Ver video {index + 1}</span>
+                            </a>
+                          );
+                        }
+
+                        return (
+                          <article key={`${videoUrl}-${index}`} className="property-detail-video-card">
+                            <div className="property-detail-video-frame">
+                              <iframe
+                                src={embedData.embedUrl}
+                                title={`${embedData.source} - video ${index + 1} de ${routedProperty.title}`}
+                                loading="lazy"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                referrerPolicy="strict-origin-when-cross-origin"
+                                allowFullScreen
+                              />
+                            </div>
+                          </article>
+                        );
+                      })}
                     </div>
                   </section>
                 ) : null}
