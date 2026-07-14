@@ -14,6 +14,13 @@ export function absoluteUrl(pathname: string) {
   return new URL(pathname, `${DEFAULT_SITE_URL}/`).href;
 }
 
+function normalizeOgImageUrl(value: string | null | undefined) {
+  const imageUrl = String(value || "").trim();
+  if (!imageUrl) return absoluteUrl(HOME_IMAGE_PATH);
+  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
+  return absoluteUrl(imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`);
+}
+
 export function homeJsonLd() {
   return {
     "@context": "https://schema.org",
@@ -87,10 +94,7 @@ export function iaMetadata(): Metadata {
 
 export function propertyMetadata(property: PropertyViewModel | null): Metadata {
   if (!property) {
-    return {
-      title: HOME_TITLE,
-      description: HOME_DESCRIPTION
-    };
+    return homeMetadata();
   }
 
   const pathname = propertyPublicPath(property);
@@ -99,8 +103,10 @@ export function propertyMetadata(property: PropertyViewModel | null): Metadata {
     property.summary ||
     property.rawDescription ||
     `${property.title} en ${property.location}. Consultá detalles con Denise Catalán Bienes Raíces.`;
+  const imageUrl = normalizeOgImageUrl(property.images[0]);
 
   return {
+    metadataBase: new URL(DEFAULT_SITE_URL),
     title,
     description,
     alternates: {
@@ -113,7 +119,20 @@ export function propertyMetadata(property: PropertyViewModel | null): Metadata {
       siteName: "Denise Catalán Bienes Raíces",
       locale: "es_AR",
       type: "article",
-      images: property.images[0] ? [property.images[0]] : [HOME_IMAGE_PATH]
+      images: [
+        {
+          url: imageUrl,
+          alt: property.title,
+          width: 1200,
+          height: 630
+        }
+      ]
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [imageUrl]
     }
   };
 }

@@ -2,7 +2,13 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { describe, it } from "vitest";
 
-import { DEFAULT_SITE_URL, HOME_TITLE, homeJsonLd, homeMetadata } from "../src/server/seo.ts";
+import {
+  DEFAULT_SITE_URL,
+  HOME_TITLE,
+  homeJsonLd,
+  homeMetadata,
+  propertyMetadata
+} from "../src/server/seo.ts";
 
 describe("Next SEO metadata", () => {
   it("exposes local real estate SEO metadata from the App Router layout", () => {
@@ -67,6 +73,25 @@ describe("Next SEO metadata", () => {
     assert.match(propertyPage, /generateMetadata/);
     assert.match(propertyPage, /getPublishedPropertyBySlug/);
     assert.match(propertyPage, /PublicAppLoader/);
+  });
+
+  it("property metadata publishes an absolute social image and Twitter card fields", () => {
+    const metadata = propertyMetadata({
+      title: "Alquiler permanente Valle Chapelco",
+      slug: "alquiler-permanente-valle-chapelco",
+      location: "Chapelco, San Martín de los Andes",
+      summary: "Casa en alquiler permanente en Valle Chapelco.",
+      rawDescription: "",
+      images: ["/uploads/properties/valle-chapelco.jpg"]
+    });
+
+    assert.equal(metadata.metadataBase?.href, DEFAULT_SITE_URL + "/");
+    assert.equal(metadata.alternates?.canonical, "/propiedades/alquiler-permanente-valle-chapelco");
+    assert.equal(metadata.openGraph?.type, "article");
+    assert.equal(metadata.openGraph?.images?.[0]?.url, `${DEFAULT_SITE_URL}/uploads/properties/valle-chapelco.jpg`);
+    assert.equal(metadata.openGraph?.images?.[0]?.alt, "Alquiler permanente Valle Chapelco");
+    assert.equal(metadata.twitter?.card, "summary_large_image");
+    assert.equal(metadata.twitter?.images?.[0], `${DEFAULT_SITE_URL}/uploads/properties/valle-chapelco.jpg`);
   });
 
   it("production builds use Next metadata instead of Vite postbuild SEO generation", () => {
