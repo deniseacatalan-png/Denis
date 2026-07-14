@@ -70,7 +70,10 @@ describe("static property SEO generation", () => {
     assert.match(meta.title, /San Martín de los Andes/);
     assert.match(meta.description, /Fracción comercial sobre el río Caleufú/);
     assert.match(meta.description, /San Martín de los Andes/);
-    assert.equal(meta.imageUrl, "https://cdn.example.com/properties/has-orillas-de-caleufu/cover.jpg");
+    assert.equal(
+      meta.imageUrl,
+      "https://www.denisecatalanbienesraices.com.ar/api/og/properties/has-orillas-de-caleufu"
+    );
     assert.equal(meta.homeTitle, "Denise Catalán Bienes Raíces | Inmobiliaria en San Martín de los Andes");
   });
 
@@ -85,8 +88,14 @@ describe("static property SEO generation", () => {
       /<link rel="canonical" href="https:\/\/www\.denisecatalanbienesraices\.com\.ar\/propiedades\/has-orillas-de-caleufu" \/>/
     );
     assert.match(html, /<meta property="og:type" content="article" \/>/);
-    assert.match(html, /<meta property="og:image" content="https:\/\/cdn\.example\.com\/properties\/has-orillas-de-caleufu\/cover\.jpg" \/>/);
-    assert.match(html, /<meta name="twitter:image" content="https:\/\/cdn\.example\.com\/properties\/has-orillas-de-caleufu\/cover\.jpg" \/>/);
+    assert.match(
+      html,
+      /<meta property="og:image" content="https:\/\/www\.denisecatalanbienesraices\.com\.ar\/api\/og\/properties\/has-orillas-de-caleufu" \/>/
+    );
+    assert.match(
+      html,
+      /<meta name="twitter:image" content="https:\/\/www\.denisecatalanbienesraices\.com\.ar\/api\/og\/properties\/has-orillas-de-caleufu" \/>/
+    );
     assert.match(html, /"@type":\s*"Place"/);
     assert.match(html, /"@type":\s*"Offer"/);
     assert.match(html, /"price":\s*420000/);

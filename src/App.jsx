@@ -895,6 +895,8 @@ function PublicApp({ initialProperties = [] }) {
   const fullscreenMapPreviewProperty =
     fullscreenMapPropertiesWithCoords.find((property) => property.id === (pinnedPropertyId || hoveredPropertyId)) ||
     null;
+  const fullscreenMapFocusProperty =
+    fullscreenMapPropertiesWithCoords.find((property) => property.id === pinnedPropertyId) || null;
   const fullscreenActiveMapPropertyId =
     fullscreenMapPreviewProperty?.id ||
     (fullscreenMapPropertiesWithCoords.some((property) => property.id === selectedId) ? selectedId : "");
@@ -989,7 +991,7 @@ function PublicApp({ initialProperties = [] }) {
             >
               <MapAutoViewport
                 properties={fullscreenMapPropertiesWithCoords}
-                focusProperty={fullscreenMapPreviewProperty}
+                focusProperty={fullscreenMapFocusProperty}
               />
               <MapClickReset onClear={clearMapPropertyPreview} />
               <TileLayer

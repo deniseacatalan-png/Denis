@@ -1,9 +1,8 @@
 export function publicNavbarItems({ isPropertyRoute = false, currentPathname = "" } = {}) {
   const currentPath = String(currentPathname || "");
   const isHomeRoute = currentPath === "/" || currentPath === "";
-  const isIaRoute = currentPath === "/IA" || currentPath.startsWith("/IA?");
-  const homeHref = isIaRoute ? "/" : "#inicio";
-  const propertiesHref = isIaRoute ? "/#propiedades" : "#propiedades";
+  const homeHref = "#inicio";
+  const propertiesHref = "#propiedades";
 
   const homeItem = isPropertyRoute
     ? { id: "home", label: "Inicio", action: "navigateHome" }
@@ -12,7 +11,6 @@ export function publicNavbarItems({ isPropertyRoute = false, currentPathname = "
   return [
     homeItem,
     ...(isPropertyRoute ? [] : [{ id: "properties", label: "Propiedades", href: propertiesHref }]),
-    { id: "ia", label: "IA", href: "/IA", active: isIaRoute },
     { id: "clients", label: "Portal clientes", href: "/clientes" },
     { id: "service", label: "Solicitar servicio", action: "openService", variant: "cta" }
   ];

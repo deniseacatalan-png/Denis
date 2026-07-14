@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { CATEGORY_META, propertyPublicPath } from "../../src/utils/properties.js";
+import { CATEGORY_META, propertyPublicPath, propertyPublicSlug } from "../../src/utils/properties.js";
 
 export const DEFAULT_SITE_URL = "https://www.denisecatalanbienesraices.com.ar";
 export const HOME_TITLE =
@@ -68,6 +68,11 @@ function absoluteUrl(siteUrl, value) {
   if (!url) return `${normalizeSiteUrl(siteUrl)}${HOME_IMAGE_PATH}`;
   if (/^https?:\/\//i.test(url)) return url;
   return new URL(url.startsWith("/") ? url : `/${url}`, `${normalizeSiteUrl(siteUrl)}/`).href;
+}
+
+function propertySocialImageUrl(siteUrl, property) {
+  const slug = propertyPublicSlug(property);
+  return slug ? absoluteUrl(siteUrl, `/api/og/properties/${slug}`) : absoluteUrl(siteUrl, HOME_IMAGE_PATH);
 }
 
 function propertyCategoryLabel(property) {
@@ -148,7 +153,7 @@ export function createPropertySeoMeta(property, options = {}) {
     `${categoryLabel} en ${location}. ${propertyDescriptionSource(property)}`,
     158
   );
-  const imageUrl = absoluteUrl(siteUrl, property?.images?.[0] || HOME_IMAGE_PATH);
+  const imageUrl = propertySocialImageUrl(siteUrl, property);
 
   return {
     title,

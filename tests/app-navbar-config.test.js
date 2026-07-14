@@ -15,7 +15,6 @@ describe("app navbar configuration", () => {
       [
         ["home", "Inicio", "link"],
         ["properties", "Propiedades", "link"],
-        ["ia", "IA", "link"],
         ["clients", "Portal clientes", "link"],
         ["service", "Solicitar servicio", "cta"]
       ]
@@ -27,7 +26,6 @@ describe("app navbar configuration", () => {
       publicNavbarItems({ isPropertyRoute: true }).map((item) => [item.id, item.label, item.action || item.href]),
       [
         ["home", "Inicio", "navigateHome"],
-        ["ia", "IA", "/IA"],
         ["clients", "Portal clientes", "/clientes"],
         ["service", "Solicitar servicio", "openService"]
       ]

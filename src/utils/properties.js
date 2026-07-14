@@ -86,8 +86,12 @@ function propertySlugValue(property) {
   return slugify(property?.slug || property?.title || property?.id || "");
 }
 
+export function propertyPublicSlug(property) {
+  return propertySlugValue(property);
+}
+
 export function propertyPublicPath(property) {
-  const slug = propertySlugValue(property);
+  const slug = propertyPublicSlug(property);
   return slug ? `/propiedades/${slug}` : "/";
 }
 

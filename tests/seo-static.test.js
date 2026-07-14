@@ -88,10 +88,19 @@ describe("Next SEO metadata", () => {
     assert.equal(metadata.metadataBase?.href, DEFAULT_SITE_URL + "/");
     assert.equal(metadata.alternates?.canonical, "/propiedades/alquiler-permanente-valle-chapelco");
     assert.equal(metadata.openGraph?.type, "article");
-    assert.equal(metadata.openGraph?.images?.[0]?.url, `${DEFAULT_SITE_URL}/uploads/properties/valle-chapelco.jpg`);
-    assert.equal(metadata.openGraph?.images?.[0]?.alt, "Alquiler permanente Valle Chapelco");
+    assert.equal(
+      metadata.openGraph?.images?.[0]?.url,
+      `${DEFAULT_SITE_URL}/api/og/properties/alquiler-permanente-valle-chapelco`
+    );
+    assert.equal(
+      metadata.openGraph?.images?.[0]?.alt,
+      "Alquiler permanente Valle Chapelco - Denise Catalán Bienes Raíces"
+    );
     assert.equal(metadata.twitter?.card, "summary_large_image");
-    assert.equal(metadata.twitter?.images?.[0], `${DEFAULT_SITE_URL}/uploads/properties/valle-chapelco.jpg`);
+    assert.equal(
+      metadata.twitter?.images?.[0],
+      `${DEFAULT_SITE_URL}/api/og/properties/alquiler-permanente-valle-chapelco`
+    );
   });
 
   it("production builds use Next metadata instead of Vite postbuild SEO generation", () => {

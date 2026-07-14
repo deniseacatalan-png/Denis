@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import type { PropertyViewModel } from "./view-models";
-import { propertyPublicPath } from "../utils/properties.js";
+import { propertyPublicPath, propertyPublicSlug } from "../utils/properties.js";
 
 export const DEFAULT_SITE_URL = "https://www.denisecatalanbienesraices.com.ar";
 export const HOME_TITLE = "Denise Catalán Bienes Raíces | Inmobiliaria en San Martín de los Andes";
@@ -14,11 +14,9 @@ export function absoluteUrl(pathname: string) {
   return new URL(pathname, `${DEFAULT_SITE_URL}/`).href;
 }
 
-function normalizeOgImageUrl(value: string | null | undefined) {
-  const imageUrl = String(value || "").trim();
-  if (!imageUrl) return absoluteUrl(HOME_IMAGE_PATH);
-  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
-  return absoluteUrl(imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`);
+function propertySocialImageUrl(property: PropertyViewModel) {
+  const slug = propertyPublicSlug(property);
+  return slug ? absoluteUrl(`/api/og/properties/${slug}`) : absoluteUrl(HOME_IMAGE_PATH);
 }
 
 export function homeJsonLd() {
@@ -68,30 +66,6 @@ export function homeMetadata(): Metadata {
   };
 }
 
-export function iaMetadata(): Metadata {
-  const title = "Asistente IA | Denise Catalán Bienes Raíces";
-  const description =
-    "Asistente de consulta inmobiliaria para comprar, alquilar y descubrir propiedades publicadas de Denise Catalán Bienes Raíces.";
-
-  return {
-    metadataBase: new URL(DEFAULT_SITE_URL),
-    title,
-    description,
-    alternates: {
-      canonical: "/IA"
-    },
-    openGraph: {
-      title,
-      description,
-      url: absoluteUrl("/IA"),
-      siteName: "Denise Catalán Bienes Raíces",
-      locale: "es_AR",
-      type: "website",
-      images: [HOME_IMAGE_PATH]
-    }
-  };
-}
-
 export function propertyMetadata(property: PropertyViewModel | null): Metadata {
   if (!property) {
     return homeMetadata();
@@ -103,7 +77,7 @@ export function propertyMetadata(property: PropertyViewModel | null): Metadata {
     property.summary ||
     property.rawDescription ||
     `${property.title} en ${property.location}. Consultá detalles con Denise Catalán Bienes Raíces.`;
-  const imageUrl = normalizeOgImageUrl(property.images[0]);
+  const imageUrl = propertySocialImageUrl(property);
 
   return {
     metadataBase: new URL(DEFAULT_SITE_URL),
@@ -122,7 +96,7 @@ export function propertyMetadata(property: PropertyViewModel | null): Metadata {
       images: [
         {
           url: imageUrl,
-          alt: property.title,
+          alt: `${property.title} - Denise Catalán Bienes Raíces`,
           width: 1200,
           height: 630
         }
