@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
+
 .page-shell {
   --brand: var(--violeta);
   --brand-deep: var(--violeta-profundo);
@@ -19,6 +21,612 @@
   background: var(--page-bg);
   background-attachment: fixed;
   overflow-x: clip;
+}
+
+/* Patagonia premium public experience */
+.page-shell:not(.ia-page) {
+  --brand: #c85d8f;
+  --brand-deep: #214e73;
+  --gold: #d7a9be;
+  --text-main: #181818;
+  --text-soft: #58625d;
+  --border: rgba(33, 78, 115, 0.13);
+  --glass-border: rgba(255, 255, 255, 0.58);
+  --shadow: 0 24px 70px rgba(24, 24, 24, 0.08);
+  --shadow-soft: 0 12px 34px rgba(33, 78, 115, 0.12);
+  --shadow-media: 0 32px 80px rgba(24, 24, 24, 0.18);
+  --shadow-lift: 0 38px 96px rgba(24, 24, 24, 0.22);
+  --surface-warm: rgba(255, 255, 255, 0.88);
+  --surface-muted: #f7f7f4;
+  --button-gradient: linear-gradient(135deg, #c85d8f, #b94f80);
+  --button-shadow: 0 14px 32px rgba(200, 93, 143, 0.22);
+  color: #181818;
+  background: #fff;
+  font-family: "Montserrat", sans-serif;
+}
+
+.page-shell:not(.ia-page) :is(h1, h2, h3, .property-slide-title) {
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 500;
+}
+
+.page-shell:not(.ia-page) .site-navbar {
+  padding: 0.9rem clamp(1rem, 4vw, 4.5rem);
+  background: rgba(255, 255, 255, 0.78);
+  border-bottom: 1px solid rgba(33, 78, 115, 0.09);
+  box-shadow: none;
+  backdrop-filter: blur(20px) saturate(1.15);
+}
+
+.page-shell:not(.ia-page) .site-nav {
+  width: min(100%, 1360px);
+}
+
+.page-shell:not(.ia-page) .site-nav-brand {
+  gap: 0.65rem;
+}
+
+.page-shell:not(.ia-page) .site-nav-brand img {
+  width: auto;
+  height: clamp(48px, 5vw, 66px);
+  object-fit: contain;
+}
+
+.page-shell:not(.ia-page) .site-nav-brand span {
+  color: #181818;
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+
+.page-shell:not(.ia-page) :is(.site-nav-link, .site-nav-cta) {
+  min-height: 44px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.page-shell:not(.ia-page) .site-nav-link {
+  color: #181818;
+}
+
+.page-shell:not(.ia-page) .site-nav-link:hover,
+.page-shell:not(.ia-page) .site-nav-link:focus-visible,
+.page-shell:not(.ia-page) .site-nav-link.is-active {
+  color: #c85d8f;
+  background: rgba(215, 169, 190, 0.13);
+}
+
+.page-shell:not(.ia-page) .site-nav-cta {
+  padding-inline: 1.25rem;
+  color: #fff;
+  border: 1px solid #314a39;
+  background: #314a39;
+  box-shadow: 0 10px 26px rgba(49, 74, 57, 0.18);
+}
+
+.page-shell:not(.ia-page) .hero {
+  position: relative;
+  min-height: min(830px, calc(100svh - 80px));
+  display: grid;
+  align-items: center;
+  padding: clamp(3rem, 8vw, 7rem) clamp(1rem, 5vw, 5rem);
+  background:
+    linear-gradient(90deg, rgba(13, 31, 42, 0.76) 0%, rgba(21, 45, 57, 0.5) 38%, rgba(33, 78, 115, 0.12) 100%),
+    url("../../Design System/assets/patagonia-lake.jpg") center / cover no-repeat;
+  border: 0;
+}
+
+.page-shell:not(.ia-page) .hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.2));
+}
+
+.page-shell:not(.ia-page) .hero-layout {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 1360px);
+  margin: 0 auto;
+  grid-template-columns: minmax(280px, 0.8fr) minmax(460px, 1.2fr);
+  gap: clamp(2rem, 6vw, 7rem);
+  align-items: center;
+}
+
+.page-shell:not(.ia-page) .hero-content {
+  max-width: 620px;
+}
+
+.page-shell:not(.ia-page) .hero-content .overline {
+  padding: 0;
+  color: #fff;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.7rem;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.page-shell:not(.ia-page) .hero-content h1 {
+  max-width: 760px;
+  margin: 1.25rem 0 1.5rem;
+  color: #fff;
+  font-size: clamp(3.8rem, 7.2vw, 7rem);
+  line-height: 0.83;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+  text-shadow: 0 14px 50px rgba(0, 0, 0, 0.25);
+}
+
+.page-shell:not(.ia-page) .contact-line {
+  max-width: 52ch;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.76rem;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  line-height: 1.8;
+  text-transform: uppercase;
+}
+
+.page-shell:not(.ia-page) .hero-claim {
+  display: grid;
+  gap: 0.35rem;
+  max-width: 48ch;
+  margin: 0 0 1.6rem;
+  color: #fff;
+  font-family: "Montserrat", sans-serif;
+}
+
+.page-shell:not(.ia-page) .hero-claim strong {
+  color: #d7a9be;
+  font-size: clamp(0.9rem, 1.35vw, 1.12rem);
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.page-shell:not(.ia-page) .hero-claim span {
+  color: rgba(255, 255, 255, 0.9);
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(1.35rem, 2.1vw, 1.85rem);
+  font-style: italic;
+  line-height: 1.15;
+}
+
+.page-shell:not(.ia-page) .hero-map-section {
+  margin: 0;
+  padding: 0.75rem;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.13);
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 28px;
+  box-shadow: 0 34px 90px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(16px) saturate(1.1);
+}
+
+.page-shell:not(.ia-page) .hero-map-section-header {
+  min-height: 32px;
+  margin: 0 0 0.55rem;
+  padding-inline: 0.4rem;
+}
+
+.page-shell:not(.ia-page) .map-fullscreen-link {
+  color: #fff;
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.page-shell:not(.ia-page) .hero-map-section .map-frame,
+.page-shell:not(.ia-page) .hero-map-section .map-view {
+  border-radius: 20px;
+}
+
+.page-shell:not(.ia-page) .content-wrap {
+  width: 100%;
+  margin: 0;
+  padding: clamp(5rem, 10vw, 10rem) 0 clamp(4rem, 8vw, 8rem);
+}
+
+.page-shell:not(.ia-page) :is(#inicio, #mapa, #propiedades) {
+  scroll-margin-top: 96px;
+}
+
+.page-shell:not(.ia-page) .properties {
+  --public-slider-edge: max(1.25rem, 6vw, calc((100vw - 1360px) / 2));
+  padding: 0;
+}
+
+.page-shell:not(.ia-page) .properties > .section-title {
+  margin-bottom: clamp(2.5rem, 5vw, 5rem);
+}
+
+.page-shell:not(.ia-page) .section-title p,
+.page-shell:not(.ia-page) .property-slider-copy p,
+.page-shell:not(.ia-page) .local-seo-copy p {
+  color: #c85d8f;
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.page-shell:not(.ia-page) .section-title h2 {
+  max-width: 850px;
+  margin: 0.55rem 0 0;
+  color: #181818;
+  font-size: clamp(3rem, 6vw, 5.7rem);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+}
+
+.page-shell:not(.ia-page) .property-slide-card {
+  min-height: clamp(560px, 78vh, 860px);
+  border: 0;
+  background: #214e73;
+}
+
+.page-shell:not(.ia-page) .property-slide-card::before {
+  background:
+    linear-gradient(180deg, rgba(11, 20, 24, 0.04) 15%, rgba(11, 20, 24, 0.18) 48%, rgba(11, 20, 24, 0.78) 100%),
+    linear-gradient(90deg, rgba(33, 78, 115, 0.26), transparent 60%);
+}
+
+.page-shell:not(.ia-page) .property-slide-image {
+  transition: transform 1.2s cubic-bezier(0.2, 0.7, 0.2, 1), filter 0.8s ease;
+}
+
+.page-shell:not(.ia-page) .property-slide-card:hover .property-slide-image {
+  transform: scale(1.025);
+  filter: saturate(1.05);
+}
+
+.page-shell:not(.ia-page) .property-slide-text {
+  max-width: min(780px, 84vw);
+}
+
+.page-shell:not(.ia-page) .property-slide-kicker {
+  color: rgba(255, 255, 255, 0.82);
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.page-shell:not(.ia-page) .property-slide-title {
+  color: #fff;
+  font-size: clamp(3.3rem, 7vw, 7.5rem);
+  font-weight: 500;
+  line-height: 0.88;
+  letter-spacing: -0.04em;
+  text-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.page-shell:not(.ia-page) .property-slide-intro {
+  max-width: 62ch;
+  color: rgba(255, 255, 255, 0.8);
+  font-family: "Montserrat", sans-serif;
+  font-size: clamp(0.82rem, 1.2vw, 1rem);
+  line-height: 1.7;
+}
+
+.page-shell:not(.ia-page) .property-slide-footer {
+  color: rgba(255, 255, 255, 0.86);
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.page-shell:not(.ia-page) .property-slide-detail-btn {
+  padding: 0.8rem 1.15rem;
+  color: #fff;
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  border: 1px solid rgba(255, 255, 255, 0.54);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.page-shell:not(.ia-page) .property-slider-divider {
+  margin-block: clamp(2rem, 5vw, 4rem);
+}
+
+.page-shell:not(.ia-page) .property-slider-divider-line {
+  background: linear-gradient(90deg, transparent, rgba(33, 78, 115, 0.34), transparent);
+}
+
+.page-shell:not(.ia-page) .property-slider-divider-mark {
+  border-color: rgba(33, 78, 115, 0.22);
+  background: #fff;
+  box-shadow: 0 12px 36px rgba(33, 78, 115, 0.1);
+}
+
+.page-shell:not(.ia-page) :is(.rental-search-section, .local-seo-section) {
+  width: min(1360px, calc(100% - clamp(2rem, 12vw, 10rem)));
+  margin-inline: auto;
+}
+
+.page-shell:not(.ia-page) .rental-search-section {
+  margin-top: clamp(7rem, 13vw, 13rem);
+  padding: clamp(1.25rem, 4vw, 4rem);
+  background:
+    linear-gradient(135deg, rgba(215, 169, 190, 0.14), rgba(33, 78, 115, 0.06)),
+    #fff;
+  border: 1px solid rgba(200, 93, 143, 0.16);
+  border-radius: 34px;
+  box-shadow: 0 28px 90px rgba(33, 78, 115, 0.08);
+}
+
+.page-shell:not(.ia-page) .rental-search-shell {
+  gap: clamp(2rem, 4vw, 4rem);
+}
+
+.page-shell:not(.ia-page) .property-slider-copy h3 {
+  max-width: 720px;
+  margin: 0.45rem 0 0;
+  color: #214e73;
+  font-size: clamp(2.5rem, 5vw, 4.8rem);
+  line-height: 0.96;
+  letter-spacing: -0.03em;
+}
+
+.page-shell:not(.ia-page) .property-slider-copy span {
+  display: block;
+  max-width: 70ch;
+  margin-top: 1rem;
+  color: #58625d;
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.75;
+}
+
+.page-shell:not(.ia-page) .rental-search-card {
+  padding: clamp(1.2rem, 3vw, 2.25rem);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(33, 78, 115, 0.1);
+  border-radius: 24px;
+  box-shadow: 0 18px 50px rgba(33, 78, 115, 0.06);
+  backdrop-filter: blur(12px);
+}
+
+.page-shell:not(.ia-page) .rental-type-toggle label {
+  color: #214e73;
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.78rem;
+  border-color: rgba(33, 78, 115, 0.14);
+  background: #fff;
+}
+
+.page-shell:not(.ia-page) .rental-search-field,
+.page-shell:not(.ia-page) .rental-search-field span {
+  color: #181818;
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.page-shell:not(.ia-page) .rental-search-field :is(input, textarea) {
+  padding: 0.95rem 1rem;
+  color: #181818;
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.84rem;
+  border: 1px solid rgba(33, 78, 115, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.page-shell:not(.ia-page) .rental-search-field :is(input, textarea):focus {
+  border-color: #c85d8f;
+  box-shadow: 0 0 0 4px rgba(200, 93, 143, 0.1);
+}
+
+.page-shell:not(.ia-page) :is(.map-btn, .wa-btn, .cta, .nav-service-button) {
+  min-height: 46px;
+  padding: 0.82rem 1.25rem;
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  border-radius: 999px;
+}
+
+.page-shell:not(.ia-page) .map-btn {
+  color: #214e73;
+  border-color: rgba(33, 78, 115, 0.2);
+  background: #fff;
+}
+
+.page-shell:not(.ia-page) :is(.wa-btn, .cta, .nav-service-button) {
+  color: #fff;
+  border-color: #c85d8f;
+  background: #c85d8f;
+}
+
+.page-shell:not(.ia-page) .local-seo-section {
+  margin-top: clamp(7rem, 12vw, 12rem);
+  padding: 0;
+}
+
+.page-shell:not(.ia-page) .local-seo-copy h2 {
+  margin: 0.5rem 0 0;
+  color: #314a39;
+  font-size: clamp(3rem, 5.5vw, 5.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+}
+
+.page-shell:not(.ia-page) .local-seo-copy span {
+  margin-top: 1rem;
+  color: #58625d;
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+.page-shell:not(.ia-page) .local-seo-grid {
+  gap: 1.25rem;
+  margin-top: clamp(2rem, 4vw, 4rem);
+}
+
+.page-shell:not(.ia-page) .local-seo-grid article {
+  min-height: 220px;
+  align-content: end;
+  padding: clamp(1.4rem, 3vw, 2.4rem);
+  border: 1px solid rgba(49, 74, 57, 0.12);
+  border-radius: 24px;
+  background: #f7f8f5;
+  box-shadow: none;
+  transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+.page-shell:not(.ia-page) .local-seo-grid article:nth-child(2) {
+  background: rgba(215, 169, 190, 0.12);
+}
+
+.page-shell:not(.ia-page) .local-seo-grid article:nth-child(3) {
+  background: rgba(33, 78, 115, 0.07);
+}
+
+.page-shell:not(.ia-page) .local-seo-grid article:hover {
+  transform: translateY(-6px);
+  border-color: rgba(200, 93, 143, 0.25);
+  box-shadow: 0 24px 55px rgba(33, 78, 115, 0.09);
+}
+
+.page-shell:not(.ia-page) .local-seo-grid h3 {
+  color: #181818;
+  font-size: clamp(1.6rem, 2.6vw, 2.3rem);
+  line-height: 1;
+}
+
+.page-shell:not(.ia-page) .local-seo-grid p {
+  color: #58625d;
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.82rem;
+  line-height: 1.7;
+}
+
+@supports (animation-timeline: view()) {
+  .page-shell:not(.ia-page) :is(.section-title, .rental-search-section, .local-seo-section) {
+    animation: publicEditorialReveal both linear;
+    animation-timeline: view();
+    animation-range: entry 5% cover 28%;
+  }
+}
+
+@keyframes publicEditorialReveal {
+  from { opacity: 0; transform: translateY(34px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 980px) {
+  .page-shell:not(.ia-page) .hero {
+    min-height: auto;
+  }
+
+  .page-shell:not(.ia-page) .hero-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .page-shell:not(.ia-page) .hero-content {
+    padding-block: clamp(2rem, 8vw, 5rem);
+  }
+
+  .page-shell:not(.ia-page) .hero-map-section {
+    width: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  .page-shell:not(.ia-page) .site-navbar {
+    padding: 0.6rem 1rem;
+  }
+
+  .page-shell:not(.ia-page) .site-nav-menu-button {
+    color: #214e73;
+    border-color: rgba(33, 78, 115, 0.14);
+    border-radius: 50%;
+    background: #fff;
+  }
+
+  .page-shell:not(.ia-page) .site-nav-links {
+    background: rgba(255, 255, 255, 0.97);
+    border-color: rgba(33, 78, 115, 0.1);
+    box-shadow: 0 22px 50px rgba(33, 78, 115, 0.12);
+  }
+
+  .page-shell:not(.ia-page) .hero {
+    padding: 2.5rem 1rem 1rem;
+  }
+
+  .page-shell:not(.ia-page) .hero-content h1 {
+    font-size: clamp(3.5rem, 18vw, 5rem);
+  }
+
+  .page-shell:not(.ia-page) .hero-map-section {
+    padding: 0.55rem;
+    border-radius: 22px;
+  }
+
+  .page-shell:not(.ia-page) .content-wrap {
+    padding-top: 5rem;
+  }
+
+  .page-shell:not(.ia-page) .property-slide-card {
+    min-height: min(70svh, 620px);
+  }
+
+  .page-shell:not(.ia-page) .property-slide-title {
+    font-size: clamp(2.8rem, 14vw, 4.5rem);
+  }
+
+  .page-shell:not(.ia-page) .property-slide-footer {
+    align-items: flex-start;
+    gap: 0.85rem;
+  }
+
+  .page-shell:not(.ia-page) :is(.rental-search-section, .local-seo-section) {
+    width: calc(100% - 2rem);
+  }
+
+  .page-shell:not(.ia-page) .rental-search-section {
+    padding: 1rem;
+    border-radius: 24px;
+  }
+
+  .page-shell:not(.ia-page) .local-seo-grid article {
+    min-height: 180px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-shell:not(.ia-page) *,
+  .page-shell:not(.ia-page) *::before,
+  .page-shell:not(.ia-page) *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .page-shell .hero {

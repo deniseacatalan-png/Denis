@@ -995,8 +995,8 @@ function PublicApp({ initialProperties = [] }) {
               />
               <MapClickReset onClear={clearMapPropertyPreview} />
               <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
               />
               {fullscreenMapPropertiesWithCoords.map((property) => (
                 <PriceMapMarker
@@ -1275,6 +1275,10 @@ function PublicApp({ initialProperties = [] }) {
           <div className="hero-content">
             <p className="overline">Inmobiliaria boutique en Patagonia</p>
             <h1>Denise Catalán Bienes Raíces</h1>
+            <p className="hero-claim">
+              <strong>Invertí en naturaleza.</strong>
+              <span>Disfrutá la tranquilidad de estar donde querés estar.</span>
+            </p>
             <p className="contact-line">
               San Martín de los Andes · Patagonia Argentina · WhatsApp: <strong>+54 9 2944 68-8613</strong>
             </p>
@@ -1307,8 +1311,8 @@ function PublicApp({ initialProperties = [] }) {
                       onClear={clearMapPropertyPreview}
                     />
                     <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      attribution='Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+                      url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
                     />
                     {visibleProperties.map((property) => (
                       <CircleMarker
