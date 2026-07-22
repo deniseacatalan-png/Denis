@@ -290,8 +290,8 @@ function propertyImage(property: NonNullable<Awaited<ReturnType<typeof getPublis
   );
 }
 
-export async function GET(_: Request, { params }: { params: { slug: string } }) {
-  const { slug } = params;
+export async function GET(_: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const property = await getPublishedPropertyBySlug(slug).catch(() => null);
   const title = property ? property.title : "Propiedad";
   const description = propertyDescription(property);
