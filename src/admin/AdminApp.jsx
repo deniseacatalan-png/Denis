@@ -1,6 +1,5 @@
 "use client";
 
-import { upload } from "@vercel/blob/client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
@@ -188,13 +187,6 @@ const imageContentTypes = ["image/avif", "image/jpeg", "image/png", "image/webp"
 const imageAccept = imageContentTypes.join(",");
 const maxImageSizeInBytes = 25 * 1024 * 1024;
 const defaultPropertyCoords = [-40.1573, -71.3524];
-
-const mimeExtensions = {
-  "image/avif": ".avif",
-  "image/jpeg": ".jpg",
-  "image/png": ".png",
-  "image/webp": ".webp"
-};
 
 function colorValue(value, fallback = CATEGORY_META.venta.mapColor) {
   return /^#[0-9a-f]{6}$/i.test(value || "") ? value : fallback;
@@ -647,13 +639,6 @@ function LocationPicker({ latitude, longitude, location, markerColor, onCoordina
       </div>
     </section>
   );
-}
-
-function imagePathForFile(file, propertySlug, index) {
-  const extension = file.name.match(/\.[a-z0-9]+$/i)?.[0]?.toLowerCase() || mimeExtensions[file.type] || "";
-  const baseName = extension ? file.name.slice(0, -extension.length) : file.name;
-  const safeBaseName = slugify(baseName, 72) || "imagen";
-  return `properties/${propertySlug}/${Date.now()}-${index}-${safeBaseName}${extension}`;
 }
 
 function sanitizeVideoLinks(values) {
@@ -1708,25 +1693,26 @@ function AdminApp() {
       const uploadedUrls = [];
 
       for (const [index, file] of files.entries()) {
-        const blob = await upload(imagePathForFile(file, propertySlug, index), file, {
-          access: "public",
-          handleUploadUrl: "/api/blob/upload",
-          contentType: file.type,
-          multipart: file.size > 4 * 1024 * 1024,
-          clientPayload: JSON.stringify({
-            accessToken: session.access_token,
-            propertyId: form.databaseId || null
-          })
+        const uploadForm = new FormData();
+        uploadForm.set("file", file);
+        uploadForm.set("propertySlug", propertySlug);
+        uploadForm.set("index", String(index));
+        const response = await fetch("/api/admin/property-images", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          body: uploadForm
         });
 
-        uploadedUrls.push(blob.url);
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "No se pudo subir la imagen.");
+        uploadedUrls.push(payload.url);
       }
 
       setForm((current) => ({
         ...current,
         images: [...current.images, ...uploadedUrls]
       }));
-      setMessage("Imagenes subidas a Vercel Blob. Guarda la propiedad para asociarlas.");
+      setMessage("Imagenes subidas a Supabase. Guarda la propiedad para asociarlas.");
     } catch (uploadError) {
       setError(
         uploadError.message.includes("Failed to fetch")
